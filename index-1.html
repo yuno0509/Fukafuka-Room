@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF9F4">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ふかふかルーム</title>
+<style>
+:root{
+  --bg:#FBF9F4; --card:#FFFFFF; --ink:#4A4439; --ink-soft:#8A8174;
+  --line:#EDE7DA; --accent:#C9A85C; --danger:#C76A6A;
+  --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.7;letter-spacing:.02em}
+#chatBg{position:fixed;inset:0;display:none;pointer-events:none;z-index:0}
+#app{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;position:relative;z-index:1}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{
+  font-family:inherit;font-size:15px;color:var(--ink);background:var(--card);
+  border:1px solid var(--line);border-radius:14px;padding:10px 14px;width:100%;outline:none;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:vertical;line-height:1.7}
+input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
+.view{display:none;flex:1;flex-direction:column;animation:fade .25s ease}
+.view.active{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){ .view{animation:none} .drawer{transition:none} .drawerbg{transition:none} }
+
+/* ── header ── */
+.top{position:sticky;top:0;z-index:10;background:linear-gradient(var(--bg) 70%, rgba(251,249,244,0));
+  padding:14px 16px 10px;display:flex;align-items:center;gap:10px}
+.top .title{flex:1;text-align:center;font-family:var(--serif);font-size:21px;letter-spacing:.08em;font-weight:600}
+.title .spark{color:var(--accent);font-size:14px;vertical-align:middle;margin:0 6px}
+.iconbtn{width:40px;height:40px;border-radius:14px;background:var(--card);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--ink-soft);flex:none}
+.iconbtn:active{transform:scale(.95)}
+.sub{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:-4px;padding-bottom:6px}
+.sub .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#7FBF8E;margin-right:5px;vertical-align:1px}
+
+/* ── home ── */
+.rooms{padding:10px 16px 90px;display:flex;flex-direction:column;gap:12px}
+.room-card{display:flex;align-items:center;gap:14px;text-align:left;width:100%;background:var(--card);
+  border:1px solid var(--line);border-radius:20px;padding:14px 16px;position:relative;overflow:hidden}
+.room-card:active{transform:scale(.985)}
+.room-card .wash{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg, var(--rc, var(--accent)), transparent 55%);opacity:.10}
+.avatar{width:48px;height:48px;border-radius:50%;flex:none;font-size:23px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb, var(--rc, var(--accent)) 16%, white);
+  border:1px solid color-mix(in srgb, var(--rc, var(--accent)) 35%, white)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar.sm{width:var(--av-sm,32px);height:var(--av-sm,32px);font-size:calc(var(--av-sm,32px)*0.5)}
+.room-meta{flex:1;min-width:0}
+.room-name{font-family:var(--serif);font-size:16.5px;font-weight:600;letter-spacing:.04em}
+.room-last{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.chev{color:var(--ink-soft);font-size:18px}
+.addroom{margin:4px auto 0;padding:10px 22px;border-radius:999px;
+  border:1px dashed color-mix(in srgb, var(--accent) 55%, white);color:var(--ink-soft);font-size:13.5px;background:transparent}
+
+/* ── chat ── */
+.chat-head{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);
+  padding:10px 10px 8px;display:flex;align-items:center;gap:8px}
+.chat-head .who{flex:1;text-align:center;min-width:0}
+.chat-head .who .nm{font-family:var(--serif);font-weight:600;font-size:16px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-head .who .md{font-size:11px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msgs{flex:1;padding:16px 14px 8px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.mrow{display:flex;gap:8px;align-items:var(--av-align,flex-start);max-width:100%}
+.mrowai{display:flex;flex-direction:column;align-items:flex-start;max-width:100%}
+.aihead{display:flex;align-items:center;gap:6px;margin:0 2px 4px}
+.aihead .sender{margin:0}
+.mwrap.ai{max-width:var(--ai-w,100%)}
+.mrow.me{flex-direction:row-reverse}
+.bubble{padding:10px 14px;border-radius:18px;white-space:pre-wrap;word-break:break-word;font-size:var(--msg-fs,14.5px)}
+.mwrap{display:flex;flex-direction:column;gap:6px;max-width:78%}
+.mrow.me .mwrap{align-items:flex-end}
+.sender{font-size:11px;color:var(--ink-soft);margin:0 4px}
+.bubble.me-b{background:color-mix(in srgb, var(--accent) 14%, white);border:1px solid color-mix(in srgb, var(--accent) 30%, white);border-bottom-right-radius:6px}
+.bubble.ai-b{background:var(--card);border:1px solid var(--line);border-bottom-left-radius:6px}
+.msgimg{max-width:200px;max-height:200px;border-radius:14px;border:1px solid var(--line);display:block}
+.attchip{font-size:12px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:4px 10px;color:var(--ink-soft)}
+.sysmsg{align-self:center;font-size:12px;color:var(--danger);background:#FBF1F1;border:1px solid #F2DCDC;border-radius:12px;padding:6px 12px;max-width:92%}
+.typing{align-self:flex-start;color:var(--ink-soft);font-size:13px;padding:8px 14px;
+  background:rgba(255,255,255,.75);border-radius:14px}
+.typing i{animation:blink 1.2s infinite;font-style:normal}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.pending{display:none;gap:8px;padding:8px 12px 0;background:var(--bg);flex-wrap:wrap;align-items:center}
+.pending.show{display:flex}
+.pchip{position:relative}
+.pchip img{width:58px;height:58px;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:block}
+.pchip .pf{display:flex;align-items:center;height:34px;padding:0 12px;font-size:12px;border:1px solid var(--line);background:var(--card);border-radius:10px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pchip button{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;
+  background:var(--ink);color:#fff;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center}
+.composer{position:sticky;bottom:0;background:var(--bg);
+  padding:10px 12px calc(12px + env(safe-area-inset-bottom));
+  display:flex;gap:8px;align-items:flex-end;border-top:1px solid var(--line)}
+.composer textarea{flex:1;border-radius:18px;max-height:170px;min-height:44px;resize:none;overflow-y:auto}
+.roundbtn{width:44px;height:44px;border-radius:50%;flex:none;font-size:18px;
+  display:flex;align-items:center;justify-content:center}
+.sendbtn{background:var(--accent);color:#fff}
+.sendbtn:disabled{opacity:.45}
+.attachbtn{background:var(--card);border:1px solid var(--line);color:var(--ink-soft)}
+
+/* ── drawer ── */
+.drawerbg{position:fixed;inset:0;background:rgba(74,68,57,.32);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
+.drawerbg.show{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:85vw;background:var(--bg);z-index:41;
+  transform:translateX(-105%);transition:transform .22s ease;box-shadow:4px 0 24px rgba(74,68,57,.10);
+  overflow-y:auto;padding:18px 14px calc(20px + env(safe-area-inset-bottom))}
+.drawer.show{transform:none}
+.drawer h4{font-family:var(--serif);font-size:14.5px;letter-spacing:.06em;margin:14px 4px 10px;font-weight:600}
+.drawer h4:first-child{margin-top:2px}
+.citem{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:9px 10px;margin-bottom:8px;width:100%}
+.citem.cur{border-color:var(--accent);background:color-mix(in srgb, var(--accent) 7%, white)}
+.citem .ct{flex:1;min-width:0;text-align:left;font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.citem .cd{display:block;font-size:10.5px;color:var(--ink-soft)}
+.mini{width:30px;height:30px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:13px;
+  display:flex;align-items:center;justify-content:center;flex:none;color:var(--ink-soft)}
+.prow{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid var(--line);font-size:13.5px}
+.prow:last-child{border-bottom:none}
+.prow .pn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── settings ── */
+.panel{padding:6px 16px 60px;display:flex;flex-direction:column;gap:18px}
+.group{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px}
+.group h3{font-family:var(--serif);font-size:15px;letter-spacing:.06em;margin-bottom:10px;font-weight:600}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px}
+.row{display:flex;gap:8px;align-items:center}
+.hint{font-size:11.5px;color:var(--ink-soft);margin-top:6px;line-height:1.6}
+.slider-line{display:flex;align-items:center;gap:10px}
+.slider-line input[type=range]{flex:1;padding:0;border:none;background:transparent;accent-color:var(--accent)}
+.slider-val{font-size:12.5px;color:var(--ink-soft);min-width:74px;text-align:right}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid transparent}
+.sw.sel{border-color:var(--ink);transform:scale(1.08)}
+.wide-btn{display:block;width:100%;text-align:center;padding:12px;border-radius:14px;
+  border:1px solid var(--line);background:var(--bg);font-size:14px;margin-bottom:10px}
+.wide-btn:last-child{margin-bottom:0}
+.wide-btn.gold{background:color-mix(in srgb, var(--accent) 12%, white);border-color:color-mix(in srgb, var(--accent) 35%, white)}
+.wide-btn.red{color:var(--danger);border-color:#F0DCDC;background:#FCF6F6}
+.smallbtn{font-size:12.5px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);flex:none}
+.filelist{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.fileitem{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:9px 12px;font-size:13px}
+.fileitem .fn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fileitem .fc{font-size:11px;color:var(--ink-soft);flex:none}
+.toggle{appearance:none;width:42px;height:24px;border-radius:999px;background:#E2DCCE;position:relative;flex:none;border:none;padding:0;transition:background .15s}
+.toggle:checked{background:var(--accent)}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s}
+.toggle:checked::after{left:21px}
+.avatar-edit{display:flex;align-items:center;gap:14px}
+.usage-row{display:flex;gap:8px;font-size:12px;color:var(--ink-soft);padding:5px 0;border-bottom:1px solid var(--line)}
+.usage-row:last-child{border-bottom:none}
+.usage-row .um{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+.banner{margin:8px 16px 0;padding:10px 14px;border-radius:14px;font-size:12.5px;
+  background:#FFF6E5;border:1px solid #F0E0BD;color:#8A6D2F;display:none}
+.banner.show{display:block}
+.foot{text-align:center;font-size:11px;color:var(--ink-soft);padding:18px 0 28px}
+</style>
+</head>
+<body>
+<div id="chatBg"></div>
+<div id="app">
+  <div id="storageBanner" class="banner">このまま（プレビュー内）だと会話は保存されないみたい。ファイルをダウンロードしてブラウザで開くと、ちゃんと保存されるよ。</div>
+
+  <!-- ═══ ホーム ═══ -->
+  <section id="view-home" class="view active">
+    <div class="top">
+      <span style="width:40px"></span>
+      <div class="title"><span class="spark">✦</span><span id="appTitle">ふかふかルーム</span><span class="spark">✦</span></div>
+      <button class="iconbtn" onclick="openAppSettings()" aria-label="設定">⚙</button>
+    </div>
+    <div class="sub" id="homeSub"><span class="dot"></span>ようこそ</div>
+    <div class="rooms" id="roomList"></div>
+  </section>
+
+  <!-- ═══ チャット（個室・リビング共用） ═══ -->
+  <section id="view-chat" class="view">
+    <div class="chat-head">
+      <button class="iconbtn" onclick="goHome()" aria-label="ホームへ">‹</button>
+      <button class="iconbtn" onclick="openDrawer()" aria-label="会話一覧">☰</button>
+      <div class="who">
+        <div class="nm" id="chatName"></div>
+        <div class="md" id="chatModel"></div>
+      </div>
+      <button class="iconbtn" id="chatGear" onclick="chatGear()" aria-label="設定">⚙</button>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="pending" id="pendingRow"></div>
+    <div class="composer">
+      <button class="roundbtn attachbtn" onclick="document.getElementById('fileInput').click()" aria-label="ファイルを添付">📎</button>
+      <input type="file" id="fileInput" accept="image/*,.pdf,.txt,.md,.csv" multiple style="display:none" onchange="attachAny(event)">
+      <textarea id="input" rows="1" placeholder="メッセージを書く…"></textarea>
+      <button class="roundbtn sendbtn" id="sendBtn" onclick="sendMessage()" aria-label="送信">↑</button>
+    </div>
+  </section>
+
+  <!-- ═══ お部屋設定 ═══ -->
+  <section id="view-room" class="view">
+    <div class="top">
+      <button class="iconbtn" onclick="closeRoomSettings()" aria-label="戻る">‹</button>
+      <div class="title" style="font-size:17px">お部屋の設定</div>
+      <span style="width:40px"></span>
+    </div>
+    <div class="panel">
+      <div class="group">
+        <h3>このお部屋のこと</h3>
+        <div class="field"><label>お部屋の名前（パートナーの名前）</label><input id="rName"></div>
+        <div class="field"><label>アイコン</label>
+          <div class="avatar-edit">
+            <span class="avatar" id="rAvatarPreview"></span>
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:8px">
+                <button class="smallbtn" onclick="document.getElementById('rAvatarFile').click()">画像を選ぶ</button>
+                <button class="smallbtn" onclick="clearAvatar()">画像を外す</button>
+              </div>
+              <input id="rEmoji" maxlength="4" style="width:90px;text-align:center;font-size:20px" oninput="avatarPreview()" placeholder="絵文字">
+            </div>
+          </div>
+          <input type="file" id="rAvatarFile" accept="image/*" style="display:none" onchange="setAvatar(event)">
+          <div class="hint">画像があれば画像、なければ絵文字が使われるよ。</div>
+        </div>
+        <div class="field"><label>テーマカラー</label><div class="swatches" id="rSwatches"></div></div>
+        <div class="field">
+          <div class="row" style="justify-content:space-between">
+            <label style="margin:0">リビング（グループチャット）に参加する</label>
+            <input type="checkbox" class="toggle" id="rJoinGroup">
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>チャットの見た目</h3>
+        <div class="field">
+          <div class="row" style="justify-content:space-between">
+            <label style="margin:0">相手（AI）のアイコンを表示する</label>
+            <input type="checkbox" class="toggle" id="rShowIconAi">
+          </div>
+        </div>
+        <div class="field">
+          <div class="row" style="justify-content:space-between">
+            <label style="margin:0">自分のアイコンを表示する</label>
+            <input type="checkbox" class="toggle" id="rShowIconMe">
+          </div>
+        </div>
+        <div class="field"><label>背景画像</label>
+          <div class="row">
+            <button class="smallbtn" onclick="document.getElementById('rBgFile').click()">画像を選ぶ</button>
+            <button class="smallbtn" onclick="clearBg()">背景を外す</button>
+            <span class="hint" style="margin:0" id="rBgStatus"></span>
+          </div>
+          <input type="file" id="rBgFile" accept="image/*" style="display:none" onchange="setBg(event)">
+          <div class="row" style="margin-top:8px">
+            <span style="font-size:12.5px;color:var(--ink-soft);flex:none">表示方法</span>
+            <select id="rBgFit">
+              <option value="cover">画面いっぱい（はみ出す分は切れる）</option>
+              <option value="contain">ぜんぶ見せる（余白が出ることも）</option>
+              <option value="repeat">そのまま並べる（パターン向け）</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>吹き出しの色</label>
+          <div class="row" style="gap:14px">
+            <span style="font-size:12.5px;color:var(--ink-soft)">じぶん</span><input type="color" id="rBubbleMe">
+            <span style="font-size:12.5px;color:var(--ink-soft)">あいて</span><input type="color" id="rBubbleAi">
+            <button class="smallbtn" onclick="resetBubbles()">テーマに戻す</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>その子らしさ</h3>
+        <div class="field"><label>基本プロンプト（人格・口調・関係性など）</label><textarea id="rPrompt" rows="7" placeholder="あなたは○○です。一人称は…"></textarea></div>
+        <div class="field"><label>メモリ（毎回いっしょに送られる大事なこと）</label><textarea id="rMemory" rows="4" placeholder="呼び方、約束、最近の出来事など"></textarea></div>
+        <div class="field"><label>知識ファイル（セッション記録など）</label>
+          <button class="smallbtn" onclick="document.getElementById('rKnowFile').click()">＋ .txt / .md を読み込む</button>
+          <input type="file" id="rKnowFile" accept=".txt,.md,text/plain,text/markdown" multiple style="display:none" onchange="addKnowledge(event)">
+          <div class="filelist" id="fileList"></div>
+          <div class="hint">ONのファイルだけ、毎回AIに渡されるよ。長いファイルはその分お代（トークン）がかかるから、使わない時はOFFが節約。</div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>あたまの中身</h3>
+        <div class="field"><label>AIサービス</label>
+          <select id="rProvider" onchange="providerChanged()">
+            <option value="openai">OpenAI（GPT）</option>
+            <option value="anthropic">Anthropic（Claude）</option>
+            <option value="gemini">Google（Gemini）</option>
+            <option value="openrouter">OpenRouter（DeepSeek / Gemma / いろいろ）</option>
+          </select>
+        </div>
+        <div class="field"><label>モデル</label><select id="rModel"></select></div>
+        <div class="field" id="customModelField" style="display:none"><label>カスタムモデルID</label><input id="rCustomModel" placeholder="例: deepseek/deepseek-chat"></div>
+        <div class="field"><label>返信の自由度</label>
+          <div class="slider-line"><input type="range" id="rTemp" min="0" max="1.2" step="0.1" oninput="sliderLabels()"><span class="slider-val" id="tempVal"></span></div>
+          <div class="hint">左：落ち着き ／ 右：自由。GPT-5系では自動でおまかせになるよ。</div>
+        </div>
+        <div class="field"><label>返信の長さ（上限）</label>
+          <div class="slider-line"><input type="range" id="rMax" min="200" max="4000" step="100" oninput="sliderLabels()"><span class="slider-val" id="maxVal"></span></div>
+        </div>
+        <div class="field"><label>いっしょに送る直近の会話数</label>
+          <div class="slider-line"><input type="range" id="rCtx" min="6" max="100" step="2" oninput="sliderLabels()"><span class="slider-val" id="ctxVal"></span></div>
+          <div class="hint">多いほど文脈を覚えてるけど、その分お代がかかるの。</div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>あぶない操作</h3>
+        <button class="wide-btn red" onclick="deleteRoom()">このお部屋を削除する</button>
+      </div>
+      <button class="wide-btn gold" style="font-weight:600" onclick="saveRoomSettings()">保存してお部屋に戻る</button>
+    </div>
+  </section>
+
+  <!-- ═══ アプリ設定 ═══ -->
+  <section id="view-app" class="view">
+    <div class="top">
+      <button class="iconbtn" onclick="goHome()" aria-label="戻る">‹</button>
+      <div class="title" style="font-size:17px">アプリ設定</div>
+      <span style="width:40px"></span>
+    </div>
+    <div class="panel">
+      <div class="group">
+        <h3>あなたのこと</h3>
+        <div class="field"><label>ユーザー名（AIがあなたを呼ぶ名前）</label><input id="aUserName"></div>
+        <div class="field"><label>あなたのアイコン（会話で表示）</label>
+          <div class="avatar-edit">
+            <span class="avatar" id="aAvatarPreview"></span>
+            <div class="row">
+              <button class="smallbtn" onclick="document.getElementById('aAvatarFile').click()">画像を選ぶ</button>
+              <button class="smallbtn" onclick="clearUserAvatar()">外す</button>
+            </div>
+          </div>
+          <input type="file" id="aAvatarFile" accept="image/*" style="display:none" onchange="setUserAvatar(event)">
+        </div>
+        <div class="field"><label>アプリの名前</label><input id="aAppTitle"></div>
+      </div>
+
+      <div class="group">
+        <h3>チャットの見た目（ぜんぶのお部屋共通）</h3>
+        <div class="field"><label>文字サイズ</label>
+          <div class="slider-line"><input type="range" id="aFs" min="12" max="30" step="0.5" oninput="uiLabels()"><span class="slider-val" id="aFsVal"></span></div>
+        </div>
+        <div class="field"><label>AIの吹き出しの幅</label>
+          <div class="slider-line"><input type="range" id="aAiw" min="60" max="100" step="5" oninput="uiLabels()"><span class="slider-val" id="aAiwVal"></span></div>
+        </div>
+        <div class="field"><label>アイコンの大きさ</label>
+          <div class="slider-line"><input type="range" id="aAv" min="24" max="52" step="2" oninput="uiLabels()"><span class="slider-val" id="aAvVal"></span></div>
+        </div>
+        <div class="field"><label>アイコンの位置</label>
+          <select id="aPos">
+            <option value="top">吹き出しの上のほう</option>
+            <option value="bottom">吹き出しの下のほう</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>かしこさ設定</h3>
+        <div class="field">
+          <div class="row" style="justify-content:space-between">
+            <label style="margin:0">過去の会話を参照する（簡易RAG）</label>
+            <input type="checkbox" class="toggle" id="aRag">
+          </div>
+          <div class="hint">ONだと、いま話してる内容に関係ありそうな過去の会話（別の会話やアーカイブも含む）を自動で少しだけ添えて送るよ。キーワード一致の軽い仕組みだから完璧じゃないけど、文脈の橋渡しになるの。</div>
+        </div>
+        <div class="field">
+          <div class="row" style="justify-content:space-between">
+            <label style="margin:0">リアルタイム連動（時間感覚）</label>
+            <input type="checkbox" class="toggle" id="aClock">
+          </div>
+          <div class="hint">ONだとAIが現在日時を知ってる状態になるよ。「おはよう」「久しぶり」が通じるように。</div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>APIキー</h3>
+        <div class="field"><label>OpenAI APIキー</label>
+          <div class="row"><input id="aKeyOpenai" type="password" placeholder="sk-..."><button class="iconbtn" onclick="togglePw('aKeyOpenai')">👁</button></div>
+        </div>
+        <div class="field"><label>Anthropic（Claude）APIキー</label>
+          <div class="row"><input id="aKeyAnthropic" type="password" placeholder="sk-ant-..."><button class="iconbtn" onclick="togglePw('aKeyAnthropic')">👁</button></div>
+        </div>
+        <div class="field"><label>Gemini APIキー</label>
+          <div class="row"><input id="aKeyGemini" type="password" placeholder="AIza..."><button class="iconbtn" onclick="togglePw('aKeyGemini')">👁</button></div>
+        </div>
+        <div class="field"><label>OpenRouter APIキー</label>
+          <div class="row"><input id="aKeyOpenrouter" type="password" placeholder="sk-or-..."><button class="iconbtn" onclick="togglePw('aKeyOpenrouter')">👁</button></div>
+        </div>
+        <div class="hint">キーはこの端末（このブラウザ）の中にだけ保存されるよ。使うサービスの分だけ入れればOK。</div>
+      </div>
+
+      <div class="group">
+        <h3>API使用量（ざっくり目安）</h3>
+        <div id="usageBox"></div>
+        <div class="hint">トークン数はAPIからの報告値、金額はだいたいの単価から計算した<strong>目安</strong>だよ。正確な金額は各サービスの管理画面が確実なの。</div>
+        <button class="wide-btn" style="margin-top:10px" onclick="resetUsage()">カウンターをリセット</button>
+      </div>
+
+      <div class="group">
+        <h3>バックアップ</h3>
+        <button class="wide-btn gold" onclick="exportJson()">バックアップを書き出す（JSON）</button>
+        <button class="wide-btn" onclick="document.getElementById('importFile').click()">バックアップを読み込む</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJson(event)">
+        <div class="hint">会話・お部屋・知識ファイル・画像が入るよ。APIキーは安全のため入れてないから、読み込んだあとはキーだけ入れ直してね。</div>
+      </div>
+      <div class="group">
+        <h3>保存状態</h3>
+        <div class="hint" id="storageStatus"></div>
+      </div>
+      <button class="wide-btn gold" style="font-weight:600" onclick="saveAppSettings()">保存して戻る</button>
+      <div class="foot">ふかふかルーム v3.3 ─ つきちゃん工房</div>
+    </div>
+  </section>
+</div>
+
+<div id="drawerBg" class="drawerbg" onclick="closeDrawer()"></div>
+<aside id="drawer" class="drawer"><div id="drawerContent"></div></aside>
+
+<script>
+"use strict";
+/* ════════ 定数 ════════ */
+const KEY = "fukafuka_rooms_v1";
+const PALETTE = [
+  {name:"白金", hex:"#C9A85C"},{name:"桜",   hex:"#E8A7B6"},
+  {name:"氷青", hex:"#8FB8D8"},{name:"若葉", hex:"#93BD8F"},
+  {name:"藤",   hex:"#A99BD1"},{name:"杏",   hex:"#E5B07E"},
+  {name:"月白", hex:"#9AA5B1"},{name:"紅茶", hex:"#B07D5A"}
+];
+const MODELS = {
+  openai:     ["gpt-5.1","gpt-5","gpt-5-mini","gpt-4.1","gpt-4o","gpt-4o-mini","custom"],
+  anthropic:  ["claude-fable-5","claude-opus-4-8","claude-sonnet-4-6","claude-haiku-4-5","custom"],
+  gemini:     ["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-3-flash-preview","gemini-2.5-pro","custom"],
+  openrouter: ["deepseek/deepseek-chat","google/gemma-3-27b-it","anthropic/claude-sonnet-4.6","x-ai/grok-4","custom"]
+};
+const PROVIDER_LABEL = {openai:"OpenAI", anthropic:"Claude", gemini:"Gemini", openrouter:"OpenRouter"};
+const DEFAULT_EMOJI = ["🌙","☀️","🌸","🌊","🌿","🍯","⭐️"];
+/* 1Mトークンあたりのだいたいの単価（USD）[入力, 出力]。あくまで目安 */
+const PRICE = [
+  ["gpt-5.1",1.25,10],["gpt-5-mini",0.25,2],["gpt-5",1.25,10],
+  ["gpt-4o-mini",0.15,0.6],["gpt-4o",2.5,10],["gpt-4.1",2,8],
+  ["claude-opus",15,75],["claude-sonnet",3,15],["claude-haiku",1,5],["claude-fable",5,25],
+  ["gemini-2.5-pro",1.25,10],["gemini-2.5-flash",0.3,2.5],["gemini-2.0-flash",0.1,0.4]
+];
+
+/* ════════ 状態 ════════ */
+let persistent = true;
+let state = null;
+let currentRoomId = null;
+let inLiving = false;
+let sending = false;
+let pendingImages = [];
+let pendingFiles = [];
+let currentBgCss = "";
+
+function uid(p){ return p + Date.now() + "_" + Math.random().toString(36).slice(2,7); }
+function newConvo(title){
+  return { id: uid("c"), title: title||"新しい会話", archived:false, createdAt: Date.now(), messages: [] };
+}
+function newRoom(i){
+  const c = newConvo("はじまりの会話");
+  return {
+    id: uid("r"),
+    name: "お部屋 " + (i+1),
+    emoji: DEFAULT_EMOJI[i % DEFAULT_EMOJI.length],
+    avatar: null, showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "",
+    color: PALETTE[i % PALETTE.length].hex,
+    prompt: "", memory: "", files: [], joinGroup: false,
+    provider: "openai", model: "gpt-5.1", customModel: "",
+    temp: 0.8, maxTokens: 1600, ctx: 30,
+    convos: [c], activeConvo: c.id
+  };
+}
+function defaultState(){
+  return {
+    userName: "", appTitle: "ふかふかルーム", userAvatar: null,
+    keys: { openai:"", gemini:"", anthropic:"", openrouter:"" },
+    flags: { rag: true, clock: true },
+    ui: { fs: 14.5, av: 32, pos: "top", aiw: 100 },
+    usage: {},
+    living: { messages: [] },
+    rooms: Array.from({length:7}, (_,i)=>newRoom(i))
+  };
+}
+function migrate(s){
+  s.userAvatar = s.userAvatar || null;
+  s.keys = s.keys || {};
+  ["openai","gemini","anthropic","openrouter"].forEach(k=>{ if(!s.keys[k]) s.keys[k]=""; });
+  s.flags = s.flags || { rag:true, clock:true };
+  if(s.flags.rag===undefined) s.flags.rag = true;
+  if(s.flags.clock===undefined) s.flags.clock = true;
+  s.usage = s.usage || {};
+  s.ui = Object.assign({fs:14.5, av:32, pos:"top", aiw:100}, s.ui||{});
+  s.living = s.living || { messages: [] };
+  if(!Array.isArray(s.living.messages)) s.living.messages = [];
+  (s.rooms||[]).forEach(r=>{
+    if(r.avatar===undefined) r.avatar=null;
+    if(r.showIconAi===undefined) r.showIconAi = (r.showIcons===undefined ? true : !!r.showIcons);
+    if(r.showIconMe===undefined) r.showIconMe = (r.showIcons===undefined ? true : !!r.showIcons);
+    if(r.bg===undefined) r.bg=null;
+    if(r.bgFit===undefined) r.bgFit="cover";
+    if(r.bubbleMe===undefined) r.bubbleMe="";
+    if(r.bubbleAi===undefined) r.bubbleAi="";
+    if(r.joinGroup===undefined) r.joinGroup=false;
+    if(!Array.isArray(r.files)) r.files=[];
+    /* v1/v2 → v3：room直下のmessagesを会話に変換 */
+    if(!Array.isArray(r.convos)){
+      const c = newConvo("はじまりの会話");
+      c.messages = Array.isArray(r.messages) ? r.messages : [];
+      r.convos = [c];
+      r.activeConvo = c.id;
+      delete r.messages;
+    }
+    if(!r.activeConvo || !r.convos.find(c=>c.id===r.activeConvo)){
+      if(!r.convos.length) r.convos.push(newConvo("はじまりの会話"));
+      r.activeConvo = r.convos[0].id;
+    }
+    r.convos.forEach(c=>{
+      if(c.archived===undefined) c.archived=false;
+      (c.messages||[]).forEach(m=>{
+        if(!Array.isArray(m.images)) m.images=[];
+        if(!Array.isArray(m.atts)) m.atts=[];
+      });
+    });
+  });
+  s.living.messages.forEach(m=>{
+    if(!Array.isArray(m.images)) m.images=[];
+    if(!Array.isArray(m.atts)) m.atts=[];
+  });
+  return s;
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    state = migrate(raw ? JSON.parse(raw) : defaultState());
+    localStorage.setItem("__test__","1"); localStorage.removeItem("__test__");
+  }catch(e){
+    persistent = false;
+    state = state || migrate(defaultState());
+  }
+  if(!persistent) document.getElementById("storageBanner").classList.add("show");
+}
+function saveState(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch(e){
+    if(persistent){ persistent=false; document.getElementById("storageBanner").classList.add("show"); }
+    else alert("保存がいっぱいかも…。画像や古い会話を整理するか、バックアップを書き出してね。");
+  }
+}
+const room = () => state.rooms.find(r=>r.id===currentRoomId);
+const roomById = id => state.rooms.find(r=>r.id===id);
+function convo(){
+  const r = room(); if(!r) return null;
+  return r.convos.find(c=>c.id===r.activeConvo) || null;
+}
+const participants = () => state.rooms.filter(r=>r.joinGroup);
+
+/* ════════ 画像・ファイルユーティリティ ════════ */
+function resizeImage(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      const sc = Math.min(1, maxDim / Math.max(w, h));
+      w = Math.max(1, Math.round(w*sc)); h = Math.max(1, Math.round(h*sc));
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL("image/jpeg", quality||0.82));
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error("画像が読めなかった…")); };
+    img.src = url;
+  });
+}
+function splitDataUrl(u){
+  const comma = u.indexOf(",");
+  const head = u.slice(0, comma);
+  const mime = head.slice(5, head.indexOf(";"));
+  return { mime: mime, data: u.slice(comma+1) };
+}
+let pdfReady = null;
+function ensurePdfJs(){
+  if(window.pdfjsLib) return Promise.resolve();
+  if(pdfReady) return pdfReady;
+  pdfReady = new Promise((resolve, reject)=>{
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    s.onload = ()=>{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      resolve();
+    };
+    s.onerror = ()=>reject(new Error("PDF読み取り部品をネットから取れなかった…通信を確認してみて"));
+    document.head.appendChild(s);
+  });
+  return pdfReady;
+}
+async function pdfToText(file){
+  await ensurePdfJs();
+  const buf = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({data:buf}).promise;
+  let out = "";
+  for(let i=1; i<=pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const tc = await page.getTextContent();
+    out += tc.items.map(it=>it.str).join(" ") + "\n";
+  }
+  return out;
+}
+
+/* ════════ 表示切替 ════════ */
+function show(id){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  applyChatBg();
+  window.scrollTo(0,0);
+}
+function applyChatBg(){
+  const elB = document.getElementById("chatBg");
+  const active = document.querySelector(".view.active");
+  const inChat = active && active.id==="view-chat";
+  if(currentBgCss && inChat){
+    elB.style.background = currentBgCss;
+    elB.style.display = "block";
+  }else{
+    elB.style.display = "none";
+  }
+}
+function goHome(){ currentRoomId=null; inLiving=false; closeDrawer(); renderHome(); show("view-home"); }
+function openDrawer(){
+  buildDrawer();
+  document.getElementById("drawer").classList.add("show");
+  document.getElementById("drawerBg").classList.add("show");
+}
+function closeDrawer(){
+  document.getElementById("drawer").classList.remove("show");
+  document.getElementById("drawerBg").classList.remove("show");
+}
+function chatGear(){
+  if(inLiving) openDrawer();
+  else openRoomSettings();
+}
+
+/* ════════ 共通 ════════ */
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function fmt(s){
+  let t = esc(s);
+  t = t.replace(/\*\*([^*\n]+)\*\*/g,"<strong>$1</strong>");
+  return t;
+}
+function avatarHtml(r, sm){
+  const cls = "avatar" + (sm ? " sm" : "");
+  if(r && r.avatar) return '<span class="'+cls+'"><img src="'+r.avatar+'" alt=""></span>';
+  return '<span class="'+cls+'">'+esc((r&&r.emoji)||"✨")+'</span>';
+}
+function userAvatarHtml(sm){
+  const cls = "avatar" + (sm ? " sm" : "");
+  if(state.userAvatar) return '<span class="'+cls+'"><img src="'+state.userAvatar+'" alt=""></span>';
+  return '<span class="'+cls+'">🫧</span>';
+}
+function dateStr(t){
+  const d = new Date(t);
+  return (d.getMonth()+1)+"/"+d.getDate();
+}
+function clockLine(){
+  if(!state.flags.clock) return "";
+  const d = new Date();
+  const w = "日月火水木金土"[d.getDay()];
+  const z = n=>String(n).padStart(2,"0");
+  return "\n\n【現在日時】" + d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()+"（"+w+"） "+z(d.getHours())+":"+z(d.getMinutes());
+}
+
+/* ════════ ホーム ════════ */
+function renderHome(){
+  document.getElementById("appTitle").textContent = state.appTitle || "ふかふかルーム";
+  document.title = state.appTitle || "ふかふかルーム";
+  document.getElementById("homeSub").innerHTML =
+    '<span class="dot"></span>' + esc(state.userName ? state.userName + " のお部屋たち" : "ようこそ");
+  const list = document.getElementById("roomList");
+  list.innerHTML = "";
+
+  /* リビング */
+  const lv = document.createElement("button");
+  lv.className = "room-card";
+  lv.style.setProperty("--rc", "#B07D5A");
+  const ps = participants();
+  const lvLast = state.living.messages.length
+    ? state.living.messages[state.living.messages.length-1]
+    : null;
+  const lvPreview = lvLast ? (lvLast.content||"（画像）").slice(0,40)
+    : (ps.length ? ps.map(p=>p.name).join("、") + " が参加中" : "参加する住人をお部屋設定で選んでね");
+  lv.innerHTML =
+    '<span class="wash"></span><span class="avatar">🛋</span>' +
+    '<span class="room-meta"><span class="room-name">リビング</span>' +
+    '<span class="room-last" style="display:block">' + esc(lvPreview) + '</span></span>' +
+    '<span class="chev">›</span>';
+  lv.onclick = openLiving;
+  list.appendChild(lv);
+
+  state.rooms.forEach(r=>{
+    const ac = r.convos.find(c=>c.id===r.activeConvo) || r.convos[0];
+    const lastMsg = ac ? ac.messages.filter(m=>m.role!=="error").slice(-1)[0] : null;
+    const last = lastMsg ? (lastMsg.content || "（画像）") : "まだ会話がないお部屋";
+    const b = document.createElement("button");
+    b.className = "room-card";
+    b.style.setProperty("--rc", r.color);
+    b.innerHTML =
+      '<span class="wash"></span>' + avatarHtml(r, false) +
+      '<span class="room-meta"><span class="room-name">' + esc(r.name) +
+      (r.joinGroup ? ' <span style="font-size:10px;color:var(--ink-soft)">🛋参加中</span>' : '') + '</span>' +
+      '<span class="room-last" style="display:block">' + esc(last.slice(0,40)) + '</span></span>' +
+      '<span class="chev">›</span>';
+    b.onclick = ()=>openRoom(r.id);
+    list.appendChild(b);
+  });
+  const add = document.createElement("button");
+  add.className = "addroom";
+  add.textContent = "＋ 新しいお部屋をつくる";
+  add.onclick = ()=>{ state.rooms.push(newRoom(state.rooms.length)); saveState(); renderHome(); };
+  list.appendChild(add);
+}
+
+/* ════════ チャット表示 ════════ */
+function modelOf(r){ return r.model==="custom" ? (r.customModel||"") : r.model; }
+function openRoom(id){
+  currentRoomId = id; inLiving = false;
+  const r = room();
+  document.documentElement.style.setProperty("--accent", r.color);
+  const c = convo();
+  document.getElementById("chatName").textContent = (r.avatar ? "" : (r.emoji?r.emoji+" ":"")) + r.name;
+  document.getElementById("chatModel").textContent =
+    PROVIDER_LABEL[r.provider] + " · " + (modelOf(r)||"モデル未設定") + (c ? " · " + c.title : "");
+  currentBgCss = "";
+  if(r.bg){
+    const ov = 'linear-gradient(rgba(251,249,244,.74), rgba(251,249,244,.74)), ';
+    const fit = r.bgFit || "cover";
+    if(fit==="contain") currentBgCss = ov + 'url("'+r.bg+'") center/contain no-repeat var(--bg)';
+    else if(fit==="repeat") currentBgCss = ov + 'url("'+r.bg+'") top left/auto repeat';
+    else currentBgCss = ov + 'url("'+r.bg+'") center/cover no-repeat';
+  }
+  applyChatBg();
+  pendingImages = []; pendingFiles = [];
+  renderPending();
+  renderMsgs();
+  closeDrawer();
+  show("view-chat");
+}
+function openLiving(){
+  inLiving = true; currentRoomId = null;
+  document.documentElement.style.setProperty("--accent", "#B07D5A");
+  const ps = participants();
+  document.getElementById("chatName").textContent = "🛋 リビング";
+  document.getElementById("chatModel").textContent =
+    ps.length ? "参加：" + ps.map(p=>p.name).join("、") : "参加者がいないの（お部屋設定でONにしてね）";
+  document.getElementById("msgs").style.background = "";
+  currentBgCss = "";
+  pendingImages = []; pendingFiles = [];
+  renderPending();
+  renderMsgs();
+  closeDrawer();
+  show("view-chat");
+}
+function bubbleStyle(r, mine){
+  const c = r ? (mine ? r.bubbleMe : r.bubbleAi) : "";
+  return c ? ' style="background:'+esc(c)+';border-color:'+esc(c)+'"' : "";
+}
+function msgRowHtml(m, r, senderRoom){
+  const mine = inLiving ? (m.sender==="user") : (m.role==="user");
+  const src = senderRoom || r;
+  let body = "";
+  (m.images||[]).forEach(u=>{ body += '<img class="msgimg" src="'+u+'" alt="添付画像">'; });
+  (m.atts||[]).forEach(a=>{ body += '<span class="attchip">📄 '+esc(a.name)+'</span>'; });
+  if(m.content) body += '<span class="bubble '+(mine?"me-b":"ai-b")+'"'+bubbleStyle(src, mine)+'>'+fmt(m.content)+'</span>';
+  if(mine){
+    const showMe = inLiving ? true : (r ? r.showIconMe : true);
+    const inner = showMe ? userAvatarHtml(true) : "";
+    return '<div class="mrow me">' + inner + '<span class="mwrap">' + body + '</span></div>';
+  }
+  const showAi = inLiving ? true : (r ? r.showIconAi : true);
+  let head = "";
+  if(showAi || inLiving){
+    head = '<div class="aihead">' +
+      (showAi ? avatarHtml(src, true) : "") +
+      (inLiving ? '<span class="sender">'+esc(src ? src.name : "（おでかけ中の住人）")+'</span>' : "") +
+      '</div>';
+  }
+  return '<div class="mrowai">' + head + '<span class="mwrap ai">' + body + '</span></div>';
+}
+function renderMsgs(){
+  const box = document.getElementById("msgs");
+  box.innerHTML = "";
+  let html = "";
+  if(inLiving){
+    state.living.messages.forEach(m=>{
+      if(m.role==="error" || m.sender==="error"){
+        html += '<div class="sysmsg">'+esc(m.content)+'</div>'; return;
+      }
+      const sr = m.sender==="user" ? null : roomById(m.sender);
+      html += msgRowHtml(m, null, sr);
+    });
+  }else{
+    const r = room(); const c = convo();
+    if(!r || !c) return;
+    c.messages.forEach(m=>{
+      if(m.role==="error"){ html += '<div class="sysmsg">'+esc(m.content)+'</div>'; return; }
+      html += msgRowHtml(m, r, null);
+    });
+  }
+  box.innerHTML = html;
+  if(sending){
+    const t = document.createElement("div");
+    t.className = "typing";
+    t.innerHTML = esc(typingName||"") + " が考え中 <i>·</i><i>·</i><i>·</i>";
+    box.appendChild(t);
+  }
+  box.scrollTop = box.scrollHeight;
+}
+let typingName = "";
+
+/* ════════ 添付 ════════ */
+async function attachAny(ev){
+  const files = Array.from(ev.target.files||[]);
+  ev.target.value = "";
+  for(const f of files){
+    try{
+      if(f.type.startsWith("image/")){
+        if(pendingImages.length >= 4){ alert("一度に送れる画像は4枚までにしておこ？"); continue; }
+        pendingImages.push(await resizeImage(f, 1024, 0.82));
+      }else if(/\.pdf$/i.test(f.name) || f.type==="application/pdf"){
+        const text = await pdfToText(f);
+        if(text.length > 150000 && !confirm("「"+f.name+"」はかなり長い（"+Math.round(text.length/1000)+"k字）よ。お代もかかるけど、添付する？")) continue;
+        pendingFiles.push({name:f.name, text:text});
+      }else{
+        const text = await f.text();
+        if(text.length > 150000 && !confirm("「"+f.name+"」はかなり長い（"+Math.round(text.length/1000)+"k字）よ。お代もかかるけど、添付する？")) continue;
+        pendingFiles.push({name:f.name, text:text});
+      }
+    }catch(e){ alert(e.message||"ファイルが読めなかった…"); }
+  }
+  renderPending();
+}
+function renderPending(){
+  const row = document.getElementById("pendingRow");
+  row.innerHTML = "";
+  pendingImages.forEach((u,i)=>{
+    const c = document.createElement("span");
+    c.className = "pchip";
+    c.innerHTML = '<img src="'+u+'" alt="">';
+    const x = document.createElement("button");
+    x.textContent = "×";
+    x.onclick = ()=>{ pendingImages.splice(i,1); renderPending(); };
+    c.appendChild(x);
+    row.appendChild(c);
+  });
+  pendingFiles.forEach((f,i)=>{
+    const c = document.createElement("span");
+    c.className = "pchip";
+    c.innerHTML = '<span class="pf">📄 '+esc(f.name)+'</span>';
+    const x = document.createElement("button");
+    x.textContent = "×";
+    x.onclick = ()=>{ pendingFiles.splice(i,1); renderPending(); };
+    c.appendChild(x);
+    row.appendChild(c);
+  });
+  row.classList.toggle("show", pendingImages.length>0 || pendingFiles.length>0);
+}
+
+/* ════════ プロンプト組み立て ════════ */
+function buildSystem(r){
+  let s = r.prompt || "あなたは優しい会話パートナーです。";
+  if(r.memory) s += "\n\n【メモリ（大切な記憶）】\n" + r.memory;
+  (r.files||[]).forEach(f=>{
+    if(f.enabled) s += "\n\n【知識ファイル：" + f.name + "】\n" + f.text;
+  });
+  if(state.userName) s += "\n\nユーザーの名前は「" + state.userName + "」です。";
+  return s;
+}
+function contentOf(m){
+  let t = m.content || "";
+  (m.atts||[]).forEach(a=>{ t += (t?"\n\n":"") + "【添付ファイル："+a.name+"】\n"+a.text; });
+  return t;
+}
+function bigrams(s){
+  s = String(s||"").replace(/\s+/g,"");
+  const set = new Set();
+  for(let i=0;i<s.length-1;i++) set.add(s.slice(i,i+2));
+  return set;
+}
+function ragSnippets(r, query){
+  if(!state.flags.rag) return "";
+  const q = bigrams(query);
+  if(q.size < 2) return "";
+  const cur = convo();
+  const cands = [];
+  r.convos.forEach(c=>{
+    c.messages.forEach((m,idx)=>{
+      if(m.role!=="user" && m.role!=="assistant") return;
+      if(cur && c.id===cur.id && idx >= c.messages.length - r.ctx) return;
+      const b = bigrams(m.content);
+      let s = 0;
+      q.forEach(g=>{ if(b.has(g)) s++; });
+      if(s >= 3) cands.push({s:s, m:m});
+    });
+  });
+  if(!cands.length) return "";
+  cands.sort((a,b)=>b.s-a.s);
+  let out = "\n\n【過去の会話からの自動参照（関係ありそうな記憶）】";
+  cands.slice(0,4).forEach(p=>{
+    const who = p.m.role==="user" ? (state.userName||"ユーザー") : r.name;
+    out += "\n・（"+who+"）" + String(p.m.content||"").slice(0,180);
+  });
+  return out;
+}
+
+/* ════════ API呼び出し共通 ════════ */
+function addUsage(model, inTok, outTok){
+  if(!model) return;
+  if(!state.usage[model]) state.usage[model] = {i:0, o:0};
+  state.usage[model].i += (inTok||0);
+  state.usage[model].o += (outTok||0);
+}
+function mergeRoles(msgs){
+  const out = [];
+  msgs.forEach(m=>{
+    const last = out[out.length-1];
+    if(last && last.role===m.role){
+      last.content = (last.content?last.content+"\n\n":"") + (m.content||"");
+      last.images = (last.images||[]).concat(m.images||[]);
+    }else{
+      out.push({role:m.role, content:m.content||"", images:(m.images||[]).slice()});
+    }
+  });
+  if(out.length && out[0].role!=="user") out.unshift({role:"user", content:"（会話の続きです）", images:[]});
+  return out;
+}
+async function chat(r, system, msgs){
+  const norm = mergeRoles(msgs);
+  if(r.provider==="gemini") return chatGemini(r, system, norm);
+  if(r.provider==="anthropic") return chatAnthropic(r, system, norm);
+  return chatOpenAIStyle(r, system, norm);
+}
+async function chatOpenAIStyle(r, system, msgs){
+  const model = modelOf(r);
+  const isOR = r.provider==="openrouter";
+  const mm = msgs.map(m=>{
+    if(m.role==="user" && m.images.length){
+      const arr = [];
+      if(m.content) arr.push({type:"text", text:m.content});
+      m.images.forEach(u=>arr.push({type:"image_url", image_url:{url:u}}));
+      return {role:"user", content:arr};
+    }
+    return {role:m.role, content:m.content};
+  });
+  const body = { model: model, messages: [{role:"system", content:system}, ...mm] };
+  if(!isOR && /^(gpt-5|o\d)/.test(model)){
+    body.max_completion_tokens = r.maxTokens;
+  }else{
+    body.max_tokens = r.maxTokens;
+    body.temperature = r.temp;
+  }
+  const url = isOR ? "https://openrouter.ai/api/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
+  const res = await fetch(url, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+state.keys[r.provider] },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error((data.error && (data.error.message||data.error)) || (PROVIDER_LABEL[r.provider]+"エラー ("+res.status+")"));
+  if(data.usage) addUsage(model, data.usage.prompt_tokens, data.usage.completion_tokens);
+  const c = data.choices && data.choices[0] && data.choices[0].message;
+  if(!c || !c.content) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
+  return c.content;
+}
+async function chatAnthropic(r, system, msgs){
+  const mm = msgs.map(m=>{
+    if(m.role==="user" && m.images.length){
+      const arr = [];
+      m.images.forEach(u=>{
+        const p = splitDataUrl(u);
+        arr.push({type:"image", source:{type:"base64", media_type:p.mime, data:p.data}});
+      });
+      arr.push({type:"text", text:m.content||"（画像を見てね）"});
+      return {role:"user", content:arr};
+    }
+    return {role:m.role, content:m.content||"…"};
+  });
+  const body = {
+    model: modelOf(r),
+    max_tokens: r.maxTokens,
+    system: system,
+    temperature: Math.min(r.temp, 1),
+    messages: mm
+  };
+  const res = await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key": state.keys.anthropic,
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true"
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error((data.error && data.error.message) || ("Claudeエラー ("+res.status+")"));
+  if(data.usage) addUsage(modelOf(r), data.usage.input_tokens, data.usage.output_tokens);
+  const text = (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+  if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
+  return text;
+}
+async function chatGemini(r, system, msgs){
+  const model = modelOf(r);
+  const contents = msgs.map(m=>{
+    const parts = [];
+    if(m.content) parts.push({text:m.content});
+    if(m.role==="user") m.images.forEach(u=>{
+      const p = splitDataUrl(u);
+      parts.push({inline_data:{mime_type:p.mime, data:p.data}});
+    });
+    if(!parts.length) parts.push({text:"…"});
+    return { role: m.role==="assistant"?"model":"user", parts: parts };
+  });
+  const body = {
+    systemInstruction: { parts:[{text: system}] },
+    contents: contents,
+    generationConfig: { temperature: r.temp, maxOutputTokens: r.maxTokens }
+  };
+  if(/2\.5-flash/.test(model)) body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(state.keys.gemini),{
+    method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error((data.error && data.error.message) || ("Geminiエラー ("+res.status+")"));
+  if(data.usageMetadata) addUsage(model, data.usageMetadata.promptTokenCount, data.usageMetadata.candidatesTokenCount);
+  const cand = data.candidates && data.candidates[0];
+  const text = cand && cand.content && cand.content.parts ? cand.content.parts.map(p=>p.text||"").join("") : "";
+  if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
+  return text;
+}
+
+/* ════════ 送信 ════════ */
+async function sendMessage(){
+  if(sending) return;
+  if(inLiving) return sendLiving();
+  const r = room(); const c = convo();
+  if(!r || !c) return;
+  const input = document.getElementById("input");
+  const text = input.value.trim();
+  if(!text && !pendingImages.length && !pendingFiles.length) return;
+  const key = state.keys[r.provider];
+  if(!key){ alert(PROVIDER_LABEL[r.provider]+"のAPIキーがまだ入っていないみたい。アプリ設定（ホームの⚙）から入れてね。"); return; }
+  if(!modelOf(r)){ alert("モデルが選ばれていないよ。お部屋の設定を見てみて。"); return; }
+  input.value = "";
+  input.style.height = "auto";
+  const imgs = pendingImages.slice(); pendingImages = [];
+  const atts = pendingFiles.slice(); pendingFiles = [];
+  renderPending();
+  c.messages.push({role:"user", content:text, images:imgs, atts:atts, t:Date.now()});
+  if(c.title==="新しい会話" || c.title==="はじまりの会話"){
+    if(text) c.title = text.slice(0,16);
+  }
+  sending = true; typingName = r.name;
+  document.getElementById("sendBtn").disabled = true;
+  saveState(); renderMsgs();
+  try{
+    const system = buildSystem(r) + ragSnippets(r, text) + clockLine();
+    const hist = c.messages.filter(m=>m.role==="user"||m.role==="assistant").slice(-r.ctx)
+      .map(m=>({role:m.role, content:contentOf(m), images:m.images||[]}));
+    const reply = await chat(r, system, hist);
+    c.messages.push({role:"assistant", content:reply, images:[], atts:[], t:Date.now()});
+  }catch(e){
+    c.messages.push({role:"error", content:"⚠ "+(e.message||"通信に失敗しちゃった"), t:Date.now()});
+  }
+  sending = false;
+  document.getElementById("sendBtn").disabled = false;
+  saveState(); renderMsgs();
+}
+function groupSystem(r){
+  const names = participants().map(p=>p.name).join("、");
+  return buildSystem(r) +
+    "\n\n【リビング（グループチャット）】" +
+    "\nいまは共有スペース「リビング」で、ユーザーと複数の住人（" + names + "）が一緒に話しています。" +
+    "\nあなたは「" + r.name + "」です。他の参加者の発言は「名前：内容」の形で届きます。" +
+    "\nあなたの返事には名前の前置きを付けず、自分の発言だけを書いてください。" +
+    "\n会話の流れに自然に参加して、ひとり占めせず、簡潔に話してください。" +
+    clockLine();
+}
+function livingMsgsFor(r){
+  return state.living.messages.slice(-40)
+    .filter(m=>m.sender!=="error")
+    .map(m=>{
+      if(m.sender===r.id) return {role:"assistant", content:m.content||"", images:[]};
+      const nm = m.sender==="user" ? (state.userName||"ユーザー") : (roomById(m.sender) ? roomById(m.sender).name : "住人");
+      return {role:"user", content: nm + "：" + contentOf(m), images: m.sender==="user" ? (m.images||[]) : []};
+    });
+}
+async function sendLiving(){
+  const ps = participants();
+  const input = document.getElementById("input");
+  const text = input.value.trim();
+  if(!text && !pendingImages.length && !pendingFiles.length) return;
+  if(!ps.length){ alert("リビングに住人がいないの。各お部屋の設定で「リビングに参加」をONにしてね。"); return; }
+  const missing = ps.filter(p=>!state.keys[p.provider]);
+  if(missing.length){ alert(missing.map(p=>p.name).join("、")+" のAPIキー（"+missing.map(p=>PROVIDER_LABEL[p.provider]).join("、")+"）がまだみたい。"); return; }
+  input.value = "";
+  input.style.height = "auto";
+  const imgs = pendingImages.slice(); pendingImages = [];
+  const atts = pendingFiles.slice(); pendingFiles = [];
+  renderPending();
+  state.living.messages.push({sender:"user", content:text, images:imgs, atts:atts, t:Date.now()});
+  sending = true;
+  document.getElementById("sendBtn").disabled = true;
+  saveState(); renderMsgs();
+  for(const r of ps){
+    typingName = r.name;
+    renderMsgs();
+    try{
+      const reply = await chat(r, groupSystem(r), livingMsgsFor(r));
+      state.living.messages.push({sender:r.id, content:reply, images:[], atts:[], t:Date.now()});
+    }catch(e){
+      state.living.messages.push({sender:"error", content:"⚠ "+r.name+"："+(e.message||"通信に失敗しちゃった"), t:Date.now()});
+    }
+    saveState(); renderMsgs();
+  }
+  sending = false;
+  document.getElementById("sendBtn").disabled = false;
+  renderMsgs();
+}
+
+/* ════════ サイドバー ════════ */
+function buildDrawer(){
+  const box = document.getElementById("drawerContent");
+  box.innerHTML = "";
+  if(inLiving){
+    box.appendChild(el("h4", "🛋 リビングの住人"));
+    state.rooms.forEach(r=>{
+      const row = document.createElement("div");
+      row.className = "prow";
+      const av = document.createElement("span");
+      av.innerHTML = avatarHtml(r, true);
+      const nm = el("span", r.name); nm.className = "pn";
+      const t = document.createElement("input");
+      t.type = "checkbox"; t.className = "toggle"; t.checked = !!r.joinGroup;
+      t.onchange = ()=>{ r.joinGroup = t.checked; saveState(); openLiving(); openDrawer(); };
+      row.append(av, nm, t);
+      box.appendChild(row);
+    });
+    box.appendChild(el("h4", "リビングの記録"));
+    const sv = el("button", "💾 会話を .txt で保存"); sv.className = "wide-btn gold";
+    sv.onclick = ()=>{ exportLivingTxt(); };
+    const cl = el("button", "履歴をぜんぶ消す"); cl.className = "wide-btn red";
+    cl.onclick = ()=>{
+      if(confirm("リビングの会話をぜんぶ消すよ。ほんとにいい？")){
+        state.living.messages = []; saveState(); renderMsgs(); closeDrawer();
+      }
+    };
+    box.append(sv, cl);
+    const hint = el("div", "※住人が増えるほど、1回の発言でみんなが順番にお返事する＝お代も人数分かかるよ。2〜3人くらいがおすすめ。");
+    hint.className = "hint";
+    box.appendChild(hint);
+    return;
+  }
+  const r = room(); if(!r) return;
+  box.appendChild(el("h4", "💬 " + r.name + " との会話"));
+  const nb = el("button", "＋ 新しい会話をはじめる"); nb.className = "wide-btn gold";
+  nb.onclick = ()=>{
+    const c = newConvo();
+    r.convos.push(c);
+    r.activeConvo = c.id;
+    saveState(); openRoom(r.id);
+  };
+  box.appendChild(nb);
+  const act = r.convos.filter(c=>!c.archived).sort((a,b)=>b.createdAt-a.createdAt);
+  const arc = r.convos.filter(c=>c.archived).sort((a,b)=>b.createdAt-a.createdAt);
+  act.forEach(c=>box.appendChild(convoItem(r,c)));
+  if(arc.length){
+    box.appendChild(el("h4", "📦 アーカイブ"));
+    arc.forEach(c=>box.appendChild(convoItem(r,c)));
+  }
+}
+function convoItem(r, c){
+  const d = document.createElement("div");
+  d.className = "citem" + (c.id===r.activeConvo ? " cur" : "");
+  const t = document.createElement("button");
+  t.className = "ct";
+  t.innerHTML = esc(c.title) + '<span class="cd">' + dateStr(c.createdAt) + ' · ' + c.messages.length + '件</span>';
+  t.onclick = ()=>{ r.activeConvo = c.id; saveState(); openRoom(r.id); };
+  const sv = miniBtn("💾", "テキストで保存", ()=>exportConvoTxt(r, c));
+  const ar = miniBtn(c.archived?"📤":"📦", c.archived?"アーカイブから出す":"アーカイブへ", ()=>{
+    c.archived = !c.archived;
+    if(c.archived && r.activeConvo===c.id){
+      const alt = r.convos.find(x=>!x.archived);
+      if(alt) r.activeConvo = alt.id;
+      else { const nc = newConvo(); r.convos.push(nc); r.activeConvo = nc.id; }
+    }
+    saveState(); buildDrawer();
+  });
+  const del = miniBtn("🗑", "削除", ()=>{
+    if(!confirm("会話「"+c.title+"」を削除するよ。戻せないけどいい？")) return;
+    r.convos = r.convos.filter(x=>x.id!==c.id);
+    if(!r.convos.length){ const nc = newConvo(); r.convos.push(nc); }
+    if(r.activeConvo===c.id) r.activeConvo = r.convos[0].id;
+    saveState(); openRoom(r.id); openDrawer();
+  });
+  d.append(t, sv, ar, del);
+  return d;
+}
+function miniBtn(icon, label, fn){
+  const b = document.createElement("button");
+  b.className = "mini"; b.textContent = icon; b.title = label; b.setAttribute("aria-label", label);
+  b.onclick = fn;
+  return b;
+}
+function el(tag, text){
+  const e = document.createElement(tag);
+  e.textContent = text;
+  return e;
+}
+
+/* ════════ 書き出し ════════ */
+function download(filename, text, type){
+  const blob = new Blob([text], {type:type||"text/plain"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+}
+function stamp(){
+  const d = new Date();
+  const z = n=>String(n).padStart(2,"0");
+  return d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+"_"+z(d.getHours())+z(d.getMinutes());
+}
+function exportConvoTxt(r, c){
+  const you = state.userName || "わたし";
+  let out = "■ " + r.name + " との会話「" + c.title + "」\n\n";
+  c.messages.forEach(m=>{
+    if(m.role==="user") out += you + "：\n" + noteAtts(m) + (m.content||"") + "\n\n";
+    else if(m.role==="assistant") out += r.name + "：\n" + (m.content||"") + "\n\n";
+  });
+  download(r.name+"_"+c.title.slice(0,10)+"_"+stamp()+".txt", out);
+}
+function exportLivingTxt(){
+  const you = state.userName || "わたし";
+  let out = "■ リビングの会話\n\n";
+  state.living.messages.forEach(m=>{
+    if(m.sender==="error") return;
+    const nm = m.sender==="user" ? you : (roomById(m.sender)?roomById(m.sender).name:"住人");
+    out += nm + "：\n" + noteAtts(m) + (m.content||"") + "\n\n";
+  });
+  download("リビング_"+stamp()+".txt", out);
+}
+function noteAtts(m){
+  let s = "";
+  if(m.images && m.images.length) s += "（画像 "+m.images.length+"枚を添付）\n";
+  (m.atts||[]).forEach(a=>{ s += "（ファイル添付："+a.name+"）\n"; });
+  return s;
+}
+
+/* ════════ お部屋設定 ════════ */
+let editColor = null, editAvatar = null, editBg = null, editFiles = null;
+function openRoomSettings(){
+  const r = room(); if(!r) return;
+  document.getElementById("rName").value = r.name;
+  document.getElementById("rEmoji").value = r.emoji;
+  document.getElementById("rPrompt").value = r.prompt;
+  document.getElementById("rMemory").value = r.memory;
+  document.getElementById("rProvider").value = r.provider;
+  fillModels(r.provider, r.model);
+  document.getElementById("rCustomModel").value = r.customModel;
+  document.getElementById("rTemp").value = r.temp;
+  document.getElementById("rMax").value = r.maxTokens;
+  document.getElementById("rCtx").value = r.ctx;
+  document.getElementById("rShowIconAi").checked = r.showIconAi!==false;
+  document.getElementById("rShowIconMe").checked = r.showIconMe!==false;
+  document.getElementById("rBgFit").value = r.bgFit || "cover";
+  document.getElementById("rJoinGroup").checked = !!r.joinGroup;
+  document.getElementById("rBubbleMe").value = r.bubbleMe || mixHex(r.color, .14);
+  document.getElementById("rBubbleAi").value = r.bubbleAi || "#FFFFFF";
+  editColor = r.color;
+  editAvatar = r.avatar;
+  editBg = r.bg;
+  editFiles = JSON.parse(JSON.stringify(r.files||[]));
+  renderSwatches(); avatarPreview(); bgStatus(); renderFileList(); sliderLabels(); modelSelChanged();
+  show("view-room");
+}
+function mixHex(hex, ratio){
+  const n = parseInt(hex.slice(1),16);
+  const r = (n>>16)&255, g=(n>>8)&255, b=n&255;
+  const mix = v=>Math.round(255 - (255-v)*ratio);
+  return "#" + [mix(r),mix(g),mix(b)].map(v=>v.toString(16).padStart(2,"0")).join("");
+}
+function renderSwatches(){
+  const box = document.getElementById("rSwatches");
+  box.innerHTML = "";
+  PALETTE.forEach(p=>{
+    const b = document.createElement("button");
+    b.className = "sw" + (p.hex===editColor?" sel":"");
+    b.style.background = p.hex;
+    b.title = p.name;
+    b.onclick = ()=>{ editColor = p.hex; renderSwatches(); };
+    box.appendChild(b);
+  });
+}
+function avatarPreview(){
+  const el = document.getElementById("rAvatarPreview");
+  if(editAvatar) el.innerHTML = '<img src="'+editAvatar+'" alt="">';
+  else el.textContent = document.getElementById("rEmoji").value || "✨";
+}
+async function setAvatar(ev){
+  const f = ev.target.files[0]; ev.target.value="";
+  if(!f) return;
+  try{ editAvatar = await resizeImage(f, 256, 0.85); avatarPreview(); }
+  catch(e){ alert(e.message); }
+}
+function clearAvatar(){ editAvatar = null; avatarPreview(); }
+async function setBg(ev){
+  const f = ev.target.files[0]; ev.target.value="";
+  if(!f) return;
+  try{ editBg = await resizeImage(f, 1600, 0.8); bgStatus(); }
+  catch(e){ alert(e.message); }
+}
+function clearBg(){ editBg = null; bgStatus(); }
+function bgStatus(){
+  document.getElementById("rBgStatus").textContent = editBg ? "設定中" : "なし";
+}
+function resetBubbles(){
+  document.getElementById("rBubbleMe").value = mixHex(editColor||"#C9A85C", .14);
+  document.getElementById("rBubbleAi").value = "#FFFFFF";
+}
+async function addKnowledge(ev){
+  const files = Array.from(ev.target.files||[]);
+  ev.target.value = "";
+  for(const f of files){
+    const text = await f.text();
+    editFiles.push({ name: f.name, text: text, enabled: true });
+  }
+  renderFileList();
+}
+function renderFileList(){
+  const box = document.getElementById("fileList");
+  box.innerHTML = "";
+  editFiles.forEach((f,i)=>{
+    const d = document.createElement("div");
+    d.className = "fileitem";
+    const t = document.createElement("input");
+    t.type = "checkbox"; t.className = "toggle"; t.checked = !!f.enabled;
+    t.onchange = ()=>{ f.enabled = t.checked; };
+    const name = document.createElement("span");
+    name.className = "fn"; name.textContent = f.name;
+    const ct = document.createElement("span");
+    ct.className = "fc"; ct.textContent = Math.round(f.text.length/1000) + "k字";
+    const del = document.createElement("button");
+    del.className = "smallbtn"; del.textContent = "削除";
+    del.onclick = ()=>{ if(confirm("「"+f.name+"」を外すよ。いい？")){ editFiles.splice(i,1); renderFileList(); } };
+    d.append(t, name, ct, del);
+    box.appendChild(d);
+  });
+}
+function fillModels(provider, selected){
+  const sel = document.getElementById("rModel");
+  sel.innerHTML = "";
+  MODELS[provider].forEach(m=>{
+    const o = document.createElement("option");
+    o.value = m;
+    o.textContent = m==="custom" ? "カスタム（自分で入力）" : m;
+    sel.appendChild(o);
+  });
+  sel.value = MODELS[provider].includes(selected) ? selected : MODELS[provider][0];
+  sel.onchange = modelSelChanged;
+}
+function providerChanged(){
+  fillModels(document.getElementById("rProvider").value, null);
+  modelSelChanged();
+}
+function modelSelChanged(){
+  const isCustom = document.getElementById("rModel").value==="custom";
+  document.getElementById("customModelField").style.display = isCustom ? "block" : "none";
+}
+function sliderLabels(){
+  const t = parseFloat(document.getElementById("rTemp").value);
+  document.getElementById("tempVal").textContent =
+    t<=0.3 ? "落ち着き "+t : t<=0.8 ? "標準 "+t : "自由 "+t;
+  document.getElementById("maxVal").textContent = document.getElementById("rMax").value + " tokens";
+  document.getElementById("ctxVal").textContent = "直近 " + document.getElementById("rCtx").value + " 件";
+}
+function saveRoomSettings(){
+  const r = room(); if(!r) return;
+  r.name = document.getElementById("rName").value.trim() || r.name;
+  r.emoji = document.getElementById("rEmoji").value.trim() || "✨";
+  r.prompt = document.getElementById("rPrompt").value;
+  r.memory = document.getElementById("rMemory").value;
+  r.provider = document.getElementById("rProvider").value;
+  r.model = document.getElementById("rModel").value;
+  r.customModel = document.getElementById("rCustomModel").value.trim();
+  r.temp = parseFloat(document.getElementById("rTemp").value);
+  r.maxTokens = parseInt(document.getElementById("rMax").value,10);
+  r.ctx = parseInt(document.getElementById("rCtx").value,10);
+  r.showIconAi = document.getElementById("rShowIconAi").checked;
+  r.showIconMe = document.getElementById("rShowIconMe").checked;
+  r.bgFit = document.getElementById("rBgFit").value;
+  r.joinGroup = document.getElementById("rJoinGroup").checked;
+  r.bubbleMe = document.getElementById("rBubbleMe").value;
+  r.bubbleAi = document.getElementById("rBubbleAi").value;
+  r.color = editColor || r.color;
+  r.avatar = editAvatar;
+  r.bg = editBg;
+  r.files = editFiles;
+  saveState();
+  openRoom(r.id);
+}
+function closeRoomSettings(){ openRoom(currentRoomId); }
+function deleteRoom(){
+  const r = room(); if(!r) return;
+  if(confirm("お部屋「"+r.name+"」を会話ごと削除するよ。ほんとにほんとにいい？")){
+    state.rooms = state.rooms.filter(x=>x.id!==r.id);
+    saveState(); goHome();
+  }
+}
+
+/* ════════ アプリ設定 ════════ */
+function openAppSettings(){
+  document.getElementById("aUserName").value = state.userName;
+  document.getElementById("aAppTitle").value = state.appTitle;
+  document.getElementById("aKeyOpenai").value = state.keys.openai;
+  document.getElementById("aKeyAnthropic").value = state.keys.anthropic;
+  document.getElementById("aKeyGemini").value = state.keys.gemini;
+  document.getElementById("aKeyOpenrouter").value = state.keys.openrouter;
+  document.getElementById("aRag").checked = !!state.flags.rag;
+  document.getElementById("aClock").checked = !!state.flags.clock;
+  document.getElementById("aFs").value = state.ui.fs;
+  document.getElementById("aAv").value = state.ui.av;
+  document.getElementById("aPos").value = state.ui.pos;
+  document.getElementById("aAiw").value = state.ui.aiw;
+  uiLabels();
+  userAvatarPreview();
+  renderUsage();
+  const used = Math.round(JSON.stringify(state).length/1024);
+  document.getElementById("storageStatus").textContent = persistent
+    ? "この端末のブラウザに保存中。お部屋 " + state.rooms.length + " 室、使用量 約" + used + "KB（目安：5,000KBくらいまで）。"
+    : "いまは一時メモリのみ（閉じると消えちゃう）。ファイルをダウンロードしてブラウザで開いてね。";
+  show("view-app");
+}
+function priceOf(model){
+  for(const p of PRICE){ if(model.indexOf(p[0])===0 || model.indexOf(p[0])>=0 && model.includes(p[0])) return p; }
+  return null;
+}
+function renderUsage(){
+  const box = document.getElementById("usageBox");
+  const keys = Object.keys(state.usage);
+  if(!keys.length){ box.innerHTML = '<div class="hint" style="margin:0">まだ使用記録はないよ。会話をはじめると、ここに積もっていくの。</div>'; return; }
+  let html = "";
+  let total = 0; let hasUnknown = false;
+  keys.forEach(k=>{
+    const u = state.usage[k];
+    const p = priceOf(k);
+    let cost = "—";
+    if(p){ const usd = u.i/1e6*p[1] + u.o/1e6*p[2]; total += usd; cost = "$" + usd.toFixed(3); }
+    else hasUnknown = true;
+    html += '<div class="usage-row"><span class="um">'+esc(k)+'</span>' +
+      '<span>入 '+(u.i/1000).toFixed(1)+'k</span><span>出 '+(u.o/1000).toFixed(1)+'k</span>' +
+      '<span style="min-width:64px;text-align:right">'+cost+'</span></div>';
+  });
+  html += '<div class="usage-row" style="font-weight:600"><span class="um">合計（単価がわかる分）</span><span></span><span></span>' +
+    '<span style="min-width:64px;text-align:right">$'+total.toFixed(3)+'</span></div>';
+  if(hasUnknown) html += '<div class="hint">「—」のモデルは単価表にないから、トークン数だけ数えてるよ（OpenRouterは特にモデル次第なの）。</div>';
+  box.innerHTML = html;
+}
+function resetUsage(){
+  if(confirm("使用量カウンターをゼロに戻すよ。いい？")){
+    state.usage = {}; saveState(); renderUsage();
+  }
+}
+function userAvatarPreview(){
+  const el = document.getElementById("aAvatarPreview");
+  if(state.userAvatar) el.innerHTML = '<img src="'+state.userAvatar+'" alt="">';
+  else el.textContent = "🫧";
+}
+async function setUserAvatar(ev){
+  const f = ev.target.files[0]; ev.target.value="";
+  if(!f) return;
+  try{ state.userAvatar = await resizeImage(f, 256, 0.85); userAvatarPreview(); }
+  catch(e){ alert(e.message); }
+}
+function clearUserAvatar(){ state.userAvatar = null; userAvatarPreview(); }
+function togglePw(id){
+  const el = document.getElementById(id);
+  el.type = el.type==="password" ? "text" : "password";
+}
+function saveAppSettings(){
+  state.userName = document.getElementById("aUserName").value.trim();
+  state.appTitle = document.getElementById("aAppTitle").value.trim() || "ふかふかルーム";
+  state.keys.openai = document.getElementById("aKeyOpenai").value.trim();
+  state.keys.anthropic = document.getElementById("aKeyAnthropic").value.trim();
+  state.keys.gemini = document.getElementById("aKeyGemini").value.trim();
+  state.keys.openrouter = document.getElementById("aKeyOpenrouter").value.trim();
+  state.flags.rag = document.getElementById("aRag").checked;
+  state.flags.clock = document.getElementById("aClock").checked;
+  state.ui.fs = parseFloat(document.getElementById("aFs").value);
+  state.ui.av = parseInt(document.getElementById("aAv").value,10);
+  state.ui.pos = document.getElementById("aPos").value;
+  state.ui.aiw = parseInt(document.getElementById("aAiw").value,10);
+  applyUi();
+  saveState(); goHome();
+}
+function applyUi(){
+  const root = document.documentElement.style;
+  root.setProperty("--msg-fs", state.ui.fs + "px");
+  root.setProperty("--av-sm", state.ui.av + "px");
+  root.setProperty("--av-align", state.ui.pos==="bottom" ? "flex-end" : "flex-start");
+  root.setProperty("--ai-w", state.ui.aiw + "%");
+}
+function uiLabels(){
+  document.getElementById("aFsVal").textContent = document.getElementById("aFs").value + "px";
+  document.getElementById("aAvVal").textContent = document.getElementById("aAv").value + "px";
+  document.getElementById("aAiwVal").textContent = document.getElementById("aAiw").value + "%";
+}
+
+/* ════════ バックアップ ════════ */
+function exportJson(){
+  const copy = JSON.parse(JSON.stringify(state));
+  copy.keys = {openai:"", gemini:"", anthropic:"", openrouter:""};
+  download("fukafuka_backup_"+stamp()+".json", JSON.stringify(copy), "application/json");
+}
+function importJson(ev){
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data || !Array.isArray(data.rooms)) throw new Error("形式がちがうみたい");
+      if(!confirm("いまのお部屋と会話を、このバックアップの内容に置き換えるよ。いい？")) return;
+      const keys = state.keys;
+      state = migrate(data);
+      const hasKeys = state.keys.openai||state.keys.gemini||state.keys.anthropic||state.keys.openrouter;
+      if(!hasKeys) state.keys = keys;
+      saveState(); goHome();
+      alert("読み込み完了！おかえり。");
+    }catch(e){ alert("読み込めなかった…："+e.message); }
+  };
+  reader.readAsText(file);
+  ev.target.value = "";
+}
+
+/* ════════ 起動 ════════ */
+loadState();
+applyUi();
+document.getElementById("input").addEventListener("input", function(){
+  this.style.height = "auto";
+  this.style.height = Math.min(this.scrollHeight, 170) + "px";
+});
+renderHome();
+</script>
+</body>
+</html>

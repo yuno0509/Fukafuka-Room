@@ -276,6 +276,10 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
             <button class="smallbtn" onclick="resetBubbles()">テーマに戻す</button>
           </div>
         </div>
+        <div class="field"><label>吹き出しの透け感</label>
+          <div class="slider-line"><input type="range" id="rBubbleAlpha" min="0.35" max="1" step="0.05" oninput="sliderLabels()"><span class="slider-val" id="alphaVal"></span></div>
+          <div class="hint">背景画像を活かしたい時は下げてみて。文字は透けないから読みやすさはそのまま。</div>
+        </div>
       </div>
 
       <div class="group">
@@ -420,7 +424,7 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
         <div class="hint" id="storageStatus"></div>
       </div>
       <button class="wide-btn gold" style="font-weight:600" onclick="saveAppSettings()">保存して戻る</button>
-      <div class="foot">ふかふかルーム v3.3 ─ つきちゃん工房</div>
+      <div class="foot">ふかふかルーム v3.4 ─ つきちゃん工房</div>
     </div>
   </section>
 </div>
@@ -474,7 +478,7 @@ function newRoom(i){
     id: uid("r"),
     name: "お部屋 " + (i+1),
     emoji: DEFAULT_EMOJI[i % DEFAULT_EMOJI.length],
-    avatar: null, showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "",
+    avatar: null, showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
     color: PALETTE[i % PALETTE.length].hex,
     prompt: "", memory: "", files: [], joinGroup: false,
     provider: "openai", model: "gpt-5.1", customModel: "",
@@ -512,6 +516,7 @@ function migrate(s){
     if(r.bgFit===undefined) r.bgFit="cover";
     if(r.bubbleMe===undefined) r.bubbleMe="";
     if(r.bubbleAi===undefined) r.bubbleAi="";
+    if(r.bubbleAlpha===undefined) r.bubbleAlpha=1;
     if(r.joinGroup===undefined) r.joinGroup=false;
     if(!Array.isArray(r.files)) r.files=[];
     /* v1/v2 → v3：room直下のmessagesを会話に変換 */
@@ -773,9 +778,20 @@ function openLiving(){
   closeDrawer();
   show("view-chat");
 }
+function hexToRgba(hex, a){
+  if(!/^#[0-9a-fA-F]{6}$/.test(hex)) return hex;
+  const n = parseInt(hex.slice(1),16);
+  return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")";
+}
 function bubbleStyle(r, mine){
-  const c = r ? (mine ? r.bubbleMe : r.bubbleAi) : "";
-  return c ? ' style="background:'+esc(c)+';border-color:'+esc(c)+'"' : "";
+  if(!r) return "";
+  const a = (r.bubbleAlpha===undefined) ? 1 : r.bubbleAlpha;
+  const custom = mine ? r.bubbleMe : r.bubbleAi;
+  if(!custom && a >= 1) return "";
+  const base = custom || (mine ? mixHex(r.color, .14) : "#FFFFFF");
+  const bg = hexToRgba(base, a);
+  const bd = hexToRgba(custom || (mine ? mixHex(r.color, .3) : "#EDE7DA"), Math.min(1, a + .15));
+  return ' style="background:'+esc(bg)+';border-color:'+esc(bd)+'"';
 }
 function msgRowHtml(m, r, senderRoom){
   const mine = inLiving ? (m.sender==="user") : (m.role==="user");
@@ -1290,6 +1306,7 @@ function openRoomSettings(){
   document.getElementById("rJoinGroup").checked = !!r.joinGroup;
   document.getElementById("rBubbleMe").value = r.bubbleMe || mixHex(r.color, .14);
   document.getElementById("rBubbleAi").value = r.bubbleAi || "#FFFFFF";
+  document.getElementById("rBubbleAlpha").value = (r.bubbleAlpha===undefined) ? 1 : r.bubbleAlpha;
   editColor = r.color;
   editAvatar = r.avatar;
   editBg = r.bg;
@@ -1396,6 +1413,7 @@ function sliderLabels(){
     t<=0.3 ? "落ち着き "+t : t<=0.8 ? "標準 "+t : "自由 "+t;
   document.getElementById("maxVal").textContent = document.getElementById("rMax").value + " tokens";
   document.getElementById("ctxVal").textContent = "直近 " + document.getElementById("rCtx").value + " 件";
+  document.getElementById("alphaVal").textContent = Math.round(parseFloat(document.getElementById("rBubbleAlpha").value)*100) + "%";
 }
 function saveRoomSettings(){
   const r = room(); if(!r) return;
@@ -1415,6 +1433,7 @@ function saveRoomSettings(){
   r.joinGroup = document.getElementById("rJoinGroup").checked;
   r.bubbleMe = document.getElementById("rBubbleMe").value;
   r.bubbleAi = document.getElementById("rBubbleAi").value;
+  r.bubbleAlpha = parseFloat(document.getElementById("rBubbleAlpha").value);
   r.color = editColor || r.color;
   r.avatar = editAvatar;
   r.bg = editBg;

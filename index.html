@@ -80,6 +80,12 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 .mwrap.ai{max-width:var(--ai-w,100%)}
 .mrow.me{flex-direction:row-reverse}
 .bubble{padding:10px 14px;border-radius:18px;white-space:pre-wrap;word-break:break-word;font-size:var(--msg-fs,14.5px)}
+.mbtns{display:inline-flex;gap:5px;margin-top:3px}
+.mrow.me .mbtns{align-self:flex-end}
+.mbtns .cpy{margin-top:0}
+.cpy{display:inline-block;margin-top:3px;font-size:10.5px;padding:2px 9px;border:none;border-radius:999px;background:rgba(120,110,95,.14);color:inherit;opacity:.4;cursor:pointer;font-family:inherit}
+.cpy:active,.cpy:hover{opacity:.85}
+.mrow.me .cpy{align-self:flex-end}
 .mwrap{display:flex;flex-direction:column;gap:6px;max-width:78%}
 .mrow.me .mwrap{align-items:flex-end}
 .sender{font-size:11px;color:var(--ink-soft);margin:0 4px}
@@ -166,6 +172,44 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
   background:#FFF6E5;border:1px solid #F0E0BD;color:#8A6D2F;display:none}
 .banner.show{display:block}
 .foot{text-align:center;font-size:11px;color:var(--ink-soft);padding:18px 0 28px}
+/* ── 声かけトースト ── */
+.toastbox{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;width:min(92vw,420px);pointer-events:none}
+.toast{pointer-events:auto;position:relative;background:#FFFDF7;border:1px solid #EAD9A8;border-radius:14px;box-shadow:0 6px 20px rgba(120,90,30,.18);padding:10px 30px 10px 14px;font-size:13.5px;line-height:1.5;color:#5A4A28;cursor:pointer;animation:tin .25s ease}
+.toast .tclose{position:absolute;top:4px;right:6px;border:none;background:none;color:#B8A87E;font-size:15px;padding:4px;cursor:pointer;line-height:1}
+.toast .tact{display:inline-block;margin-top:7px;margin-right:6px;font-size:12px;padding:4px 12px;border-radius:999px;background:#F3E8C8;border:none;color:#6B5A2E;font-family:inherit;cursor:pointer}
+.toastbox.hid{display:none}
+.toast b{color:#8A6A1F}
+.toast .tx{display:block;margin-top:2px}
+@keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.notemsg{align-self:center;font-size:12px;color:#7A6A3A;background:#FBF6E6;border:1px solid #EDE2C0;border-radius:12px;padding:6px 12px;max-width:92%}
+/* ── 記録棚 ── */
+.shelfbg{position:fixed;inset:0;background:rgba(60,48,20,.35);z-index:250;display:none}
+.shelfbg.show{display:block}
+.shelf{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:260;width:min(94vw,560px);max-height:84vh;overflow:auto;background:#FFFDF7;border:1px solid #EADFC8;border-radius:18px;box-shadow:0 12px 40px rgba(80,60,20,.25);padding:16px;display:none}
+.shelf.show{display:block}
+.shelf h3{margin:0 0 10px;font-size:16px;color:#6B5A2E}
+.ritem{border:1px solid #EFE7D2;border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#FFFEFA}
+.ritem .rt{font-weight:600;font-size:13.5px;color:#5A4A28}
+.ritem .rd{font-size:11.5px;color:#A99B78;margin:2px 0 6px}
+.ritem pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;line-height:1.6;background:#FBF8EE;border-radius:8px;padding:8px;margin:6px 0;max-height:260px;overflow:auto}
+.ritem .rbtns{display:flex;gap:6px;flex-wrap:wrap}
+.remrow{display:flex;align-items:center;gap:8px;border:1px solid #EFE7D2;border-radius:10px;padding:7px 10px;margin-bottom:6px;font-size:12.5px;background:#FFFEFA}
+.remrow .ri{flex:1;min-width:0}
+.remrow .rn{font-weight:600;color:#5A4A28}
+.remrow .rw{font-size:11px;color:#A99B78}
+/* ── ホームの立ち絵とステータス ── */
+.room-card .sprite{width:76px;height:76px;flex:none;object-fit:contain;border-radius:12px}
+.room-card .sprite.pix{image-rendering:pixelated}
+.room-status{display:block;font-size:12px;color:#8A6A1F;margin-top:1px}
+.spedit{display:flex;align-items:center;gap:10px}
+.spedit img{width:64px;height:64px;object-fit:contain;border-radius:10px;background:#FBF8EE;border:1px solid #EFE7D2}
+.spedit .noimg{width:64px;height:64px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#FBF8EE;border:1px dashed #E0D5B8;color:#C0B48E;font-size:11px}
+/* ── 記録棚タブ ── */
+.shelftabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.shelftabs button{border:1px solid #EADFC8;background:#FFFEFA;border-radius:999px;padding:5px 12px;font-size:12.5px;color:#8A7A4E;cursor:pointer}
+.shelftabs button.on{background:#F3E8C8;color:#6B5A2E;font-weight:600}
+.bt{position:absolute;right:-2px;bottom:-20px}
+
 </style>
 </head>
 <body>
@@ -229,6 +273,27 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
           </div>
           <input type="file" id="rAvatarFile" accept="image/*" style="display:none" onchange="setAvatar(event)">
           <div class="hint">画像があれば画像、なければ絵文字が使われるよ。</div>
+        </div>
+        <div class="field"><label>ホームの立ち絵・ミニキャラ</label>
+          <div class="spedit">
+            <span id="rSpritePreview"></span>
+            <div style="flex:1">
+              <div class="row" style="margin-bottom:8px">
+                <button class="smallbtn" onclick="document.getElementById('rSpriteFile').click()">画像を選ぶ</button>
+                <button class="smallbtn" onclick="clearSprite()">画像を外す</button>
+              </div>
+              <div class="row">
+                <label style="margin:0;font-size:12.5px">ドット絵モード（くっきり拡大）</label>
+                <input type="checkbox" class="toggle" id="rPixel" onchange="spritePreview()">
+              </div>
+            </div>
+          </div>
+          <input type="file" id="rSpriteFile" accept="image/*" style="display:none" onchange="setSprite(event)">
+          <div class="hint">ホーム画面のカードに大きめに表示されるよ。背景が透明なPNGだと特にかわいい。</div>
+        </div>
+        <div class="field"><label>時間帯ステータス（ホームに表示）</label>
+          <textarea id="rStatus" rows="4" placeholder="0-6 🌙 ぐぅ…すやすや&#10;6-9 ☕ 紅茶の準備中&#10;9-23 📖 起きてるよ、おいで&#10;23-24 🕯 そろそろおやすみの支度"></textarea>
+          <div class="hint">1行に「開始時-終了時 表示する文」の形式で書いてね（24時間表記）。今の時刻に合う行がホームに出るよ。空っぽなら非表示。</div>
         </div>
         <div class="field"><label>テーマカラー</label><div class="swatches" id="rSwatches"></div></div>
         <div class="field">
@@ -317,6 +382,19 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
           <div class="slider-line"><input type="range" id="rCtx" min="6" max="100" step="2" oninput="sliderLabels()"><span class="slider-val" id="ctxVal"></span></div>
           <div class="hint">多いほど文脈を覚えてるけど、その分お代がかかるの。</div>
         </div>
+        <div class="field">
+          <div style="display:flex;gap:10px;align-items:center">
+            <input type="checkbox" id="rStream" style="width:auto">
+            <label style="margin:0">お返事をぽつぽつ表示（ストリーミング）</label>
+          </div>
+          <div class="hint">オンにすると、書きながら届くみたいに少しずつ表示されるよ。オフだと今まで通り一気に届くよ。</div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>書庫へのおすそわけ</h3>
+        <button class="wide-btn" onclick="exportRoomForShoko()">このお部屋の会話を書庫形式で書き出し</button>
+        <div class="hint">ふかふか書庫の「conversations.json を選ぶ」でそのまま収蔵できるよ。</div>
       </div>
 
       <div class="group">
@@ -431,6 +509,9 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 
 <div id="drawerBg" class="drawerbg" onclick="closeDrawer()"></div>
 <aside id="drawer" class="drawer"><div id="drawerContent"></div></aside>
+<div id="toastbox" class="toastbox"></div>
+<div id="shelfBg" class="shelfbg" onclick="closeShelf()"></div>
+<div id="shelf" class="shelf"><div id="shelfContent"></div></div>
 
 <script>
 "use strict";
@@ -478,7 +559,7 @@ function newRoom(i){
     id: uid("r"),
     name: "お部屋 " + (i+1),
     emoji: DEFAULT_EMOJI[i % DEFAULT_EMOJI.length],
-    avatar: null, showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
+    avatar: null, sprite: null, pixel: false, status: "", showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
     color: PALETTE[i % PALETTE.length].hex,
     prompt: "", memory: "", files: [], joinGroup: false,
     provider: "openai", model: "gpt-5.1", customModel: "",
@@ -494,6 +575,8 @@ function defaultState(){
     ui: { fs: 14.5, av: 32, pos: "top", aiw: 100 },
     usage: {},
     living: { messages: [] },
+    reminders: [],
+    records: [],
     rooms: Array.from({length:7}, (_,i)=>newRoom(i))
   };
 }
@@ -508,11 +591,23 @@ function migrate(s){
   s.ui = Object.assign({fs:14.5, av:32, pos:"top", aiw:100}, s.ui||{});
   s.living = s.living || { messages: [] };
   if(!Array.isArray(s.living.messages)) s.living.messages = [];
+  if(!Array.isArray(s.reminders)) s.reminders = [];
+  s.reminders.forEach(rem=>{
+    if(rem.notified===undefined) rem.notified = !!rem.done;
+    if(rem.dismissed===undefined) rem.dismissed = false;
+  });
+  if(!Array.isArray(s.records)) s.records = [];
+  if(!Array.isArray(s.diaries)) s.diaries = [];
+  if(!Array.isArray(s.notes)) s.notes = [];
+  if(!Array.isArray(s.emotions)) s.emotions = [];
   (s.rooms||[]).forEach(r=>{
     if(r.avatar===undefined) r.avatar=null;
     if(r.showIconAi===undefined) r.showIconAi = (r.showIcons===undefined ? true : !!r.showIcons);
     if(r.showIconMe===undefined) r.showIconMe = (r.showIcons===undefined ? true : !!r.showIcons);
     if(r.bg===undefined) r.bg=null;
+    if(r.sprite===undefined) r.sprite=null;
+    if(r.pixel===undefined) r.pixel=false;
+    if(r.status===undefined) r.status="";
     if(r.bgFit===undefined) r.bgFit="cover";
     if(r.bubbleMe===undefined) r.bubbleMe="";
     if(r.bubbleAi===undefined) r.bubbleAi="";
@@ -649,10 +744,12 @@ function openDrawer(){
   buildDrawer();
   document.getElementById("drawer").classList.add("show");
   document.getElementById("drawerBg").classList.add("show");
+  document.getElementById("toastbox").classList.add("hid");
 }
 function closeDrawer(){
   document.getElementById("drawer").classList.remove("show");
   document.getElementById("drawerBg").classList.remove("show");
+  document.getElementById("toastbox").classList.remove("hid");
 }
 function chatGear(){
   if(inLiving) openDrawer();
@@ -689,6 +786,19 @@ function clockLine(){
 }
 
 /* ════════ ホーム ════════ */
+function statusOf(r){
+  if(!r.status) return "";
+  const h = new Date().getHours();
+  const lines = r.status.split("\n");
+  for(const line of lines){
+    const m = line.trim().match(/^(\d{1,2})\s*[-〜~]\s*(\d{1,2})\s+(.+)$/);
+    if(!m) continue;
+    const a = +m[1], b = +m[2];
+    const hit = (a <= b) ? (h >= a && h < b) : (h >= a || h < b);
+    if(hit) return m[3].trim();
+  }
+  return "";
+}
 function renderHome(){
   document.getElementById("appTitle").textContent = state.appTitle || "ふかふかルーム";
   document.title = state.appTitle || "ふかふかルーム";
@@ -719,14 +829,19 @@ function renderHome(){
     const ac = r.convos.find(c=>c.id===r.activeConvo) || r.convos[0];
     const lastMsg = ac ? ac.messages.filter(m=>m.role!=="error").slice(-1)[0] : null;
     const last = lastMsg ? (lastMsg.content || "（画像）") : "まだ会話がないお部屋";
+    const st = statusOf(r);
     const b = document.createElement("button");
     b.className = "room-card";
     b.style.setProperty("--rc", r.color);
+    const face = r.sprite
+      ? '<img class="sprite'+(r.pixel?" pix":"")+'" src="'+r.sprite+'" alt="">'
+      : avatarHtml(r, false);
     b.innerHTML =
-      '<span class="wash"></span>' + avatarHtml(r, false) +
+      '<span class="wash"></span>' + face +
       '<span class="room-meta"><span class="room-name">' + esc(r.name) +
       (r.joinGroup ? ' <span style="font-size:10px;color:var(--ink-soft)">🛋参加中</span>' : '') + '</span>' +
-      '<span class="room-last" style="display:block">' + esc(last.slice(0,40)) + '</span></span>' +
+      (st ? '<span class="room-status">' + esc(st) + '</span>'
+          : '<span class="room-last" style="display:block">' + esc(last.slice(0,40)) + '</span>') + '</span>' +
       '<span class="chev">›</span>';
     b.onclick = ()=>openRoom(r.id);
     list.appendChild(b);
@@ -736,6 +851,11 @@ function renderHome(){
   add.textContent = "＋ 新しいお部屋をつくる";
   add.onclick = ()=>{ state.rooms.push(newRoom(state.rooms.length)); saveState(); renderHome(); };
   list.appendChild(add);
+  const shBtn = document.createElement("button");
+  shBtn.className = "addroom";
+  shBtn.textContent = "📚 記録棚と声かけ予約をみる";
+  shBtn.onclick = ()=>{ shelfTab = "rem"; openShelf(); };
+  list.appendChild(shBtn);
 }
 
 /* ════════ チャット表示 ════════ */
@@ -800,6 +920,11 @@ function msgRowHtml(m, r, senderRoom){
   (m.images||[]).forEach(u=>{ body += '<img class="msgimg" src="'+u+'" alt="添付画像">'; });
   (m.atts||[]).forEach(a=>{ body += '<span class="attchip">📄 '+esc(a.name)+'</span>'; });
   if(m.content) body += '<span class="bubble '+(mine?"me-b":"ai-b")+'"'+bubbleStyle(src, mine)+'>'+fmt(m.content)+'</span>';
+  if(m.content){
+    body += '<span class="mbtns"><button class="cpy" data-t="'+encodeURIComponent(m.content)+'" onclick="copyMsgTxt(this)" aria-label="コピー">⧉</button>';
+    if(!inLiving) body += '<button class="cpy" data-t="'+encodeURIComponent(m.content)+'" data-w="'+(mine?"u":"a")+'" onclick="bottleMsg(this)" aria-label="瓶詰め">🫙</button>';
+    body += '</span>';
+  }
   if(mine){
     const showMe = inLiving ? true : (r ? r.showIconMe : true);
     const inner = showMe ? userAvatarHtml(true) : "";
@@ -832,11 +957,12 @@ function renderMsgs(){
     if(!r || !c) return;
     c.messages.forEach(m=>{
       if(m.role==="error"){ html += '<div class="sysmsg">'+esc(m.content)+'</div>'; return; }
+      if(m.role==="notice"){ html += '<div class="notemsg">'+esc(m.content)+'</div>'; return; }
       html += msgRowHtml(m, r, null);
     });
   }
   box.innerHTML = html;
-  if(sending){
+  if(sending && typingName){
     const t = document.createElement("div");
     t.className = "typing";
     t.innerHTML = esc(typingName||"") + " が考え中 <i>·</i><i>·</i><i>·</i>";
@@ -902,6 +1028,7 @@ function buildSystem(r){
     if(f.enabled) s += "\n\n【知識ファイル：" + f.name + "】\n" + f.text;
   });
   if(state.userName) s += "\n\nユーザーの名前は「" + state.userName + "」です。";
+  s += notesBlock(r);
   return s;
 }
 function contentOf(m){
@@ -962,13 +1089,53 @@ function mergeRoles(msgs){
   if(out.length && out[0].role!=="user") out.unshift({role:"user", content:"（会話の続きです）", images:[]});
   return out;
 }
-async function chat(r, system, msgs){
+async function chat(r, system, msgs, onDelta){
   const norm = mergeRoles(msgs);
-  if(r.provider==="gemini") return chatGemini(r, system, norm);
-  if(r.provider==="anthropic") return chatAnthropic(r, system, norm);
-  return chatOpenAIStyle(r, system, norm);
+  if(r.provider==="gemini") return chatGemini(r, system, norm, onDelta);
+  if(r.provider==="anthropic") return chatAnthropic(r, system, norm, onDelta);
+  return chatOpenAIStyle(r, system, norm, onDelta);
 }
-async function chatOpenAIStyle(r, system, msgs){
+async function readSSE(res, onData){
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  while(true){
+    const {done, value} = await reader.read();
+    if(done) break;
+    buf += dec.decode(value, {stream:true});
+    let idx;
+    while((idx = buf.indexOf("\n")) >= 0){
+      const line = buf.slice(0, idx).trim();
+      buf = buf.slice(idx+1);
+      if(line.startsWith("data:")){
+        const payload = line.slice(5).trim();
+        if(payload === "[DONE]") continue;
+        try{ onData(JSON.parse(payload)); }catch(_){}
+      }
+    }
+  }
+}
+function exportRoomForShoko(){
+  const r = room(); if(!r) return;
+  const convs = (r.convos||[]).filter(c=>(c.messages||[]).some(m=>m.role==="user"||m.role==="assistant"));
+  if(!convs.length){ alert("書き出せる会話がまだないみたい。"); return; }
+  const data = convs.map(c=>({
+    uuid: r.id + "_" + c.id,
+    name: r.name + "／" + (c.title || "会話"),
+    created_at: new Date((c.messages[0] && c.messages[0].t) || Date.now()).toISOString(),
+    chat_messages: c.messages.filter(m=>m.role==="user"||m.role==="assistant").map(m=>({
+      sender: m.role==="user" ? "human" : "assistant",
+      text: m.content || ""
+    }))
+  }));
+  const blob = new Blob([JSON.stringify(data)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "conversations.json";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+}
+async function chatOpenAIStyle(r, system, msgs, onDelta){
   const model = modelOf(r);
   const isOR = r.provider==="openrouter";
   const mm = msgs.map(m=>{
@@ -987,12 +1154,29 @@ async function chatOpenAIStyle(r, system, msgs){
     body.max_tokens = r.maxTokens;
     body.temperature = r.temp;
   }
+  const streaming = !!(r.stream && onDelta);
+  if(streaming){ body.stream = true; body.stream_options = {include_usage:true}; }
   const url = isOR ? "https://openrouter.ai/api/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
   const res = await fetch(url, {
     method:"POST",
     headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+state.keys[r.provider] },
     body: JSON.stringify(body)
   });
+  if(streaming){
+    if(!res.ok){
+      let data={}; try{ data = await res.json(); }catch(_){}
+      throw new Error((data.error && (data.error.message||data.error)) || (PROVIDER_LABEL[r.provider]+"エラー ("+res.status+")"));
+    }
+    let text = "", pIn = 0, pOut = 0;
+    await readSSE(res, d=>{
+      const ch = d.choices && d.choices[0];
+      if(ch && ch.delta && typeof ch.delta.content === "string"){ text += ch.delta.content; onDelta(text); }
+      if(d.usage){ pIn = d.usage.prompt_tokens||0; pOut = d.usage.completion_tokens||0; }
+    });
+    if(pIn||pOut) addUsage(model, pIn, pOut);
+    if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
+    return text;
+  }
   const data = await res.json();
   if(!res.ok) throw new Error((data.error && (data.error.message||data.error)) || (PROVIDER_LABEL[r.provider]+"エラー ("+res.status+")"));
   if(data.usage) addUsage(model, data.usage.prompt_tokens, data.usage.completion_tokens);
@@ -1000,7 +1184,15 @@ async function chatOpenAIStyle(r, system, msgs){
   if(!c || !c.content) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
   return c.content;
 }
-async function chatAnthropic(r, system, msgs){
+function copyMsgTxt(btn){
+  const t = decodeURIComponent(btn.dataset.t||"");
+  navigator.clipboard.writeText(t).then(()=>{
+    const old = btn.textContent;
+    btn.textContent = "✓";
+    setTimeout(()=>{ btn.textContent = old; }, 1200);
+  }).catch(()=>{ alert("コピーできなかった…もう一度試してみて？"); });
+}
+async function chatAnthropic(r, system, msgs, onDelta){
   const mm = msgs.map(m=>{
     if(m.role==="user" && m.images.length){
       const arr = [];
@@ -1016,10 +1208,12 @@ async function chatAnthropic(r, system, msgs){
   const body = {
     model: modelOf(r),
     max_tokens: r.maxTokens,
-    system: system,
+    system: [{ type:"text", text: system, cache_control:{ type:"ephemeral" } }],
     temperature: Math.min(r.temp, 1),
     messages: mm
   };
+  const streaming = !!(r.stream && onDelta);
+  if(streaming) body.stream = true;
   const res = await fetch("https://api.anthropic.com/v1/messages",{
     method:"POST",
     headers:{
@@ -1030,6 +1224,21 @@ async function chatAnthropic(r, system, msgs){
     },
     body: JSON.stringify(body)
   });
+  if(streaming){
+    if(!res.ok){
+      let data={}; try{ data = await res.json(); }catch(_){}
+      throw new Error((data.error && data.error.message) || ("Claudeエラー ("+res.status+")"));
+    }
+    let text = "", pIn = 0, pOut = 0;
+    await readSSE(res, d=>{
+      if(d.type==="content_block_delta" && d.delta && typeof d.delta.text==="string"){ text += d.delta.text; onDelta(text); }
+      if(d.type==="message_start" && d.message && d.message.usage) pIn = d.message.usage.input_tokens||0;
+      if(d.type==="message_delta" && d.usage) pOut = d.usage.output_tokens||0;
+    });
+    if(pIn||pOut) addUsage(modelOf(r), pIn, pOut);
+    if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
+    return text;
+  }
   const data = await res.json();
   if(!res.ok) throw new Error((data.error && data.error.message) || ("Claudeエラー ("+res.status+")"));
   if(data.usage) addUsage(modelOf(r), data.usage.input_tokens, data.usage.output_tokens);
@@ -1037,7 +1246,7 @@ async function chatAnthropic(r, system, msgs){
   if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
   return text;
 }
-async function chatGemini(r, system, msgs){
+async function chatGemini(r, system, msgs, onDelta){
   const model = modelOf(r);
   const contents = msgs.map(m=>{
     const parts = [];
@@ -1055,9 +1264,29 @@ async function chatGemini(r, system, msgs){
     generationConfig: { temperature: r.temp, maxOutputTokens: r.maxTokens }
   };
   if(/2\.5-flash/.test(model)) body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
-  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(state.keys.gemini),{
+  const streaming = !!(r.stream && onDelta);
+  const method = streaming ? ":streamGenerateContent?alt=sse&key=" : ":generateContent?key=";
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+method+encodeURIComponent(state.keys.gemini),{
     method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body)
   });
+  if(streaming){
+    if(!res.ok){
+      let data={}; try{ data = await res.json(); }catch(_){}
+      throw new Error((data.error && data.error.message) || ("Geminiエラー ("+res.status+")"));
+    }
+    let text = "", pIn = 0, pOut = 0;
+    await readSSE(res, d=>{
+      const cand = d.candidates && d.candidates[0];
+      if(cand && cand.content && cand.content.parts){
+        cand.content.parts.forEach(p=>{ if(p.text) text += p.text; });
+        onDelta(text);
+      }
+      if(d.usageMetadata){ pIn = d.usageMetadata.promptTokenCount||pIn; pOut = d.usageMetadata.candidatesTokenCount||pOut; }
+    });
+    if(pIn||pOut) addUsage(model, pIn, pOut);
+    if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
+    return text;
+  }
   const data = await res.json();
   if(!res.ok) throw new Error((data.error && data.error.message) || ("Geminiエラー ("+res.status+")"));
   if(data.usageMetadata) addUsage(model, data.usageMetadata.promptTokenCount, data.usageMetadata.candidatesTokenCount);
@@ -1092,11 +1321,42 @@ async function sendMessage(){
   document.getElementById("sendBtn").disabled = true;
   saveState(); renderMsgs();
   try{
-    const system = buildSystem(r) + ragSnippets(r, text) + clockLine();
+    const system = buildSystem(r) + ragSnippets(r, text) + reminderInstruction() + memoInstruction() + clockLine();
     const hist = c.messages.filter(m=>m.role==="user"||m.role==="assistant").slice(-r.ctx)
       .map(m=>({role:m.role, content:contentOf(m), images:m.images||[]}));
-    const reply = await chat(r, system, hist);
-    c.messages.push({role:"assistant", content:reply, images:[], atts:[], t:Date.now()});
+    let liveMsg = null, renderTimer = null;
+    const onDelta = !r.stream ? null : (full)=>{
+      if(!liveMsg){
+        liveMsg = {role:"assistant", content:"", images:[], atts:[], t:Date.now()};
+        c.messages.push(liveMsg);
+        typingName = "";
+      }
+      liveMsg.content = full;
+      if(!renderTimer){ renderTimer = setTimeout(()=>{ renderTimer=null; renderMsgs(); }, 120); }
+    };
+    const reply = await chat(r, system, hist, onDelta);
+    if(renderTimer){ clearTimeout(renderTimer); renderTimer=null; }
+    const pr = parseReminder(reply, r, c);
+    const pm = parseMemo(pr.clean, r);
+    if(liveMsg){ liveMsg.content = pm.clean; liveMsg.t = Date.now(); }
+    else c.messages.push({role:"assistant", content:pm.clean, images:[], atts:[], t:Date.now()});
+    if(pm.memo){
+      const dup = state.notes.some(n=>n.roomId===r.id && n.text.replace(/\s+/g,"")===pm.memo.text.replace(/\s+/g,""));
+      if(!dup){
+        state.notes.push(pm.memo);
+        c.messages.push({role:"notice", content:"📝 覚え書き：「"+pm.memo.text.slice(0,40)+"」", t:Date.now()});
+      }
+    }
+    if(pr.rem && state.reminders.some(x=>!x.done && x.roomId===pr.rem.roomId && x.title===pr.rem.title && Math.abs(x.dueAt-pr.rem.dueAt) < 10*60*1000)){
+      pr.rem = null; /* 同じ予約はもう預かってる */
+    }
+    if(pr.rem){
+      state.reminders.push(pr.rem);
+      c.messages.push({role:"notice", content:"⏰ 声かけ予約：「"+pr.rem.title+"」 "+remWhen(pr.rem.dueAt), t:Date.now()});
+      if("Notification" in window && Notification.permission==="default"){
+        toast("<b>🔔 通知を許可する？</b><span class='tx'>タップすると、別タブを見ている間もブラウザ通知で声かけできるよ。</span>", askNotifPerm);
+      }
+    }
   }catch(e){
     c.messages.push({role:"error", content:"⚠ "+(e.message||"通信に失敗しちゃった"), t:Date.now()});
   }
@@ -1156,6 +1416,376 @@ async function sendLiving(){
   renderMsgs();
 }
 
+/* ════════ 声かけ予約（リマインダー） ════════ */
+function reminderInstruction(){
+  return "\n\n【声かけ予約の特別ルール】" +
+    "\nユーザーが「〜分後に…って声かけて」「明日の朝に…って言って」のようにリマインダー・声かけ・通知を明確にお願いした時だけ、通常のお返事の最後に、次の形式のブロックを1つ付けてください：" +
+    "\n<<FUKAREM\n{\"title\":\"用件を短く\",\"due\":\"YYYY-MM-DD HH:mm\",\"texts\":[\"声かけ文1\",\"声かけ文2\",\"声かけ文3\",\"声かけ文4\",\"声かけ文5\"]}\nFUKAREM>>" +
+    "\n・due は【現在日時】から計算した絶対日時で、必ずこの形式（24時間表記）で書くこと。" +
+    "\n・texts はあなたの口調での声かけ文を4〜6個。短く、責めずに、毎回ちがう表現で。" +
+    "\n・日時や用件が曖昧な時はブロックを付けず、自然に聞き返すこと。" +
+    "\n・ただし、ユーザーが「時間はまかせる」「あなたが決めて」と言った場合は、あなたが良いと思う日時を自分で決めて構いません（その場合は聞き返さずに予約すること）。" +
+    "\n・このルールは一番新しいユーザー発言に対してだけ適用すること。過去の発言での依頼や、すでに予約済みの内容に遡って反応してはいけません。" +
+    "\n・リマインダーの依頼がない時は、絶対にこのブロックを出さないこと。";
+}
+function parseReminder(reply, r, c){
+  const m = reply.match(/<<FUKAREM([\s\S]*?)FUKAREM>>/);
+  if(!m) return { clean: reply, rem: null };
+  const clean = reply.replace(/\n?<<FUKAREM[\s\S]*?FUKAREM>>\n?/, "").trim();
+  let rem = null;
+  try{
+    const j = JSON.parse(m[1].trim());
+    const dm = String(j.due||"").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})/);
+    if(j.title && dm){
+      const due = new Date(+dm[1], +dm[2]-1, +dm[3], +dm[4], +dm[5]).getTime();
+      rem = { id: uid("rem"), roomId: r.id, convoId: c.id, title: String(j.title).slice(0,40),
+        dueAt: due, texts: Array.isArray(j.texts) ? j.texts.filter(t=>typeof t==="string").slice(0,8) : [],
+        done: false, notified: false, dismissed: false, createdAt: Date.now() };
+    }
+  }catch(_){}
+  return { clean: clean, rem: rem };
+}
+function remWhen(t){
+  const d = new Date(t); const z = n=>String(n).padStart(2,"0");
+  return (d.getMonth()+1)+"/"+d.getDate()+" "+z(d.getHours())+":"+z(d.getMinutes());
+}
+function toast(html, onClick, ms, actions){
+  const box = document.getElementById("toastbox");
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.innerHTML = html;
+  const x = document.createElement("button");
+  x.className = "tclose"; x.textContent = "✕"; x.setAttribute("aria-label","とじる");
+  x.onclick = (e)=>{ e.stopPropagation(); t.remove(); };
+  t.appendChild(x);
+  (actions||[]).forEach(a=>{
+    const b = document.createElement("button");
+    b.className = "tact"; b.textContent = a.label;
+    b.onclick = (e)=>{ e.stopPropagation(); a.fn(); t.remove(); };
+    t.appendChild(b);
+  });
+  t.onclick = ()=>{ if(onClick) onClick(); t.remove(); };
+  box.appendChild(t);
+  if(ms!==0) setTimeout(()=>{ if(t.parentNode) t.remove(); }, ms||12000);
+  return t;
+}
+function jumpToReminder(rem){
+  const r = roomById(rem.roomId);
+  if(!r) return;
+  if(rem.convoId && r.convos.find(c=>c.id===rem.convoId)) r.activeConvo = rem.convoId;
+  inLiving = false;
+  saveState();
+  openRoom(r.id);
+}
+function fireReminder(rem, prefix){
+  rem.notified = true; saveState();
+  const r = roomById(rem.roomId);
+  const who = r ? r.name : "だれか";
+  const txt = rem.texts.length ? rem.texts[Math.floor(Math.random()*rem.texts.length)] : ("「"+rem.title+"」の時間だよ。");
+  toast("<b>"+esc(prefix||("⏰ "+who))+"</b><span class='tx'>"+esc(txt)+"</span>", ()=>jumpToReminder(rem), 0,
+    [{label:"✓ 完了", fn:()=>{ rem.done = true; saveState(); buildDrawerIfOpen(); }}]);
+  if("Notification" in window && Notification.permission==="granted"){
+    try{
+      const n = new Notification(who+"（ふかふかルーム）", { body: txt, tag: rem.id });
+      n.onclick = ()=>{ try{ window.focus(); }catch(_){} jumpToReminder(rem); n.close(); };
+    }catch(_){}
+  }
+  if(currentRoomId===rem.roomId && !inLiving){ buildDrawerIfOpen(); }
+}
+function checkReminders(){
+  const now = Date.now();
+  (state.reminders||[]).forEach(rem=>{
+    if(!rem.done && !rem.notified && rem.dueAt <= now) fireReminder(rem);
+  });
+}
+function checkOverdueOnStart(){
+  const now = Date.now();
+  const over = (state.reminders||[]).filter(rem=>!rem.done && !rem.notified && rem.dueAt <= now);
+  over.forEach(rem=>{
+    const r = roomById(rem.roomId);
+    fireReminder(rem, "🍂 "+(r?r.name:"だれか")+"（拾いもの）");
+  });
+}
+function askNotifPerm(){
+  if(!("Notification" in window)){ alert("このブラウザは通知に対応していないみたい…。"); return; }
+  Notification.requestPermission().then(p=>{
+    toast(p==="granted" ? "<b>🔔 通知オン！</b><span class='tx'>タブが開いていれば、別タブ中でも声かけできるよ。</span>"
+                        : "<b>🔕</b><span class='tx'>通知は許可されなかったよ。画面内の声かけだけになるね。</span>");
+    buildDrawerIfOpen();
+  });
+}
+function buildDrawerIfOpen(){
+  const d = document.getElementById("drawer");
+  if(d && d.classList.contains("show")) buildDrawer();
+}
+setInterval(checkReminders, 15000);
+
+/* ════════ 自由メモ（覚え書き） ════════ */
+function memoInstruction(){
+  return "\n\n【覚え書きの特別ルール】" +
+    "\nユーザーが「覚えておいて」「メモしておいて」「次回に持ち越して」のように、次回のために何かを覚えることを明確にお願いした時だけ、通常のお返事の最後に、次の形式のブロックを1つ付けてください：" +
+    "\n<<FUKAMEMO\n{\"text\":\"覚えておく内容を簡潔に\"}\nFUKAMEMO>>" +
+    "\n・このルールは一番新しいユーザー発言に対してだけ適用すること。過去の発言でのお願いに遡って反応してはいけません。" +
+    "\n・すでに【覚え書き】一覧に載っている内容を、もう一度書かないこと。" +
+    "\n・依頼がない時は、絶対にこのブロックを出さないこと。";
+}
+function parseMemo(reply, r){
+  const m = reply.match(/<<FUKAMEMO([\s\S]*?)FUKAMEMO>>/);
+  if(!m) return { clean: reply, memo: null };
+  const clean = reply.replace(/\n?<<FUKAMEMO[\s\S]*?FUKAMEMO>>\n?/, "").trim();
+  let memo = null;
+  try{
+    const j = JSON.parse(m[1].trim());
+    if(j.text) memo = { id: uid("nt"), roomId: r.id, text: String(j.text).slice(0,300), createdAt: Date.now() };
+  }catch(_){}
+  return { clean: clean, memo: memo };
+}
+function notesBlock(r){
+  const ns = (state.notes||[]).filter(n=>n.roomId===r.id).slice(-20);
+  if(!ns.length) return "";
+  return "\n\n【覚え書き（あなた自身のメモ）】\n" + ns.map(n=>"・"+n.text).join("\n");
+}
+
+/* ════════ 日記 ════════ */
+async function generateDiary(){
+  const r = room(); const c = convo();
+  if(!r || !c) return;
+  if(sending){ alert("いまお返事の作成中みたい。少し待ってね。"); return; }
+  const lines = convoLogText(r, c);
+  if(!lines.length){ alert("まだ日記にする会話がないみたい。"); return; }
+  if(!state.keys[r.provider]){ alert("APIキーがまだ入っていないみたい。"); return; }
+  sending = true; document.getElementById("sendBtn").disabled = true;
+  const prog = toast("<b>📔 日記を書いてるよ…</b><span class='tx'>今日をゆっくり振り返り中。</span>", null, 0);
+  try{
+    let full = lines.join("\n\n");
+    if(full.length > 18000) full = "（※これは長い会話の後半部分です）\n\n" + full.slice(-18000);
+    const sys = "あなたは「"+r.name+"」です。以下はあなたとユーザー（"+(state.userName||"ユーザー")+"）の会話ログです。この会話を振り返って、あなた自身の視点で短い日記を書いてください。" +
+      "\n・200〜400字くらい。出来事の羅列にせず、感情と余韻を大切に。" +
+      "\n・あなた自身の口調・文体のままで。" +
+      "\n・日記の本文だけを書くこと（前置きや見出しは不要）。" + clockLine();
+    const body = await chat(r, sys, [{role:"user", content: full, images:[]}]);
+    state.diaries.push({ id: uid("dia"), roomId: r.id, roomName: r.name, convoTitle: c.title, body: body.trim(), createdAt: Date.now() });
+    saveState();
+    prog.remove();
+    toast("<b>📔 日記、書けたよ。</b><span class='tx'>記録棚の「日記」に置いてあるからね。</span>", ()=>{ openShelf(); shelfTab="dia"; renderShelf(); });
+  }catch(e){
+    prog.remove();
+    alert("日記が書けなかった… "+(e.message||""));
+  }
+  sending = false; document.getElementById("sendBtn").disabled = false;
+}
+
+/* ════════ 瓶詰め（感情ログ） ════════ */
+function bottleMsg(btn){
+  const r = room(); if(!r) return;
+  const text = decodeURIComponent(btn.dataset.t||"");
+  const who = btn.dataset.w==="u" ? (state.userName||"わたし") : r.name;
+  const title = prompt("この瞬間に、ラベルを付ける？（空欄でもいいよ）", "");
+  if(title===null) return;
+  state.emotions.push({ id: uid("emo"), roomId: r.id, roomName: r.name, who: who,
+    title: (title||"").slice(0,40), text: text, createdAt: Date.now() });
+  saveState();
+  toast("<b>🫙 瓶詰めしたよ。</b><span class='tx'>"+esc((title||text).slice(0,30))+"</span>", ()=>{ openShelf(); shelfTab="emo"; renderShelf(); });
+}
+
+function convoLogText(r, c){
+  const you = state.userName || "ユーザー";
+  const lines = [];
+  c.messages.forEach(m=>{
+    if(m.role==="user") lines.push(you+"：\n"+(m.content||""));
+    else if(m.role==="assistant") lines.push(r.name+"：\n"+(m.content||""));
+  });
+  return lines;
+}
+function chunkLines(lines, maxChars){
+  const chunks = []; let cur = [], len = 0;
+  lines.forEach(l=>{
+    if(len + l.length > maxChars && cur.length){ chunks.push(cur.join("\n\n")); cur=[]; len=0; }
+    cur.push(l); len += l.length;
+  });
+  if(cur.length) chunks.push(cur.join("\n\n"));
+  return chunks;
+}
+async function generateRecord(){
+  const r = room(); const c = convo();
+  if(!r || !c) return;
+  if(sending){ alert("いまお返事の作成中みたい。少し待ってね。"); return; }
+  const lines = convoLogText(r, c);
+  if(!lines.length){ alert("まだ記録する会話がないみたい。"); return; }
+  if(!state.keys[r.provider]){ alert("APIキーがまだ入っていないみたい。"); return; }
+  const recFmt = "次の形式で、日本語で書いてください：\n【日付】\n【会話タイトル】\n【時系列の出来事】（冒頭から順に、箇条書きで具体的に。省略しすぎない）\n【印象的な発言】（短い引用を2〜5個）\n【次回覚えておきたいこと】";
+  sending = true; document.getElementById("sendBtn").disabled = true;
+  const prog = toast("<b>📖 記録執筆中…</b><span class='tx' id='recProg'>会話ぜんぶ読み返してるよ。</span>", null, 0);
+  const setProg = t=>{ const e=document.getElementById("recProg"); if(e) e.textContent=t; };
+  try{
+    let body = "";
+    const full = lines.join("\n\n");
+    if(full.length <= 20000){
+      const sys = "あなたは「"+r.name+"」です。以下はあなたとユーザー（"+(state.userName||"ユーザー")+"）の会話ログ全文です。セッション記録係として、この会話の記録を正確に書いてください。\n"+recFmt + clockLine();
+      body = await chat(r, sys, [{role:"user", content: full, images:[]}]);
+    }else{
+      const chunks = chunkLines(lines, 14000);
+      const sums = [];
+      for(let i=0;i<chunks.length;i++){
+        setProg("長いお話だから分割中…（"+(i+1)+"/"+chunks.length+"）");
+        const sys = "以下は長い会話ログの一部（"+(i+1)+"/"+chunks.length+"）です。出来事・話題・決めたこと・感情の流れを、時系列の箇条書きで具体的に要約してください。印象的な発言は短く引用してください。";
+        sums.push(await chat(r, sys, [{role:"user", content: chunks[i], images:[]}]));
+      }
+      setProg("要約をひとつにまとめてるよ…");
+      const sys2 = "あなたは「"+r.name+"」です。以下は同じ会話を順番に分割要約したメモです。これらを統合して、会話全体のセッション記録を書いてください。\n"+recFmt + clockLine();
+      body = await chat(r, sys2, [{role:"user", content: sums.map((s,i)=>"◆分割要約 "+(i+1)+"\n"+s).join("\n\n"), images:[]}]);
+    }
+    const rec = { id: uid("rec"), roomId: r.id, convoId: c.id, roomName: r.name, convoTitle: c.title,
+      body: body, createdAt: Date.now() };
+    state.records.push(rec); saveState();
+    prog.remove();
+    toast("<b>📖 記録できたよ！</b><span class='tx'>記録棚に置いておいたからね。</span>", ()=>openShelf());
+    openShelf();
+  }catch(e){
+    prog.remove();
+    alert("記録の作成に失敗しちゃった… "+(e.message||""));
+  }
+  sending = false; document.getElementById("sendBtn").disabled = false;
+}
+
+/* ════════ 記録棚 ════════ */
+function openShelf(){
+  document.getElementById("shelfBg").classList.add("show");
+  document.getElementById("shelf").classList.add("show");
+  renderShelf();
+}
+function closeShelf(){
+  document.getElementById("shelfBg").classList.remove("show");
+  document.getElementById("shelf").classList.remove("show");
+}
+function recTxt(rec){
+  return "■ セッション記録（"+rec.roomName+"／"+rec.convoTitle+"）　"+dateStr(rec.createdAt)+"\n\n"+rec.body+"\n";
+}
+let shelfTab = "rec";
+function renderShelf(){
+  const r = room();
+  const box = document.getElementById("shelfContent");
+  box.innerHTML = "";
+  const h = document.createElement("h3");
+  h.textContent = "📚 記録棚" + (r ? "（"+r.name+"）" : "");
+  box.appendChild(h);
+  const tabs = document.createElement("div"); tabs.className = "shelftabs";
+  [["rec","📖 記録"],["dia","📔 日記"],["note","📝 メモ"],["emo","🫙 瓶詰め"],["rem","⏰ 予約"]].forEach(([k,label])=>{
+    const b = el("button", label);
+    if(shelfTab===k) b.className = "on";
+    b.onclick = ()=>{ shelfTab = k; renderShelf(); };
+    tabs.appendChild(b);
+  });
+  box.appendChild(tabs);
+  const byRoom = arr => arr.filter(x=>!r || x.roomId===r.id).sort((a,b)=>b.createdAt-a.createdAt);
+  const addItem = (title, sub, bodyText, onDel, onTxt)=>{
+    const d = document.createElement("div"); d.className = "ritem";
+    if(title){ const t = document.createElement("div"); t.className="rt"; t.textContent = title; d.appendChild(t); }
+    const dt = document.createElement("div"); dt.className="rd"; dt.textContent = sub; d.appendChild(dt);
+    const pre = document.createElement("pre"); pre.textContent = bodyText; pre.style.display="none"; d.appendChild(pre);
+    const btns = document.createElement("div"); btns.className="rbtns";
+    const vb = el("button","👀 ひらく"); vb.className="mini"; vb.style.width="auto"; vb.style.padding="0 8px";
+    vb.onclick = ()=>{ const sh = pre.style.display==="none"; pre.style.display = sh?"block":"none"; vb.textContent = sh?"🙈 とじる":"👀 ひらく"; };
+    btns.appendChild(vb);
+    if(onTxt){ const sb = el("button","💾 txt"); sb.className="mini"; sb.style.width="auto"; sb.style.padding="0 8px"; sb.onclick = onTxt; btns.appendChild(sb); }
+    const db = el("button","🗑"); db.className="mini";
+    db.onclick = ()=>{ if(confirm("これを削除するよ。いい？")){ onDel(); saveState(); renderShelf(); } };
+    btns.appendChild(db);
+    d.appendChild(btns);
+    box.appendChild(d);
+    return d;
+  };
+  let items = [];
+  if(shelfTab==="rec"){
+    items = byRoom(state.records);
+    if(!items.length){ const p=el("div","まだ記録がないよ。サイドバーの「📖 セッション記録を書く」から作れるからね。"); p.className="hint"; box.appendChild(p); }
+    items.forEach(rec=>{
+      addItem(rec.convoTitle, rec.roomName+"　"+dateStr(rec.createdAt), rec.body,
+        ()=>{ state.records = state.records.filter(x=>x.id!==rec.id); },
+        ()=>download("セッション記録_"+rec.roomName+"_"+stamp()+".txt", recTxt(rec)));
+    });
+    if(items.length){
+      const allb = el("button","💾 この棚をぜんぶ .txt で書き出す"); allb.className="wide-btn gold";
+      allb.onclick = ()=>{
+        const out = items.slice().reverse().map(recTxt).join("\n"+"─".repeat(24)+"\n\n");
+        download("セッション記録_まとめ_"+stamp()+".txt", out);
+      };
+      box.appendChild(allb);
+    }
+  }
+  if(shelfTab==="dia"){
+    items = byRoom(state.diaries);
+    if(!items.length){ const p=el("div","まだ日記がないよ。サイドバーの「📔 日記を書いてもらう」からどうぞ。"); p.className="hint"; box.appendChild(p); }
+    items.forEach(d=>{
+      addItem(dateStr(d.createdAt)+" の日記", d.roomName+"　（"+d.convoTitle+"）", d.body,
+        ()=>{ state.diaries = state.diaries.filter(x=>x.id!==d.id); },
+        ()=>download("日記_"+d.roomName+"_"+stamp()+".txt", "■ "+d.roomName+"の日記　"+dateStr(d.createdAt)+"\n\n"+d.body+"\n"));
+    });
+    if(items.length){
+      const allb = el("button","💾 日記をぜんぶ .txt で書き出す"); allb.className="wide-btn gold";
+      allb.onclick = ()=>{
+        const out = items.slice().reverse().map(d=>"■ "+d.roomName+"の日記　"+dateStr(d.createdAt)+"\n\n"+d.body+"\n").join("\n"+"─".repeat(24)+"\n\n");
+        download("日記_まとめ_"+stamp()+".txt", out);
+      };
+      box.appendChild(allb);
+    }
+  }
+  if(shelfTab==="note"){
+    items = byRoom(state.notes);
+    const hint = el("div","覚え書きは、次の会話からAIちゃんにこっそり渡されるよ。会話の中で「覚えておいて」って言っても増やせるからね。");
+    hint.className = "hint"; box.appendChild(hint);
+    items.forEach(n=>{
+      addItem("", dateStr(n.createdAt), n.text, ()=>{ state.notes = state.notes.filter(x=>x.id!==n.id); }, null);
+    });
+    if(r){
+      const row = document.createElement("div"); row.className="row"; row.style.marginTop="8px";
+      const inp = document.createElement("input"); inp.placeholder = "手書きで覚え書きを追加…"; inp.style.flex="1";
+      const ab = el("button","追加"); ab.className="smallbtn";
+      ab.onclick = ()=>{
+        const t = inp.value.trim(); if(!t) return;
+        state.notes.push({id:uid("nt"), roomId:r.id, text:t.slice(0,300), createdAt:Date.now()});
+        saveState(); renderShelf();
+      };
+      row.append(inp, ab);
+      box.appendChild(row);
+    }
+  }
+  if(shelfTab==="emo"){
+    items = byRoom(state.emotions);
+    if(!items.length){ const p=el("div","まだ瓶詰めがないよ。吹き出しの 🫙 を押すと、その瞬間を瓶に詰められるからね。"); p.className="hint"; box.appendChild(p); }
+    items.forEach(e2=>{
+      addItem(e2.title || "（無題の瓶）", e2.who+"　"+dateStr(e2.createdAt), e2.text,
+        ()=>{ state.emotions = state.emotions.filter(x=>x.id!==e2.id); },
+        ()=>download("瓶詰め_"+stamp()+".txt", "🫙 "+(e2.title||"（無題）")+"　"+e2.who+"　"+dateStr(e2.createdAt)+"\n\n"+e2.text+"\n"));
+    });
+    if(items.length){
+      const allb = el("button","💾 瓶をぜんぶ .txt で書き出す"); allb.className="wide-btn gold";
+      allb.onclick = ()=>{
+        const out = items.slice().reverse().map(e2=>"🫙 "+(e2.title||"（無題）")+"　"+e2.who+"　"+dateStr(e2.createdAt)+"\n\n"+e2.text+"\n").join("\n"+"─".repeat(24)+"\n\n");
+        download("瓶詰め_まとめ_"+stamp()+".txt", out);
+      };
+      box.appendChild(allb);
+    }
+  }
+  if(shelfTab==="rem"){
+    const rems = (state.reminders||[]).filter(x=>(!r || x.roomId===r.id) && !x.done).sort((a,b)=>a.dueAt-b.dueAt);
+    if(!rems.length){ const p=el("div","いまは声かけ予約がないよ。会話の中で「◯分後に…って声かけて」って言うと増えるからね。"); p.className="hint"; box.appendChild(p); }
+    rems.forEach(rem=>{
+      const rm = roomById(rem.roomId);
+      const row = document.createElement("div"); row.className = "remrow";
+      const info = document.createElement("div"); info.className = "ri";
+      info.innerHTML = '<div class="rn">'+esc(rem.title)+'</div><div class="rw">'+esc((rm?rm.name+"　":"")+remWhen(rem.dueAt))+(rem.notified?"　🔔お知らせ済み":"")+'</div>';
+      const ok = miniBtn("✓", "完了にする", ()=>{ rem.done = true; saveState(); renderShelf(); });
+      const del = miniBtn("🗑", "削除", ()=>{ state.reminders = state.reminders.filter(x=>x.id!==rem.id); saveState(); renderShelf(); });
+      row.append(info, ok, del);
+      box.appendChild(row);
+    });
+  }
+  const cb = el("button","とじる"); cb.className="wide-btn";
+  cb.onclick = closeShelf;
+  box.appendChild(cb);
+}
+
 /* ════════ サイドバー ════════ */
 function buildDrawer(){
   const box = document.getElementById("drawerContent");
@@ -1199,6 +1829,35 @@ function buildDrawer(){
     saveState(); openRoom(r.id);
   };
   box.appendChild(nb);
+  const recb = el("button", "📖 セッション記録を書く（この会話）"); recb.className = "wide-btn";
+  recb.onclick = ()=>{ closeDrawer(); generateRecord(); };
+  const diab = el("button", "📔 日記を書いてもらう（この会話）"); diab.className = "wide-btn";
+  diab.onclick = ()=>{ closeDrawer(); generateDiary(); };
+  const shb = el("button", "📚 記録棚をひらく"); shb.className = "wide-btn";
+  shb.onclick = ()=>{ closeDrawer(); openShelf(); };
+  box.append(recb, diab, shb);
+  const rems = (state.reminders||[]).filter(x=>x.roomId===r.id && !x.done).sort((a,b)=>a.dueAt-b.dueAt);
+  if(rems.length || ("Notification" in window && Notification.permission!=="granted")){
+    box.appendChild(el("h4", "⏰ 声かけ予約"));
+    rems.forEach(rem=>{
+      const row = document.createElement("div"); row.className = "remrow";
+      const info = document.createElement("div"); info.className = "ri";
+      info.innerHTML = '<div class="rn">'+esc(rem.title)+'</div><div class="rw">'+esc(remWhen(rem.dueAt))+(rem.notified?"　🔔お知らせ済み":"")+'</div>';
+      const ok = miniBtn("✓", "済みにする", ()=>{ rem.done = true; saveState(); buildDrawer(); });
+      const del = miniBtn("🗑", "削除", ()=>{ state.reminders = state.reminders.filter(x=>x.id!==rem.id); saveState(); buildDrawer(); });
+      row.append(info, ok, del);
+      box.appendChild(row);
+    });
+    if(!rems.length){
+      const hint = el("div", "予約はまだないよ。会話の中で「15分後に◯◯って声かけて」って言ってみてね。");
+      hint.className = "hint"; box.appendChild(hint);
+    }
+    if("Notification" in window && Notification.permission==="default"){
+      const nb2 = el("button", "🔔 ブラウザ通知を許可する"); nb2.className = "wide-btn";
+      nb2.onclick = askNotifPerm;
+      box.appendChild(nb2);
+    }
+  }
   const act = r.convos.filter(c=>!c.archived).sort((a,b)=>b.createdAt-a.createdAt);
   const arc = r.convos.filter(c=>c.archived).sort((a,b)=>b.createdAt-a.createdAt);
   act.forEach(c=>box.appendChild(convoItem(r,c)));
@@ -1287,7 +1946,7 @@ function noteAtts(m){
 }
 
 /* ════════ お部屋設定 ════════ */
-let editColor = null, editAvatar = null, editBg = null, editFiles = null;
+let editColor = null, editAvatar = null, editBg = null, editFiles = null, editSprite = null;
 function openRoomSettings(){
   const r = room(); if(!r) return;
   document.getElementById("rName").value = r.name;
@@ -1304,14 +1963,18 @@ function openRoomSettings(){
   document.getElementById("rShowIconMe").checked = r.showIconMe!==false;
   document.getElementById("rBgFit").value = r.bgFit || "cover";
   document.getElementById("rJoinGroup").checked = !!r.joinGroup;
+  document.getElementById("rStream").checked = !!r.stream;
   document.getElementById("rBubbleMe").value = r.bubbleMe || mixHex(r.color, .14);
   document.getElementById("rBubbleAi").value = r.bubbleAi || "#FFFFFF";
   document.getElementById("rBubbleAlpha").value = (r.bubbleAlpha===undefined) ? 1 : r.bubbleAlpha;
   editColor = r.color;
   editAvatar = r.avatar;
+  editSprite = r.sprite;
+  document.getElementById("rPixel").checked = !!r.pixel;
+  document.getElementById("rStatus").value = r.status || "";
   editBg = r.bg;
   editFiles = JSON.parse(JSON.stringify(r.files||[]));
-  renderSwatches(); avatarPreview(); bgStatus(); renderFileList(); sliderLabels(); modelSelChanged();
+  renderSwatches(); avatarPreview(); spritePreview(); bgStatus(); renderFileList(); sliderLabels(); modelSelChanged();
   show("view-room");
 }
 function mixHex(hex, ratio){
@@ -1344,6 +2007,39 @@ async function setAvatar(ev){
   catch(e){ alert(e.message); }
 }
 function clearAvatar(){ editAvatar = null; avatarPreview(); }
+async function setSprite(ev){
+  const f = ev.target.files[0]; ev.target.value = "";
+  if(!f) return;
+  try{ editSprite = await resizePng(f, 320); spritePreview(); }
+  catch(e){ alert("画像が読めなかった…"); }
+}
+function resizePng(file, maxDim){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      const sc = Math.min(1, maxDim / Math.max(w, h));
+      w = Math.max(1, Math.round(w*sc)); h = Math.max(1, Math.round(h*sc));
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL("image/png"));
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error("画像が読めなかった…")); };
+    img.src = url;
+  });
+}
+function clearSprite(){ editSprite = null; spritePreview(); }
+function spritePreview(){
+  const el = document.getElementById("rSpritePreview");
+  if(!el) return;
+  const pix = document.getElementById("rPixel").checked;
+  el.innerHTML = editSprite
+    ? '<img src="'+editSprite+'" alt="" style="'+(pix?'image-rendering:pixelated':'')+'">'
+    : '<span class="noimg">なし</span>';
+}
 async function setBg(ev){
   const f = ev.target.files[0]; ev.target.value="";
   if(!f) return;
@@ -1431,11 +2127,15 @@ function saveRoomSettings(){
   r.showIconMe = document.getElementById("rShowIconMe").checked;
   r.bgFit = document.getElementById("rBgFit").value;
   r.joinGroup = document.getElementById("rJoinGroup").checked;
+  r.stream = document.getElementById("rStream").checked;
   r.bubbleMe = document.getElementById("rBubbleMe").value;
   r.bubbleAi = document.getElementById("rBubbleAi").value;
   r.bubbleAlpha = parseFloat(document.getElementById("rBubbleAlpha").value);
   r.color = editColor || r.color;
   r.avatar = editAvatar;
+  r.sprite = editSprite;
+  r.pixel = document.getElementById("rPixel").checked;
+  r.status = document.getElementById("rStatus").value;
   r.bg = editBg;
   r.files = editFiles;
   saveState();
@@ -1582,6 +2282,10 @@ document.getElementById("input").addEventListener("input", function(){
   this.style.height = Math.min(this.scrollHeight, 170) + "px";
 });
 renderHome();
+setTimeout(checkOverdueOnStart, 800);
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(()=>{ /* 留守番さん不在でも家は回る */ });
+}
 </script>
 </body>
 </html>

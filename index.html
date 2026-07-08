@@ -1145,6 +1145,43 @@ function exportRoomForShoko(){
   a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
 }
+/* ── エラー翻訳係：英語の呪文をやさしい日本語に ── */
+function friendlyError(raw){
+  const msg = String(raw||"");
+  const m = msg.match(/retry in ([\d.]+)\s*s/i);
+  const src = msg.length>140 ? msg.slice(0,140)+"…" : msg;
+  if(/quota|RESOURCE_EXHAUSTED|rate.?limit|free_tier|\b429\b/i.test(msg)){
+    const wait = m ? Math.ceil(parseFloat(m[1])) : null;
+    return wait
+      ? "⏳ 無料枠の回数が上限みたい。あと"+wait+"秒くらい待ってから、もう一度送ってみてね。"
+      : "⏳ 無料枠か、1分あたりの回数が上限みたい。少し待ってから、もう一度送ってみてね。";
+  }
+  if(/provider returned error/i.test(msg)){
+    return "🌊 モデルの提供元さんでエラーが起きたみたい。少し待って、もう一度試してみてね。\n（原文: "+src+"）";
+  }
+  if(/high demand|overloaded|unavailable|\b503\b|\b529\b/i.test(msg)){
+    return "🌊 いまサーバー側が混雑しているみたい。少し時間をおいて、もう一度試してみてね。\n（原文: "+src+"）";
+  }
+  if(/Failed to fetch|NetworkError|Load failed|network request failed/i.test(msg)){
+    return "📡 通信が途中で迷子になっちゃったみたい。電波を確認して、もう一度送ってみてね。";
+  }
+  if(/時間切れ/.test(msg)) return msg;
+  if(/api.?key|unauthorized|permission|\b401\b|\b403\b/i.test(msg)){
+    return "🔑 APIキーの確認でつまずいたみたい。設定（⚙）でキーを見直してみてね。\n（原文: "+src+"）";
+  }
+  return msg;
+}
+/* ── 時間切れ番人：90秒返事がなければ正直に言う ── */
+async function fetchT(url, opts){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), 90000);
+  try{
+    return await fetch(url, Object.assign({}, opts, { signal: ctrl.signal }));
+  }catch(e){
+    if(e && e.name==="AbortError") throw new Error("⌛ 90秒待っても返事が来なかったの（時間切れ）。もう一度送ってみてね。");
+    throw e;
+  }finally{ clearTimeout(timer); }
+}
 async function chatOpenAIStyle(r, system, msgs, onDelta){
   const model = modelOf(r);
   const isOR = r.provider==="openrouter";
@@ -1167,7 +1204,7 @@ async function chatOpenAIStyle(r, system, msgs, onDelta){
   const streaming = !!(r.stream && onDelta);
   if(streaming){ body.stream = true; body.stream_options = {include_usage:true}; }
   const url = isOR ? "https://openrouter.ai/api/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
-  const res = await fetch(url, {
+  const res = await fetchT(url, {
     method:"POST",
     headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+state.keys[r.provider] },
     body: JSON.stringify(body)
@@ -1224,7 +1261,7 @@ async function chatAnthropic(r, system, msgs, onDelta){
   };
   const streaming = !!(r.stream && onDelta);
   if(streaming) body.stream = true;
-  const res = await fetch("https://api.anthropic.com/v1/messages",{
+  const res = await fetchT("https://api.anthropic.com/v1/messages",{
     method:"POST",
     headers:{
       "Content-Type":"application/json",
@@ -1276,7 +1313,7 @@ async function chatGemini(r, system, msgs, onDelta){
   if(/2\.5-flash/.test(model)) body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
   const streaming = !!(r.stream && onDelta);
   const method = streaming ? ":streamGenerateContent?alt=sse&key=" : ":generateContent?key=";
-  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+method+encodeURIComponent(state.keys.gemini),{
+  const res = await fetchT("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+method+encodeURIComponent(state.keys.gemini),{
     method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body)
   });
   if(streaming){
@@ -1368,7 +1405,7 @@ async function sendMessage(){
       }
     }
   }catch(e){
-    c.messages.push({role:"error", content:"⚠ "+(e.message||"通信に失敗しちゃった"), t:Date.now()});
+    c.messages.push({role:"error", content:"⚠ "+friendlyError(e.message||"通信に失敗しちゃった"), t:Date.now()});
   }
   sending = false;
   document.getElementById("sendBtn").disabled = false;
@@ -1417,7 +1454,7 @@ async function sendLiving(){
       const reply = await chat(r, groupSystem(r), livingMsgsFor(r));
       state.living.messages.push({sender:r.id, content:reply, images:[], atts:[], t:Date.now()});
     }catch(e){
-      state.living.messages.push({sender:"error", content:"⚠ "+r.name+"："+(e.message||"通信に失敗しちゃった"), t:Date.now()});
+      state.living.messages.push({sender:"error", content:"⚠ "+r.name+"："+friendlyError(e.message||"通信に失敗しちゃった"), t:Date.now()});
     }
     saveState(); renderMsgs();
   }

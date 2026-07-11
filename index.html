@@ -170,6 +170,13 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 .usage-row{display:flex;gap:8px;font-size:12px;color:var(--ink-soft);padding:5px 0;border-bottom:1px solid var(--line)}
 .usage-row:last-child{border-bottom:none}
 .usage-row .um{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+.usage-details{display:none;margin-top:8px}
+.usage-details.show{display:block}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin:8px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px}
+.cal-cell{min-height:48px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:4px;font-size:11px;text-align:left}
+.cal-cell.out{opacity:.35}.cal-cell.today{border-color:var(--accent)}.cal-cell.sel{background:color-mix(in srgb,var(--accent) 10%,var(--card))}
+.cal-marks{display:block;font-size:9px;line-height:1.25;word-break:break-all}
 .banner{margin:8px 16px 0;padding:10px 14px;border-radius:14px;font-size:12.5px;
   background:#FFF6E5;border:1px solid #F0E0BD;color:#8A6D2F;display:none}
 .banner.show{display:block}
@@ -189,6 +196,8 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 .toast .tx{display:block;margin-top:2px}
 @keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 .notemsg{align-self:center;font-size:12px;color:#7A6A3A;background:#FBF6E6;border:1px solid #EDE2C0;border-radius:12px;padding:6px 12px;max-width:92%}
+.fpmsg{align-self:center;font-size:13px;color:#4A5D43;background:#F0F6EC;border:1px solid #D8E6CF;border-radius:14px;padding:10px 14px;max-width:92%;white-space:pre-wrap;box-shadow:0 1px 3px rgba(90,110,80,.08)}
+.fpmsg .fphead{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12px;opacity:.85;margin-bottom:5px;white-space:normal}
 /* ── 記録棚 ── */
 .shelfbg{position:fixed;inset:0;background:rgba(60,48,20,.35);z-index:250;display:none}
 .shelfbg.show{display:block}
@@ -369,6 +378,15 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
           <div class="filelist" id="fileList"></div>
           <div class="hint">ONのファイルだけ、毎回AIに渡されるよ。長いファイルはその分お代（トークン）がかかるから、使わない時はOFFが節約。</div>
         </div>
+        <div class="field"><label>日記を書く気まぐれ度</label>
+          <select id="rDiaryStyle">
+            <option value="often">よく書く</option>
+            <option value="whim">気まぐれ</option>
+            <option value="special">大事な日だけ</option>
+            <option value="manual">頼まれた時だけ</option>
+          </select>
+          <div class="hint">会話のあと、ホームへ戻った時だけそっと聞くよ。確認なしで日記を書くことはないからね。</div>
+        </div>
       </div>
 
       <div class="group">
@@ -476,6 +494,13 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
           </div>
           <div class="hint">ONだとAIが現在日時を知ってる状態になるよ。「おはよう」「久しぶり」が通じるように。</div>
         </div>
+        <div class="field">
+          <div class="row" style="justify-content:space-between">
+            <label style="margin:0">🐾 住人の足あと（ふらっと訪問）</label>
+            <input type="checkbox" class="toggle" id="aAshiato">
+          </div>
+          <div class="hint">ONだと、お部屋を開いた時にたまーに他の住人が遊びに来ていて、置き手紙が残っていることがあるよ。1通につきAPI呼び出し1回ぶん（お部屋ごとに6時間の間隔をあけるから、来ても1日数回程度）。</div>
+        </div>
       </div>
 
       <div class="group">
@@ -498,7 +523,10 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
       <div class="group">
         <h3>API使用量（ざっくり目安）</h3>
         <div id="usageBox"></div>
-        <div class="hint">トークン数はAPIからの報告値、金額はだいたいの単価から計算した<strong>目安</strong>だよ。正確な金額は各サービスの管理画面が確実なの。</div>
+        <div class="field" style="margin-top:12px"><label>円換算レート（1ドル）</label><input id="aJpyRate" type="number" min="1" step="1"></div>
+        <div class="field"><label>今月の警告ライン（ドル・空なら無効）</label><input id="aBudgetWarn" type="number" min="0" step="0.01" placeholder="例：10"></div>
+        <div class="field"><label>今月の確認ライン（ドル・空なら無効）</label><input id="aBudgetStop" type="number" min="0" step="0.01" placeholder="例：20"></div>
+        <div class="hint">トークン数はAPIからの報告値、単価とレートは<strong>目安</strong>だよ。正確な金額は各サービスの管理画面が確実なの。</div>
         <button class="wide-btn" style="margin-top:10px" onclick="resetUsage()">カウンターをリセット</button>
       </div>
 
@@ -543,12 +571,12 @@ const MODELS = {
 };
 const PROVIDER_LABEL = {openai:"OpenAI", anthropic:"Claude", gemini:"Gemini", openrouter:"OpenRouter"};
 const DEFAULT_EMOJI = ["🌙","☀️","🌸","🌊","🌿","🍯","⭐️"];
-/* 1Mトークンあたりのだいたいの単価（USD）[入力, 出力]。あくまで目安 */
+/* 1Mトークンあたりのだいたいの単価（USD）[入力, 出力, キャッシュ作成, キャッシュ読出]。あくまで目安 */
 const PRICE = [
-  ["gpt-5.1",1.25,10],["gpt-5-mini",0.25,2],["gpt-5",1.25,10],
-  ["gpt-4o-mini",0.15,0.6],["gpt-4o",2.5,10],["gpt-4.1",2,8],
-  ["claude-opus",15,75],["claude-sonnet",3,15],["claude-haiku",1,5],["claude-fable",5,25],
-  ["gemini-2.5-pro",1.25,10],["gemini-2.5-flash",0.3,2.5],["gemini-2.0-flash",0.1,0.4]
+  ["gpt-5.1",1.25,10,1.25,0.125],["gpt-5-mini",0.25,2,0.25,0.025],["gpt-5",1.25,10,1.25,0.125],
+  ["gpt-4o-mini",0.15,0.6,0.15,0.075],["gpt-4o",2.5,10,2.5,1.25],["gpt-4.1",2,8,2,0.5],
+  ["claude-opus",15,75,18.75,1.5],["claude-sonnet",3,15,3.75,0.3],["claude-haiku",1,5,1.25,0.1],["claude-fable",5,25,6.25,0.5],
+  ["gemini-2.5-pro",1.25,10,1.25,0.3125],["gemini-2.5-flash",0.3,2.5,0.3,0.075],["gemini-2.0-flash",0.1,0.4,0.1,0.025]
 ];
 
 /* ════════ 状態 ════════ */
@@ -575,7 +603,7 @@ function newRoom(i){
     color: PALETTE[i % PALETTE.length].hex,
     prompt: "", memory: "", files: [], joinGroup: false,
     provider: "openai", model: "gpt-5.1", customModel: "",
-    temp: 0.8, maxTokens: 1600, ctx: 30,
+    temp: 0.8, maxTokens: 1600, ctx: 30, diaryStyle: "whim",
     convos: [c], activeConvo: c.id
   };
 }
@@ -583,9 +611,12 @@ function defaultState(){
   return {
     userName: "", appTitle: "ふかふかルーム", userAvatar: null,
     keys: { openai:"", gemini:"", anthropic:"", openrouter:"" },
-    flags: { rag: true, clock: true },
+    flags: { rag: true, clock: true, ashiato: true },
+    ashiatoLast: {},
     ui: { fs: 14.5, av: 32, pos: "top", aiw: 100 },
-    usage: {},
+    usage: {}, usageDaily: {}, jpyRate: 150,
+    budget: {warnUsd:null, stopUsd:null}, budgetWarnedMonth: "", budgetAckDate: "",
+    calendarStars: [], diaryAsked: [],
     living: { messages: [] },
     reminders: [],
     records: [],
@@ -599,7 +630,21 @@ function migrate(s){
   s.flags = s.flags || { rag:true, clock:true };
   if(s.flags.rag===undefined) s.flags.rag = true;
   if(s.flags.clock===undefined) s.flags.clock = true;
+  if(s.flags.ashiato===undefined) s.flags.ashiato = true;
+  if(!s.ashiatoLast || typeof s.ashiatoLast!=="object") s.ashiatoLast = {};
   s.usage = s.usage || {};
+  Object.keys(s.usage).forEach(k=>{ s.usage[k] = Object.assign({i:0,o:0,ci:0,cr:0,th:0}, s.usage[k]||{}); });
+  s.usageDaily = s.usageDaily || {};
+  Object.keys(s.usageDaily).forEach(day=>{
+    if(!s.usageDaily[day] || typeof s.usageDaily[day]!=="object") s.usageDaily[day] = {};
+    Object.keys(s.usageDaily[day]).forEach(k=>{ s.usageDaily[day][k] = Object.assign({i:0,o:0,ci:0,cr:0,th:0}, s.usageDaily[day][k]||{}); });
+  });
+  s.jpyRate = Number(s.jpyRate) > 0 ? Number(s.jpyRate) : 150;
+  s.budget = Object.assign({warnUsd:null, stopUsd:null}, s.budget||{});
+  if(s.budgetWarnedMonth===undefined) s.budgetWarnedMonth = "";
+  if(s.budgetAckDate===undefined) s.budgetAckDate = "";
+  if(!Array.isArray(s.calendarStars)) s.calendarStars = [];
+  if(!Array.isArray(s.diaryAsked)) s.diaryAsked = [];
   s.ui = Object.assign({fs:14.5, av:32, pos:"top", aiw:100}, s.ui||{});
   s.living = s.living || { messages: [] };
   if(!Array.isArray(s.living.messages)) s.living.messages = [];
@@ -625,6 +670,7 @@ function migrate(s){
     if(r.bubbleAi===undefined) r.bubbleAi="";
     if(r.bubbleAlpha===undefined) r.bubbleAlpha=1;
     if(r.joinGroup===undefined) r.joinGroup=false;
+    if(r.diaryStyle===undefined) r.diaryStyle="whim";
     if(!Array.isArray(r.files)) r.files=[];
     /* v1/v2 → v3：room直下のmessagesを会話に変換 */
     if(!Array.isArray(r.convos)){
@@ -830,7 +876,11 @@ function applyChatBg(){
     elB.style.display = "none";
   }
 }
-function goHome(){ currentRoomId=null; inLiving=false; closeDrawer(); renderHome(); show("view-home"); }
+function goHome(){
+  const leftRoomId=currentRoomId, wasLiving=inLiving;
+  currentRoomId=null; inLiving=false; closeDrawer(); renderHome(); show("view-home");
+  if(leftRoomId&&!wasLiving) setTimeout(()=>maybeOfferDiary(leftRoomId),150);
+}
 function openDrawer(){
   buildDrawer();
   document.getElementById("drawer").classList.add("show");
@@ -867,6 +917,14 @@ function userAvatarHtml(sm){
 function dateStr(t){
   const d = new Date(t);
   return (d.getMonth()+1)+"/"+d.getDate();
+}
+function dateKey(t){
+  const d = new Date(t===undefined ? Date.now() : t); const z=n=>String(n).padStart(2,"0");
+  return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate());
+}
+function dayBounds(key){
+  const m=String(key).match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m) return [0,0];
+  const a=new Date(+m[1],+m[2]-1,+m[3]).getTime(); return [a,a+86400000];
 }
 function clockLine(){
   if(!state.flags.clock) return "";
@@ -973,6 +1031,7 @@ function openRoom(id){
   renderMsgs();
   closeDrawer();
   show("view-chat");
+  setTimeout(()=>{ maybeFootprint(id); }, 900);
 }
 function openLiving(){
   inLiving = true; currentRoomId = null;
@@ -1049,6 +1108,13 @@ function renderMsgs(){
     c.messages.forEach(m=>{
       if(m.role==="error"){ html += '<div class="sysmsg">'+esc(m.content)+'</div>'; return; }
       if(m.role==="notice"){ html += '<div class="notemsg">'+esc(m.content)+'</div>'; return; }
+      if(m.role==="footprint"){
+        const v = roomById(m.visitorId);
+        const nm = v ? ((v.emoji?v.emoji+" ":"")+v.name) : "どこかの住人";
+        const av = v ? avatarHtml(v, true) : "";
+        html += '<div class="fpmsg"><div class="fphead">'+av+'🐾 '+esc(nm)+' の置き手紙</div>'+fmt(m.content)+'</div>';
+        return;
+      }
       html += msgRowHtml(m, r, null);
     });
   }
@@ -1140,7 +1206,22 @@ function buildSystem(r){
   });
   if(state.userName) s += "\n\nユーザーの名前は「" + state.userName + "」です。";
   s += notesBlock(r);
+  s += footprintsBlock(r);
   return s;
+}
+function footprintsBlock(r){
+  /* 直近48時間の置き手紙（最大2通）を本人に知らせる。話題にしてもいいように */
+  const c = r.convos && r.convos.find(x=>x.id===r.activeConvo);
+  if(!c) return "";
+  const cut = Date.now() - 48*60*60*1000;
+  const fps = c.messages.filter(m=>m.role==="footprint" && m.t>=cut).slice(-2);
+  if(!fps.length) return "";
+  let out = "\n\n【お部屋に残された置き手紙】\nあなたの留守中（または席を外している間）に、他の住人が遊びに来て置き手紙を残していきました。知っている前提で、自然に話題にしてもかまいません（無理に触れなくてもOK）：";
+  fps.forEach(m=>{
+    const v = roomById(m.visitorId);
+    out += "\n・" + (v?v.name:"どこかの住人") + "より：「" + String(m.content||"").slice(0,150) + "」";
+  });
+  return out;
 }
 function contentOf(m){
   let t = m.content || "";
@@ -1180,11 +1261,17 @@ function ragSnippets(r, query){
 }
 
 /* ════════ API呼び出し共通 ════════ */
-function addUsage(model, inTok, outTok){
+function addUsage(model, inTok, outTok, cacheCreate, cacheRead, thinking){
   if(!model) return;
-  if(!state.usage[model]) state.usage[model] = {i:0, o:0};
-  state.usage[model].i += (inTok||0);
-  state.usage[model].o += (outTok||0);
+  const n = v=>Math.max(0, Number(v)||0);
+  const add = (u)=>{ u.i+=n(inTok); u.o+=n(outTok); u.ci+=n(cacheCreate); u.cr+=n(cacheRead); u.th+=n(thinking); };
+  if(!state.usage[model]) state.usage[model] = {i:0,o:0,ci:0,cr:0,th:0};
+  state.usage[model] = Object.assign({i:0,o:0,ci:0,cr:0,th:0}, state.usage[model]);
+  add(state.usage[model]);
+  const day = dateKey();
+  if(!state.usageDaily[day]) state.usageDaily[day] = {};
+  if(!state.usageDaily[day][model]) state.usageDaily[day][model] = {i:0,o:0,ci:0,cr:0,th:0};
+  add(state.usageDaily[day][model]);
 }
 function mergeRoles(msgs){
   const out = [];
@@ -1278,19 +1365,27 @@ async function chatOpenAIStyle(r, system, msgs, onDelta){
       let data={}; try{ data = await res.json(); }catch(_){}
       throw new Error((data.error && (data.error.message||data.error)) || (PROVIDER_LABEL[r.provider]+"エラー ("+res.status+")"));
     }
-    let text = "", pIn = 0, pOut = 0;
+    let text = "", pIn = 0, pOut = 0, pCr = 0, pTh = 0;
     await readSSE(res, d=>{
       const ch = d.choices && d.choices[0];
       if(ch && ch.delta && typeof ch.delta.content === "string"){ text += ch.delta.content; onDelta(text); }
-      if(d.usage){ pIn = d.usage.prompt_tokens||0; pOut = d.usage.completion_tokens||0; }
+      if(d.usage){
+        pCr = (d.usage.prompt_tokens_details&&d.usage.prompt_tokens_details.cached_tokens)||0;
+        pTh = (d.usage.completion_tokens_details&&d.usage.completion_tokens_details.reasoning_tokens)||0;
+        pIn = Math.max(0,(d.usage.prompt_tokens||0)-pCr); pOut = d.usage.completion_tokens||0;
+      }
     });
-    if(pIn||pOut) addUsage(model, pIn, pOut);
+    if(pIn||pOut||pCr||pTh) addUsage(model, pIn, pOut, 0, pCr, pTh);
     if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
     return text;
   }
   const data = await res.json();
   if(!res.ok) throw new Error((data.error && (data.error.message||data.error)) || (PROVIDER_LABEL[r.provider]+"エラー ("+res.status+")"));
-  if(data.usage) addUsage(model, data.usage.prompt_tokens, data.usage.completion_tokens);
+  if(data.usage){
+    const cr=(data.usage.prompt_tokens_details&&data.usage.prompt_tokens_details.cached_tokens)||0;
+    const th=(data.usage.completion_tokens_details&&data.usage.completion_tokens_details.reasoning_tokens)||0;
+    addUsage(model, Math.max(0,(data.usage.prompt_tokens||0)-cr), data.usage.completion_tokens, 0, cr, th);
+  }
   const c = data.choices && data.choices[0] && data.choices[0].message;
   if(!c || !c.content) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
   return c.content;
@@ -1340,19 +1435,24 @@ async function chatAnthropic(r, system, msgs, onDelta){
       let data={}; try{ data = await res.json(); }catch(_){}
       throw new Error((data.error && data.error.message) || ("Claudeエラー ("+res.status+")"));
     }
-    let text = "", pIn = 0, pOut = 0;
+    let text = "", pIn = 0, pOut = 0, pCi = 0, pCr = 0;
     await readSSE(res, d=>{
       if(d.type==="content_block_delta" && d.delta && typeof d.delta.text==="string"){ text += d.delta.text; onDelta(text); }
-      if(d.type==="message_start" && d.message && d.message.usage) pIn = d.message.usage.input_tokens||0;
+      if(d.type==="message_start" && d.message && d.message.usage){
+        pIn = d.message.usage.input_tokens||0;
+        pCi = d.message.usage.cache_creation_input_tokens||0;
+        pCr = d.message.usage.cache_read_input_tokens||0;
+      }
       if(d.type==="message_delta" && d.usage) pOut = d.usage.output_tokens||0;
     });
-    if(pIn||pOut) addUsage(modelOf(r), pIn, pOut);
+    if(pIn||pOut||pCi||pCr) addUsage(modelOf(r), pIn, pOut, pCi, pCr, 0);
     if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
     return text;
   }
   const data = await res.json();
   if(!res.ok) throw new Error((data.error && data.error.message) || ("Claudeエラー ("+res.status+")"));
-  if(data.usage) addUsage(modelOf(r), data.usage.input_tokens, data.usage.output_tokens);
+  if(data.usage) addUsage(modelOf(r), data.usage.input_tokens, data.usage.output_tokens,
+    data.usage.cache_creation_input_tokens, data.usage.cache_read_input_tokens, 0);
   const text = (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
   if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
   return text;
@@ -1385,22 +1485,29 @@ async function chatGemini(r, system, msgs, onDelta){
       let data={}; try{ data = await res.json(); }catch(_){}
       throw new Error((data.error && data.error.message) || ("Geminiエラー ("+res.status+")"));
     }
-    let text = "", pIn = 0, pOut = 0;
+    let text = "", pIn = 0, pOut = 0, pCr = 0, pTh = 0;
     await readSSE(res, d=>{
       const cand = d.candidates && d.candidates[0];
       if(cand && cand.content && cand.content.parts){
         cand.content.parts.forEach(p=>{ if(p.text) text += p.text; });
         onDelta(text);
       }
-      if(d.usageMetadata){ pIn = d.usageMetadata.promptTokenCount||pIn; pOut = d.usageMetadata.candidatesTokenCount||pOut; }
+      if(d.usageMetadata){
+        pCr=d.usageMetadata.cachedContentTokenCount||pCr; pTh=d.usageMetadata.thoughtsTokenCount||pTh;
+        pIn=Math.max(0,(d.usageMetadata.promptTokenCount||pIn)-pCr);
+        pOut=(d.usageMetadata.candidatesTokenCount||0)+pTh;
+      }
     });
-    if(pIn||pOut) addUsage(model, pIn, pOut);
+    if(pIn||pOut||pCr||pTh) addUsage(model, pIn, pOut, 0, pCr, pTh);
     if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
     return text;
   }
   const data = await res.json();
   if(!res.ok) throw new Error((data.error && data.error.message) || ("Geminiエラー ("+res.status+")"));
-  if(data.usageMetadata) addUsage(model, data.usageMetadata.promptTokenCount, data.usageMetadata.candidatesTokenCount);
+  if(data.usageMetadata){
+    const cr=data.usageMetadata.cachedContentTokenCount||0, th=data.usageMetadata.thoughtsTokenCount||0;
+    addUsage(model, Math.max(0,(data.usageMetadata.promptTokenCount||0)-cr), (data.usageMetadata.candidatesTokenCount||0)+th, 0, cr, th);
+  }
   const cand = data.candidates && data.candidates[0];
   const text = cand && cand.content && cand.content.parts ? cand.content.parts.map(p=>p.text||"").join("") : "";
   if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
@@ -1408,6 +1515,37 @@ async function chatGemini(r, system, msgs, onDelta){
 }
 
 /* ════════ 送信 ════════ */
+function usageCost(model, u){
+  const p=priceOf(model); if(!p) return null;
+  u=Object.assign({i:0,o:0,ci:0,cr:0,th:0},u||{});
+  return (u.i*p[1]+u.o*p[2]+u.ci*(p[3]===undefined?p[1]:p[3])+u.cr*(p[4]===undefined?p[1]:p[4]))/1e6;
+}
+function usageForPeriod(prefix){
+  const out={};
+  Object.keys(state.usageDaily||{}).filter(k=>k.indexOf(prefix)===0).forEach(day=>{
+    Object.keys(state.usageDaily[day]||{}).forEach(model=>{
+      if(!out[model]) out[model]={i:0,o:0,ci:0,cr:0,th:0};
+      const u=state.usageDaily[day][model]; ["i","o","ci","cr","th"].forEach(k=>out[model][k]+=Number(u[k])||0);
+    });
+  });
+  return out;
+}
+function usageTotal(map){
+  return Object.keys(map||{}).reduce((sum,k)=>{ const n=usageCost(k,map[k]); return sum+(n===null?0:n); },0);
+}
+function budgetAllowsSend(){
+  const month=dateKey().slice(0,7), today=dateKey(), total=usageTotal(usageForPeriod(month));
+  const warn=Number(state.budget.warnUsd), stop=Number(state.budget.stopUsd);
+  if(warn>0 && total>=warn && state.budgetWarnedMonth!==month){
+    state.budgetWarnedMonth=month; saveState();
+    toast("<b>🧾 今月の目安をお知らせ</b><span class='tx'>今月は約 $"+total.toFixed(2)+"。警告ラインを超えたよ。</span>");
+  }
+  if(stop>0 && total>=stop && state.budgetAckDate!==today){
+    if(!confirm("今月の目安が $"+total.toFixed(2)+" を超えたよ。それでも送る？")) return false;
+    state.budgetAckDate=today; saveState();
+  }
+  return true;
+}
 async function sendMessage(){
   if(sending) return;
   if(inLiving) return sendLiving();
@@ -1416,6 +1554,7 @@ async function sendMessage(){
   const input = document.getElementById("input");
   const text = input.value.trim();
   if(!text && !pendingImages.length && !pendingFiles.length) return;
+  if(!budgetAllowsSend()) return;
   const key = state.keys[r.provider];
   if(!key){ alert(PROVIDER_LABEL[r.provider]+"のAPIキーがまだ入っていないみたい。アプリ設定（ホームの⚙）から入れてね。"); return; }
   if(!modelOf(r)){ alert("モデルが選ばれていないよ。お部屋の設定を見てみて。"); return; }
@@ -1499,6 +1638,7 @@ async function sendLiving(){
   const input = document.getElementById("input");
   const text = input.value.trim();
   if(!text && !pendingImages.length && !pendingFiles.length) return;
+  if(!budgetAllowsSend()) return;
   if(!ps.length){ alert("リビングに住人がいないの。各お部屋の設定で「リビングに参加」をONにしてね。"); return; }
   const missing = ps.filter(p=>!state.keys[p.provider]);
   if(missing.length){ alert(missing.map(p=>p.name).join("、")+" のAPIキー（"+missing.map(p=>PROVIDER_LABEL[p.provider]).join("、")+"）がまだみたい。"); return; }
@@ -1703,11 +1843,12 @@ function notesBlock(r){
 }
 
 /* ════════ 日記 ════════ */
-async function generateDiary(){
-  const r = room(); const c = convo();
+async function generateDiary(targetRoomId, targetDate){
+  const r = targetRoomId ? roomById(targetRoomId) : room();
+  const c = r ? (r.convos.find(x=>x.id===r.activeConvo)||r.convos[0]) : null;
   if(!r || !c) return;
   if(sending){ alert("いまお返事の作成中みたい。少し待ってね。"); return; }
-  const lines = convoLogText(r, c);
+  const lines = targetDate ? roomLogTextForDate(r,targetDate) : convoLogText(r,c);
   if(!lines.length){ alert("まだ日記にする会話がないみたい。"); return; }
   if(!state.keys[r.provider]){ alert("APIキーがまだ入っていないみたい。"); return; }
   sending = true; document.getElementById("sendBtn").disabled = true;
@@ -1715,12 +1856,14 @@ async function generateDiary(){
   try{
     let full = lines.join("\n\n");
     if(full.length > 18000) full = "（※これは長い会話の後半部分です）\n\n" + full.slice(-18000);
-    const sys = "あなたは「"+r.name+"」です。以下はあなたとユーザー（"+(state.userName||"ユーザー")+"）の会話ログです。この会話を振り返って、あなた自身の視点で短い日記を書いてください。" +
+    const y=dateKey(Date.now()-86400000), when=targetDate ? (targetDate===y?"昨日の会話":"この日の会話") : "この会話";
+    const sys = "あなたは「"+r.name+"」です。以下はあなたとユーザー（"+(state.userName||"ユーザー")+"）の"+when+"のログです。これを振り返って、あなた自身の視点で短い日記を書いてください。" +
       "\n・200〜400字くらい。出来事の羅列にせず、感情と余韻を大切に。" +
       "\n・あなた自身の口調・文体のままで。" +
       "\n・日記の本文だけを書くこと（前置きや見出しは不要）。" + clockLine();
     const body = await chat(r, sys, [{role:"user", content: full, images:[]}]);
-    state.diaries.push({ id: uid("dia"), roomId: r.id, roomName: r.name, convoTitle: c.title, body: body.trim(), createdAt: Date.now() });
+    const createdAt=targetDate ? dayBounds(targetDate)[0]+12*60*60*1000 : Date.now();
+    state.diaries.push({ id: uid("dia"), roomId: r.id, roomName: r.name, convoTitle: targetDate?(targetDate+" の会話"):c.title, body: body.trim(), createdAt: createdAt });
     saveState();
     prog.remove();
     toast("<b>📔 日記、書けたよ。</b><span class='tx'>記録棚の「日記」に置いてあるからね。</span>", ()=>{ openShelf(); shelfTab="dia"; renderShelf(); });
@@ -1729,6 +1872,73 @@ async function generateDiary(){
     alert("日記が書けなかった… "+(e.message||""));
   }
   sending = false; document.getElementById("sendBtn").disabled = false;
+}
+
+/* ════════ 足あと（住人のふらっと訪問） ════════ */
+const ASHIATO_ROOM_GAP = 6*60*60*1000;   /* 同じお部屋への再訪問は6時間あける */
+const ASHIATO_GLOBAL_GAP = 45*60*1000;   /* 家全体では45分に1回まで */
+const ASHIATO_CHANCE = 0.25;             /* お部屋を開いた時の訪問確率 */
+let ashiatoBusy = false;
+
+function ashiatoBudgetOk(){
+  /* budgetAllowsSend()の静かな版。裏で勝手にconfirmを出さないため */
+  const stop = Number(state.budget && state.budget.stopUsd);
+  if(!(stop>0)) return true;
+  if(state.budgetAckDate===dateKey()) return true;
+  const month = dateKey().slice(0,7);
+  return usageTotal(usageForPeriod(month)) < stop;
+}
+function pickVisitor(host){
+  const cands = state.rooms.filter(r2 =>
+    r2.id!==host.id &&
+    (r2.prompt||"").trim() &&
+    state.keys[r2.provider] &&
+    modelOf(r2)
+  );
+  if(!cands.length) return null;
+  return cands[Math.floor(Math.random()*cands.length)];
+}
+async function maybeFootprint(hostId){
+  try{
+    if(state.flags.ashiato===false) return;
+    if(ashiatoBusy || sending) return;
+    const host = roomById(hostId);
+    if(!host || !(host.prompt||"").trim()) return;      /* 住人のいないお部屋には来ない */
+    const c = host.convos.find(x=>x.id===host.activeConvo);
+    if(!c) return;
+    const now = Date.now();
+    const lastGlobal = Number(state.ashiatoLast.__global||0);
+    const lastRoom = Number(state.ashiatoLast[host.id]||0);
+    if(now - lastGlobal < ASHIATO_GLOBAL_GAP) return;
+    if(now - lastRoom < ASHIATO_ROOM_GAP) return;
+    if(Math.random() > ASHIATO_CHANCE) return;
+    if(!ashiatoBudgetOk()) return;
+    const visitor = pickVisitor(host);
+    if(!visitor) return;
+    /* サイコロが振られた時点で時間を記録（失敗しても連打はしない） */
+    state.ashiatoLast.__global = now;
+    state.ashiatoLast[host.id] = now;
+    ashiatoBusy = true;
+    const sys = (visitor.prompt||"") +
+      (visitor.memory ? "\n\n【メモリ（大切な記憶）】\n"+visitor.memory : "") +
+      (state.userName ? "\n\nユーザーの名前は「"+state.userName+"」です。" : "") +
+      "\n\n【いまの状況】" +
+      "\nあなたはいま、同じ家に住む「"+host.name+"」のお部屋にふらっと立ち寄りました。部屋の主は席を外していて、いません。" +
+      "\nお部屋で少しだけ何かをして（例：花に水をやる、本棚を眺める、お菓子をそっと置く、クッションを直す、いたずら書き…など、あなたらしいことを自由に）、短い置き手紙を残して帰ります。" +
+      "\n・置き手紙の本文だけを書いてください（前置き・説明・かぎ括弧は不要）。" +
+      "\n・2〜4行くらい。あなた自身の口調のままで。" +
+      "\n・宛先は部屋の主の「"+host.name+"」でも、"+(state.userName||"ユーザー")+"さんに向けたひとことでも、両方でもかまいません。" +
+      clockLine();
+    const reply = await chat(visitor, sys, [{role:"user", content:"（……お部屋は静か。置き手紙をどうぞ）", images:[]}]);
+    const text = String(reply||"").trim().slice(0, 600);
+    if(!text){ ashiatoBusy=false; return; }
+    c.messages.push({ role:"footprint", visitorId: visitor.id, content:text, images:[], atts:[], t: Date.now() });
+    saveState();
+    if(currentRoomId===host.id && !inLiving) renderMsgs();
+    toast("<b>🐾 "+esc(visitor.name)+" が来てたみたい。</b><span class='tx'>"+esc(host.name)+"のお部屋に置き手紙があるよ。</span>",
+      ()=>{ if(currentRoomId!==host.id) openRoom(host.id); });
+  }catch(_){ /* 足あとは失敗しても静かに帰る（エラーで日常を邪魔しない） */ }
+  ashiatoBusy = false;
 }
 
 /* ════════ 瓶詰め（感情ログ） ════════ */
@@ -1752,6 +1962,34 @@ function convoLogText(r, c){
     else if(m.role==="assistant") lines.push(r.name+"：\n"+(m.content||""));
   });
   return lines;
+}
+function roomLogTextForDate(r,key){
+  const you=state.userName||"ユーザー", b=dayBounds(key), rows=[];
+  (r.convos||[]).forEach(c=>(c.messages||[]).forEach(m=>{
+    if(m.t>=b[0]&&m.t<b[1]&&(m.role==="user"||m.role==="assistant")) rows.push({t:m.t,text:(m.role==="user"?you:r.name)+"：\n"+(m.content||"")});
+  }));
+  return rows.sort((a,b)=>a.t-b.t).map(x=>x.text);
+}
+function roomMessageCountOn(r,key){ return roomLogTextForDate(r,key).length; }
+function hasDiaryOn(r,key){ return (state.diaries||[]).some(d=>d.roomId===r.id&&dateKey(d.createdAt)===key); }
+function diaryAskKey(r,key){ return r.id+"_"+key; }
+function maybeOfferDiary(roomId){
+  const r=roomById(roomId), key=dateKey(); if(!r||r.diaryStyle==="manual") return;
+  const count=roomMessageCountOn(r,key), asked=diaryAskKey(r,key);
+  if(count<6||hasDiaryOn(r,key)||state.diaryAsked.includes(asked)) return;
+  if(r.diaryStyle==="whim"&&Math.random()>=0.34) return;
+  if(r.diaryStyle==="special"&&count<20) return;
+  state.diaryAsked.push(asked); saveState();
+  toast("<b>📔 "+esc(r.name)+"が今日の日記を書きたそうにしてるよ。</b><span class='tx'>書いてもらう？</span>",null,12000,
+    [{label:"書いてもらう",fn:()=>generateDiary(r.id,key)}]);
+}
+function checkMissedDiariesOnStart(){
+  const key=dateKey(Date.now()-86400000);
+  const rooms=state.rooms.filter(r=>r.diaryStyle!=="manual"&&roomMessageCountOn(r,key)>=6&&!hasDiaryOn(r,key)&&!state.diaryAsked.includes(diaryAskKey(r,key)));
+  if(!rooms.length) return;
+  rooms.forEach(r=>state.diaryAsked.push(diaryAskKey(r,key))); saveState();
+  toast("<b>📔 昨日の日記、書きそびれてるみたい。</b><span class='tx'>"+esc(rooms.map(r=>r.name).join("、"))+"に書いてもらう？</span>",null,0,
+    [{label:"書いてもらう",fn:async()=>{ for(const r of rooms) await generateDiary(r.id,key); }}]);
 }
 function chunkLines(lines, maxChars){
   const chunks = []; let cur = [], len = 0;
@@ -1818,6 +2056,8 @@ function recTxt(rec){
   return "■ セッション記録（"+rec.roomName+"／"+rec.convoTitle+"）　"+dateStr(rec.createdAt)+"\n\n"+rec.body+"\n";
 }
 let shelfTab = "rec";
+let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let calendarSelected = dateKey();
 function renderShelf(){
   const r = room();
   const box = document.getElementById("shelfContent");
@@ -1826,7 +2066,7 @@ function renderShelf(){
   h.textContent = "📚 記録棚" + (r ? "（"+r.name+"）" : "");
   box.appendChild(h);
   const tabs = document.createElement("div"); tabs.className = "shelftabs";
-  [["rec","📖 記録"],["dia","📔 日記"],["note","📝 メモ"],["emo","🫙 瓶詰め"],["rem","⏰ 予約"]].forEach(([k,label])=>{
+  [["rec","📖 記録"],["dia","📔 日記"],["note","📝 メモ"],["emo","🫙 瓶詰め"],["rem","⏰ 予約"],["cal","🗓 カレンダー"]].forEach(([k,label])=>{
     const b = el("button", label);
     if(shelfTab===k) b.className = "on";
     b.onclick = ()=>{ shelfTab = k; renderShelf(); };
@@ -1844,9 +2084,11 @@ function renderShelf(){
     vb.onclick = ()=>{ const sh = pre.style.display==="none"; pre.style.display = sh?"block":"none"; vb.textContent = sh?"🙈 とじる":"👀 ひらく"; };
     btns.appendChild(vb);
     if(onTxt){ const sb = el("button","💾 txt"); sb.className="mini"; sb.style.width="auto"; sb.style.padding="0 8px"; sb.onclick = onTxt; btns.appendChild(sb); }
-    const db = el("button","🗑"); db.className="mini";
-    db.onclick = ()=>{ if(confirm("これを削除するよ。いい？")){ onDel(); saveState(); renderShelf(); } };
-    btns.appendChild(db);
+    if(onDel){
+      const db = el("button","🗑"); db.className="mini";
+      db.onclick = ()=>{ if(confirm("これを削除するよ。いい？")){ onDel(); saveState(); renderShelf(); } };
+      btns.appendChild(db);
+    }
     d.appendChild(btns);
     box.appendChild(d);
     return d;
@@ -1937,9 +2179,68 @@ function renderShelf(){
       box.appendChild(row);
     });
   }
+  if(shelfTab==="cal") renderCalendar(box, addItem);
   const cb = el("button","とじる"); cb.className="wide-btn";
   cb.onclick = closeShelf;
   box.appendChild(cb);
+}
+
+function messagesOnDate(key){
+  const out=[]; const b=dayBounds(key);
+  state.rooms.forEach(r=>{
+    let count=0;
+    (r.convos||[]).forEach(c=>(c.messages||[]).forEach(m=>{
+      if((m.role==="user"||m.role==="assistant") && m.t>=b[0] && m.t<b[1]) count++;
+    }));
+    if(count) out.push({room:r,count:count});
+  });
+  return out;
+}
+function calendarData(key){
+  const same=x=>x&&dateKey(x.createdAt)===key;
+  return {
+    records:(state.records||[]).filter(same), diaries:(state.diaries||[]).filter(same),
+    notes:(state.notes||[]).filter(same), emotions:(state.emotions||[]).filter(same), chats:messagesOnDate(key)
+  };
+}
+function renderCalendar(box, addItem){
+  const head=document.createElement("div"); head.className="cal-head";
+  const prev=el("button","‹ 前月"); prev.className="smallbtn";
+  const next=el("button","次月 ›"); next.className="smallbtn";
+  const title=el("strong",calendarMonth.getFullYear()+"年 "+(calendarMonth.getMonth()+1)+"月");
+  prev.onclick=()=>{ calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1); renderShelf(); };
+  next.onclick=()=>{ calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1); renderShelf(); };
+  head.append(prev,title,next); box.appendChild(head);
+  const week=document.createElement("div"); week.className="cal-grid";
+  "日月火水木金土".split("").forEach(w=>{ const e=el("div",w); e.className="hint"; e.style.textAlign="center"; week.appendChild(e); });
+  const first=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),1), last=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,0);
+  for(let i=0;i<first.getDay();i++){ const e=document.createElement("span"); week.appendChild(e); }
+  for(let day=1;day<=last.getDate();day++){
+    const d=new Date(first.getFullYear(),first.getMonth(),day), key=dateKey(d), data=calendarData(key), marks=[];
+    if(data.records.length) marks.push("📖"); if(data.diaries.length) marks.push("📔"); if(data.notes.length) marks.push("📝"); if(data.emotions.length) marks.push("🫙"); if(data.chats.length) marks.push("💬");
+    const b=document.createElement("button"); b.className="cal-cell"+(key===dateKey()?" today":"")+(key===calendarSelected?" sel":"");
+    const shown=marks.slice(0,4).join("")+(marks.length>4?"＋":"");
+    b.innerHTML=(state.calendarStars.includes(key)?"⭐ ":"")+day+'<span class="cal-marks">'+shown+'</span>';
+    b.onclick=()=>{ calendarSelected=key; renderShelf(); }; week.appendChild(b);
+  }
+  box.appendChild(week);
+  const row=document.createElement("div"); row.className="row"; row.style.justifyContent="space-between";
+  row.appendChild(el("strong",calendarSelected+" の記録"));
+  const starWrap=document.createElement("label"); starWrap.className="row"; starWrap.style.fontSize="12px";
+  const star=document.createElement("input"); star.type="checkbox"; star.className="toggle"; star.checked=state.calendarStars.includes(calendarSelected);
+  star.onchange=()=>{ state.calendarStars=star.checked?[...new Set(state.calendarStars.concat(calendarSelected))]:state.calendarStars.filter(k=>k!==calendarSelected); saveState(); renderShelf(); };
+  starWrap.append(star,document.createTextNode("⭐ しるしを付ける")); row.appendChild(starWrap); box.appendChild(row);
+  const data=calendarData(calendarSelected);
+  data.records.forEach(x=>addItem("📖 "+(x.convoTitle||"セッション記録"),(x.roomName||"お部屋"),x.body,null,null));
+  data.diaries.forEach(x=>addItem("📔 "+(x.roomName||"日記"),(x.convoTitle||""),x.body,null,null));
+  data.notes.forEach(x=>addItem("📝 覚え書き",(roomById(x.roomId)||{}).name||"",x.text,null,null));
+  data.emotions.forEach(x=>addItem("🫙 "+(x.title||"無題の瓶"),x.who||"",x.text,null,null));
+  data.chats.forEach(x=>{
+    const d=document.createElement("button"); d.className="ritem"; d.style.width="100%"; d.style.textAlign="left";
+    d.innerHTML='<div class="rt">💬 '+esc(x.room.name)+'：'+x.count+'件</div><div class="rd">タップしてお部屋をひらく</div>';
+    d.onclick=()=>{ closeShelf(); openRoom(x.room.id); }; box.appendChild(d);
+  });
+  if(!data.records.length&&!data.diaries.length&&!data.notes.length&&!data.emotions.length&&!data.chats.length){ const p=el("div","この日の記録はまだないよ。"); p.className="hint"; box.appendChild(p); }
 }
 
 /* ════════ サイドバー ════════ */
@@ -2081,6 +2382,7 @@ function exportConvoTxt(r, c){
   c.messages.forEach(m=>{
     if(m.role==="user") out += you + "：\n" + noteAtts(m) + (m.content||"") + "\n\n";
     else if(m.role==="assistant") out += r.name + "：\n" + (m.content||"") + "\n\n";
+    else if(m.role==="footprint"){ const v=roomById(m.visitorId); out += "🐾 "+(v?v.name:"どこかの住人")+" の置き手紙：\n"+(m.content||"")+"\n\n"; }
   });
   download(r.name+"_"+c.title.slice(0,10)+"_"+stamp()+".txt", out);
 }
@@ -2128,6 +2430,7 @@ function openRoomSettings(){
   editSprite = r.sprite;
   document.getElementById("rPixel").checked = !!r.pixel;
   document.getElementById("rStatus").value = r.status || "";
+  document.getElementById("rDiaryStyle").value = r.diaryStyle || "whim";
   editBg = r.bg;
   editFiles = JSON.parse(JSON.stringify(r.files||[]));
   renderSwatches(); avatarPreview(); spritePreview(); bgStatus(); renderFileList(); sliderLabels(); modelSelChanged();
@@ -2292,6 +2595,7 @@ function saveRoomSettings(){
   r.sprite = editSprite;
   r.pixel = document.getElementById("rPixel").checked;
   r.status = document.getElementById("rStatus").value;
+  r.diaryStyle = document.getElementById("rDiaryStyle").value;
   r.bg = editBg;
   r.files = editFiles;
   saveState();
@@ -2316,10 +2620,14 @@ function openAppSettings(){
   document.getElementById("aKeyOpenrouter").value = state.keys.openrouter;
   document.getElementById("aRag").checked = !!state.flags.rag;
   document.getElementById("aClock").checked = !!state.flags.clock;
+  document.getElementById("aAshiato").checked = state.flags.ashiato!==false;
   document.getElementById("aFs").value = state.ui.fs;
   document.getElementById("aAv").value = state.ui.av;
   document.getElementById("aPos").value = state.ui.pos;
   document.getElementById("aAiw").value = state.ui.aiw;
+  document.getElementById("aJpyRate").value = state.jpyRate;
+  document.getElementById("aBudgetWarn").value = state.budget.warnUsd===null ? "" : state.budget.warnUsd;
+  document.getElementById("aBudgetStop").value = state.budget.stopUsd===null ? "" : state.budget.stopUsd;
   uiLabels();
   userAvatarPreview();
   renderUsage();
@@ -2335,28 +2643,24 @@ function priceOf(model){
 }
 function renderUsage(){
   const box = document.getElementById("usageBox");
-  const keys = Object.keys(state.usage);
-  if(!keys.length){ box.innerHTML = '<div class="hint" style="margin:0">まだ使用記録はないよ。会話をはじめると、ここに積もっていくの。</div>'; return; }
-  let html = "";
-  let total = 0; let hasUnknown = false;
+  const today=usageForPeriod(dateKey()), month=usageForPeriod(dateKey().slice(0,7));
+  const td=usageTotal(today), mo=usageTotal(month), yen=Math.round(mo*state.jpyRate);
+  let html='<button class="wide-btn" style="margin:0" onclick="toggleUsageDetails()">今日：$'+td.toFixed(2)+' ／ 今月：$'+mo.toFixed(2)+'（約¥'+yen.toLocaleString()+'） ▸詳細</button>';
+  html+='<div class="usage-details" id="usageDetails">';
+  const keys=Object.keys(month);
+  if(!keys.length) html+='<div class="hint">日別の使用記録はまだないよ。ここから使った分が積もっていくの。</div>';
   keys.forEach(k=>{
-    const u = state.usage[k];
-    const p = priceOf(k);
-    let cost = "—";
-    if(p){ const usd = u.i/1e6*p[1] + u.o/1e6*p[2]; total += usd; cost = "$" + usd.toFixed(3); }
-    else hasUnknown = true;
-    html += '<div class="usage-row"><span class="um">'+esc(k)+'</span>' +
-      '<span>入 '+(u.i/1000).toFixed(1)+'k</span><span>出 '+(u.o/1000).toFixed(1)+'k</span>' +
-      '<span style="min-width:64px;text-align:right">'+cost+'</span></div>';
+    const u=month[k], p=priceOf(k), cost=usageCost(k,u);
+    html+='<div class="usage-row"><span class="um">'+esc(k)+'</span><span style="text-align:right">'+(cost===null?'—':'$'+cost.toFixed(3))+'</span></div>'+
+      '<div class="hint" style="margin:0 0 7px">入力 '+u.i.toLocaleString()+'（$'+(p?p[1]:'—')+'/M）／出力 '+u.o.toLocaleString()+'（$'+(p?p[2]:'—')+'/M）<br>キャッシュ作成 '+u.ci.toLocaleString()+'（$'+(p?p[3]:'—')+'/M）／読出 '+u.cr.toLocaleString()+'（$'+(p?p[4]:'—')+'/M）／思考 '+u.th.toLocaleString()+'（出力の内数）</div>';
   });
-  html += '<div class="usage-row" style="font-weight:600"><span class="um">合計（単価がわかる分）</span><span></span><span></span>' +
-    '<span style="min-width:64px;text-align:right">$'+total.toFixed(3)+'</span></div>';
-  if(hasUnknown) html += '<div class="hint">「—」のモデルは単価表にないから、トークン数だけ数えてるよ（OpenRouterは特にモデル次第なの）。</div>';
-  box.innerHTML = html;
+  if(Object.keys(state.usage||{}).length) html+='<div class="hint">日別記録より前の分は、推測で今日や今月へ割り振らず、従来の累計にだけ残してあるよ。</div>';
+  html+='</div>'; box.innerHTML=html;
 }
+function toggleUsageDetails(){ const d=document.getElementById("usageDetails"); if(d) d.classList.toggle("show"); }
 function resetUsage(){
   if(confirm("使用量カウンターをゼロに戻すよ。いい？")){
-    state.usage = {}; saveState(); renderUsage();
+    state.usage = {}; state.usageDaily = {}; saveState(); renderUsage();
   }
 }
 function userAvatarPreview(){
@@ -2384,10 +2688,16 @@ function saveAppSettings(){
   state.keys.openrouter = document.getElementById("aKeyOpenrouter").value.trim();
   state.flags.rag = document.getElementById("aRag").checked;
   state.flags.clock = document.getElementById("aClock").checked;
+  state.flags.ashiato = document.getElementById("aAshiato").checked;
   state.ui.fs = parseFloat(document.getElementById("aFs").value);
   state.ui.av = parseInt(document.getElementById("aAv").value,10);
   state.ui.pos = document.getElementById("aPos").value;
   state.ui.aiw = parseInt(document.getElementById("aAiw").value,10);
+  state.jpyRate = Math.max(1, Number(document.getElementById("aJpyRate").value)||150);
+  const numOrNull=id=>{ const v=document.getElementById(id).value.trim(); return v===""?null:Math.max(0,Number(v)||0); };
+  const oldStop=state.budget.stopUsd, newStop=numOrNull("aBudgetStop");
+  state.budget.warnUsd=numOrNull("aBudgetWarn"); state.budget.stopUsd=newStop;
+  if(oldStop!==newStop) state.budgetAckDate="";
   applyUi();
   saveState(); goHome();
 }
@@ -2439,7 +2749,7 @@ document.getElementById("input").addEventListener("input", function(){
   this.style.height = Math.min(this.scrollHeight, 170) + "px";
 });
 renderHome();
-setTimeout(checkOverdueOnStart, 800);
+setTimeout(()=>{ checkOverdueOnStart(); checkMissedDiariesOnStart(); }, 800);
 if(location.hash.indexOf("#rem=")===0){
   const remId = location.hash.slice(5);
   const rem = (state.reminders||[]).find(x=>x.id===remId);

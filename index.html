@@ -198,6 +198,11 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 .notemsg{align-self:center;font-size:12px;color:#7A6A3A;background:#FBF6E6;border:1px solid #EDE2C0;border-radius:12px;padding:6px 12px;max-width:92%}
 .fpmsg{align-self:center;font-size:13px;color:#4A5D43;background:#F0F6EC;border:1px solid #D8E6CF;border-radius:14px;padding:10px 14px;max-width:92%;white-space:pre-wrap;box-shadow:0 1px 3px rgba(90,110,80,.08)}
 .fpmsg .fphead{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12px;opacity:.85;margin-bottom:5px;white-space:normal}
+.gcard{background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:0 1px 4px rgba(120,100,70,.08);white-space:pre-wrap;font-size:13.5px}
+.gcard .ghead{display:flex;align-items:center;gap:8px;margin-bottom:6px;white-space:normal}
+.gcard .ghead .gname{font-weight:600;font-size:13px}
+.gcard .ghead .gwhen{font-size:11.5px;color:var(--sub);margin-left:auto}
+.gempty{align-self:center;text-align:center;color:var(--sub);font-size:13px;margin-top:32px;line-height:2}
 /* ── 記録棚 ── */
 .shelfbg{position:fixed;inset:0;background:rgba(60,48,20,.35);z-index:250;display:none}
 .shelfbg.show{display:block}
@@ -269,6 +274,38 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
       <textarea id="input" rows="1" placeholder="メッセージを書く…"></textarea>
       <button class="roundbtn sendbtn" id="sendBtn" onclick="sendMessage()" aria-label="送信">↑</button>
     </div>
+  </section>
+
+  <!-- ═══ お庭 ═══ -->
+  <section id="view-garden" class="view">
+    <div class="chat-head">
+      <button class="iconbtn" onclick="goHome()" aria-label="ホームへ">‹</button>
+      <div class="who">
+        <div class="nm">🌷 お庭</div>
+        <div class="md" id="gardenSub">みんなの、だれのものでもない場所</div>
+      </div>
+      <button class="iconbtn" id="breezeBtn" onclick="gardenBreeze()" aria-label="そっと風を吹かせる">🍃</button>
+      <button class="iconbtn" onclick="toggleGardenSettings()" aria-label="お庭の設定">⚙</button>
+    </div>
+    <div id="gardenSettings" style="display:none;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--bg)">
+      <div class="field"><label>お庭にあるもの（1行にひとつ）</label>
+        <textarea id="gItems" rows="6"></textarea>
+        <div class="hint">住人たちに見える備品リストだよ。あとから自由に足したり減らしたりできるの。</div>
+      </div>
+      <div class="field"><label>背景画像（季節の衣替え用）</label>
+        <div class="row" style="gap:8px">
+          <button class="smallbtn" onclick="document.getElementById('gBgInput').click()">画像を選ぶ</button>
+          <button class="smallbtn" onclick="clearGardenBg()">はずす</button>
+          <span class="hint" id="gBgStatus" style="margin:0"></span>
+          <input type="file" id="gBgInput" accept="image/*" style="display:none" onchange="setGardenBg(event)">
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end;gap:8px">
+        <button class="smallbtn" onclick="exportGardenTxt()">📄 書き出し</button>
+        <button class="smallbtn" onclick="saveGardenSettings()">保存</button>
+      </div>
+    </div>
+    <div class="msgs" id="gardenCards"></div>
   </section>
 
   <!-- ═══ お部屋設定 ═══ -->
@@ -600,6 +637,7 @@ let pendingFiles = [];
 let currentBgCss = "";
 
 function uid(p){ return p + Date.now() + "_" + Math.random().toString(36).slice(2,7); }
+const DEFAULT_GARDEN_ITEMS = ["花壇とじょうろ","木の椅子とメモ帳","ベンチ","ブランコ","小さな池","物干し","チェス盤","シャボン玉の道具","ピクニックシートとお菓子の籠"];
 function newConvo(title){
   return { id: uid("c"), title: title||"新しい会話", archived:false, createdAt: Date.now(), messages: [] };
 }
@@ -628,6 +666,7 @@ function defaultState(){
     budget: {warnUsd:null, stopUsd:null}, budgetWarnedMonth: "", budgetAckDate: "",
     calendarStars: [], diaryAsked: [],
     living: { messages: [] },
+    garden: { events: [], items: DEFAULT_GARDEN_ITEMS.slice(), bg: null, last: 0 },
     reminders: [],
     records: [],
     rooms: Array.from({length:7}, (_,i)=>newRoom(i))
@@ -658,6 +697,11 @@ function migrate(s){
   s.ui = Object.assign({fs:14.5, av:32, pos:"top", aiw:100}, s.ui||{});
   s.living = s.living || { messages: [] };
   if(!Array.isArray(s.living.messages)) s.living.messages = [];
+  s.garden = s.garden || {};
+  if(!Array.isArray(s.garden.events)) s.garden.events = [];
+  if(!Array.isArray(s.garden.items) || !s.garden.items.length) s.garden.items = DEFAULT_GARDEN_ITEMS.slice();
+  if(s.garden.bg===undefined) s.garden.bg = null;
+  if(!s.garden.last) s.garden.last = 0;
   if(!Array.isArray(s.reminders)) s.reminders = [];
   s.reminders.forEach(rem=>{
     if(rem.notified===undefined) rem.notified = !!rem.done;
@@ -984,6 +1028,22 @@ function renderHome(){
     '<span class="chev">›</span>';
   lv.onclick = openLiving;
   list.appendChild(lv);
+
+  /* お庭 */
+  const gd = document.createElement("button");
+  gd.className = "room-card";
+  gd.style.setProperty("--rc", "#8AA86E");
+  const gLast = state.garden.events.length ? state.garden.events[state.garden.events.length-1] : null;
+  const gPrev = gLast
+    ? ((roomById(gLast.roomId)||{name:"だれか"}).name + "「" + String(gLast.text||"").replace(/\n/g," ").slice(0,26) + "…」")
+    : "まだしずかなお庭。だれか来るかな";
+  gd.innerHTML =
+    '<span class="wash"></span><span class="avatar">🌷</span>' +
+    '<span class="room-meta"><span class="room-name">お庭</span>' +
+    '<span class="room-last" style="display:block">' + esc(gPrev) + '</span></span>' +
+    '<span class="chev">›</span>';
+  gd.onclick = openGarden;
+  list.appendChild(gd);
 
   state.rooms.forEach(r=>{
     const ac = r.convos.find(c=>c.id===r.activeConvo) || r.convos[0];
@@ -2061,6 +2121,154 @@ async function askStatusFromResident(){
     alert("相談できなかった… "+(e.message||""));
   }
   if(btn){ btn.disabled = false; btn.textContent = "✍ この子に決めてもらう"; }
+}
+
+/* ════════ お庭（みんなの、だれのものでもない場所） ════════ */
+const GARDEN_GAP = 3*60*60*1000;   /* お庭のひとこまは3時間に1回まで */
+const GARDEN_CHANCE = 0.35;
+let gardenBusy = false;
+
+function gardenTimeslot(t){
+  const h = new Date(t).getHours();
+  if(h>=5 && h<10) return "朝ごろ";
+  if(h>=10 && h<16) return "ひるごろ";
+  if(h>=16 && h<19) return "夕方ごろ";
+  if(h>=19) return "よるごろ";
+  return "夜ふけごろ";
+}
+function openGarden(){
+  inLiving = false; currentRoomId = null;
+  document.documentElement.style.setProperty("--accent", "#8AA86E");
+  document.getElementById("gardenSettings").style.display = "none";
+  renderGardenCards();
+  show("view-garden");
+  setTimeout(()=>{ maybeGardenEvent(false); }, 900);
+}
+function renderGardenCards(){
+  const box = document.getElementById("gardenCards");
+  if(state.garden.bg){
+    box.style.background = 'linear-gradient(rgba(251,249,244,.68), rgba(251,249,244,.68)), url("'+state.garden.bg+'") center/cover no-repeat';
+  }else{
+    box.style.background = "";
+  }
+  const evs = state.garden.events.slice().sort((a,b)=>b.t-a.t);
+  if(!evs.length){
+    box.innerHTML = '<div class="gempty">🌷<br>まだしずかなお庭。<br>ここは、住人たちの痕跡がすこしずつ積もる場所。<br>🍃を押すと、そっと風を吹かせられるよ。</div>';
+    return;
+  }
+  let html = "";
+  evs.forEach(ev=>{
+    const v = roomById(ev.roomId);
+    const nm = v ? v.name : "どこかの住人";
+    const d = new Date(ev.t);
+    const when = (d.getMonth()+1)+"/"+d.getDate()+"　"+gardenTimeslot(ev.t);
+    html += '<div class="gcard"><div class="ghead">'+(v?avatarHtml(v,true):"")+
+      '<span class="gname">'+esc(nm)+'</span><span class="gwhen">🌿 '+esc(when)+'</span></div>'+fmt(ev.text)+'</div>';
+  });
+  box.innerHTML = html;
+  box.scrollTop = 0;
+}
+function gardenCandidates(){
+  return state.rooms.filter(r=>(r.prompt||"").trim() && state.keys[r.provider] && modelOf(r));
+}
+async function maybeGardenEvent(force){
+  try{
+    if(gardenBusy || sending) return;
+    const now = Date.now();
+    if(!force){
+      if(now - (state.garden.last||0) < GARDEN_GAP) return;
+      if(Math.random() > GARDEN_CHANCE) return;
+      if(!ashiatoBudgetOk()) return;
+    }else{
+      if(!budgetAllowsSend()) return;
+    }
+    const cands = gardenCandidates();
+    if(!cands.length){ if(force) alert("お庭に来られる住人がまだいないみたい。キャラクター設定とAPIキーを確認してね。"); return; }
+    const visitor = cands[Math.floor(Math.random()*cands.length)];
+    state.garden.last = now;
+    gardenBusy = true;
+    const bb = document.getElementById("breezeBtn"); if(bb) bb.disabled = true;
+    const recent = state.garden.events.slice(-3);
+    let recentTxt = "";
+    if(recent.length){
+      recentTxt = "\n\n【最近のお庭のできごと（他の住人の痕跡）】";
+      recent.forEach(ev=>{
+        const v = roomById(ev.roomId);
+        const d = new Date(ev.t);
+        recentTxt += "\n・"+(d.getMonth()+1)+"/"+d.getDate()+" "+gardenTimeslot(ev.t)+"　"+(v?v.name:"どこかの住人")+"：「"+String(ev.text||"").replace(/\n/g," ").slice(0,120)+"」";
+      });
+    }else{
+      recentTxt = "\n\n【最近のお庭のできごと】\nまだ何もない、しずかなお庭です。あなたが最初の一人。";
+    }
+    const sys = (visitor.prompt||"") +
+      (visitor.memory ? "\n\n【メモリ（大切な記憶）】\n"+visitor.memory : "") +
+      (state.userName ? "\n\nユーザーの名前は「"+state.userName+"」です。" : "") +
+      "\n\n【いまの状況】" +
+      "\nあなたはいま、同じ家のみんなで共有している「お庭」にふらっと立ち寄りました。ほかには誰もいません。" +
+      "\nお庭にあるもの：" + state.garden.items.join("、") +
+      recentTxt +
+      "\n\nお庭で少しだけ何かをして（お庭にあるものを使っても使わなくてもいい）、短い痕跡を残して帰ります。" +
+      "\n・2〜4行くらい。あなた自身の口調で、痕跡の本文だけを書くこと（前置き・説明は不要）。" +
+      "\n・直前の痕跡に気づいて、そっと応えたり続きをしたりするのも自由（無理に触れなくてもいい）。" +
+      "\n・「名前：」の形式や、他の住人・ユーザーのセリフの創作は禁止。" +
+      clockLine();
+    const reply = await chat(visitor, sys, [{role:"user", content:"（……しずかなお庭。痕跡をどうぞ）", images:[]}]);
+    const text = peekClean(reply, visitor).slice(0, 600);
+    if(text){
+      state.garden.events.push({ id: uid("gd"), roomId: visitor.id, text: text, t: Date.now() });
+      if(state.garden.events.length > 200) state.garden.events = state.garden.events.slice(-200);
+      saveState();
+      const gv = document.getElementById("view-garden");
+      if(gv && gv.classList.contains("active")) renderGardenCards();
+      toast("<b>🌷 "+esc(visitor.name)+" がお庭に来てたみたい。</b><span class='tx'>痕跡が残ってるよ。</span>",
+        ()=>{ openGarden(); });
+    }
+  }catch(e){
+    if(force) alert("お庭に風が届かなかった… "+(e.message||""));
+  }
+  gardenBusy = false;
+  const bb2 = document.getElementById("breezeBtn"); if(bb2) bb2.disabled = false;
+}
+function gardenBreeze(){ maybeGardenEvent(true); }
+function toggleGardenSettings(){
+  const p = document.getElementById("gardenSettings");
+  const open = p.style.display === "none";
+  if(open){
+    document.getElementById("gItems").value = state.garden.items.join("\n");
+    document.getElementById("gBgStatus").textContent = state.garden.bg ? "設定中" : "なし";
+  }
+  p.style.display = open ? "" : "none";
+}
+async function setGardenBg(ev){
+  const f = ev.target.files[0]; ev.target.value = "";
+  if(!f) return;
+  try{
+    state.garden.bg = await resizeImage(f, 1600, 0.8);
+    document.getElementById("gBgStatus").textContent = "設定中";
+    saveState(); renderGardenCards();
+  }catch(e){ alert(e.message); }
+}
+function clearGardenBg(){
+  state.garden.bg = null;
+  document.getElementById("gBgStatus").textContent = "なし";
+  saveState(); renderGardenCards();
+}
+function saveGardenSettings(){
+  const items = document.getElementById("gItems").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  state.garden.items = items.length ? items : DEFAULT_GARDEN_ITEMS.slice();
+  saveState();
+  document.getElementById("gardenSettings").style.display = "none";
+  toast("<b>🌷 お庭の備品、覚えたよ。</b><span class='tx'>"+esc(state.garden.items.slice(0,3).join("、"))+" …</span>");
+}
+function exportGardenTxt(){
+  if(!state.garden.events.length){ alert("まだ書き出せる痕跡がないみたい。"); return; }
+  let out = "■ お庭の記録\n\n";
+  state.garden.events.forEach(ev=>{
+    const v = roomById(ev.roomId);
+    const d = new Date(ev.t);
+    out += "🌿 "+d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()+" "+gardenTimeslot(ev.t)+"　"+(v?v.name:"どこかの住人")+"\n"+ev.text+"\n\n";
+  });
+  download("お庭の記録_"+stamp()+".txt", out);
 }
 
 /* ════════ 瓶詰め（感情ログ） ════════ */

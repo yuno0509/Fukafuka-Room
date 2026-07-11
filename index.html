@@ -1969,10 +1969,26 @@ function peekSystem(r, picked){
   return buildSystem(r) +
     "\n\n【リビング・住人だけの時間】" +
     "\nいまユーザー（"+(state.userName||"ユーザー")+"）は席を外していて、リビングには住人だけがいます。あなたは「"+r.name+"」として、"+others+" とくつろいで雑談しています。" +
-    "\n・他の参加者の発言は「名前：内容」の形で届きます。あなたの返事には名前の前置きを付けず、自分の発言だけを書いてください。" +
+    "\n・他の参加者の発言は「名前：内容」の形で届きますが、これは受信の形式です。あなたの返事に「名前：」の形式を絶対に含めないこと。" +
+    "\n・台本のように複数人分の会話を書かないこと。あなたの発言【1回ぶんだけ】を書いてください。他の住人やユーザーのセリフを代わりに創作するのは禁止です。" +
+    "\n・シークレットノート・内心メモ・隠しブロックなどは書かず、声に出す言葉だけを書くこと。" +
     "\n・短めに（1〜3文くらい）。会話をひとり占めしないこと。" +
     "\n・話題は自由。最近のこと、他の住人のこと、なんてことない雑談。楽屋みたいな自然な空気で。" +
     clockLine();
+}
+function peekClean(reply, self){
+  const known = [state.userName||"ユーザー"].concat(state.rooms.map(r=>r.name)).filter(s=>s && s.trim());
+  const out = [];
+  String(reply||"").split("\n").forEach(ln=>{
+    const m = ln.match(/^\s*([^：:\n]{1,20}?)\s*[：:]\s*(.*)$/);
+    if(m){
+      const nm = m[1].trim();
+      if(nm===self.name){ out.push(m[2]); return; }  /* 自分の名前の前置きは剥がして本文だけ残す */
+      if(known.indexOf(nm)>=0) return;               /* 他の住人・ユーザーのセリフ行は没収 */
+    }
+    out.push(ln);
+  });
+  return out.join("\n").replace(/\n{3,}/g,"\n\n").trim();
 }
 async function peekLiving(){
   if(sending) return;
@@ -1999,7 +2015,8 @@ async function peekLiving(){
       let msgs = livingMsgsFor(r);
       if(!msgs.length) msgs = [{role:"user", content:"（静かなリビング。だれからともなく、話しはじめる）", images:[]}];
       const reply = await chat(r, peekSystem(r, picked), msgs);
-      state.living.messages.push({sender:r.id, content:reply, images:[], atts:[], t:Date.now()});
+      const clean = peekClean(reply, r);
+      if(clean) state.living.messages.push({sender:r.id, content:clean, images:[], atts:[], t:Date.now()});
     }catch(e){
       state.living.messages.push({sender:"error", content:"⚠ "+r.name+"："+(e.message||"通信に失敗しちゃった"), t:Date.now()});
     }

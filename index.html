@@ -253,6 +253,7 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
         <div class="nm" id="chatName"></div>
         <div class="md" id="chatModel"></div>
       </div>
+      <button class="iconbtn" id="peekBtn" onclick="peekLiving()" aria-label="そっと覗く" style="display:none">🫣</button>
       <button class="iconbtn" id="chatGear" onclick="chatGear()" aria-label="設定">⚙</button>
     </div>
     <div class="msgs" id="msgs"></div>
@@ -315,6 +316,8 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
         <div class="field"><label>時間帯ステータス（ホームに表示）</label>
           <textarea id="rStatus" rows="4" placeholder="0-6 🌙 ぐぅ…すやすや&#10;6-9 ☕ 紅茶の準備中&#10;9-23 📖 起きてるよ、おいで&#10;23-24 🕯 そろそろおやすみの支度"></textarea>
           <div class="hint">1行に「開始時-終了時 表示する文」の形式で書いてね（24時間表記）。今の時刻に合う行がホームに出るよ。空っぽなら非表示。</div>
+          <button class="smallbtn" id="askStatusBtn" onclick="askStatusFromResident()" style="margin-top:6px">✍ この子に決めてもらう</button>
+          <div class="hint">押すと、この子自身に一日の過ごし方を聞いて、上の欄に書き込むよ（API呼び出し1回・保存ボタンを押すまで確定しないから、気に入らなければ書き直してOK）。</div>
         </div>
         <div class="field"><label>テーマカラー</label><div class="swatches" id="rSwatches"></div></div>
         <div class="field">
@@ -322,6 +325,13 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
             <label style="margin:0">リビング（グループチャット）に参加する</label>
             <input type="checkbox" class="toggle" id="rJoinGroup">
           </div>
+        </div>
+        <div class="field">
+          <div class="row" style="justify-content:space-between">
+            <label style="margin:0">🫣 「そっと覗く」に参加する</label>
+            <input type="checkbox" class="toggle" id="rPeekGroup">
+          </div>
+          <div class="hint">ONだと、リビングの🫣ボタンを押した時に「住人だけのおしゃべり」のメンバー候補になるよ。1回の覗き見で参加者×2回ぶんのAPI呼び出しがあるから、お安いモデルの子がおすすめ。</div>
         </div>
       </div>
 
@@ -601,7 +611,7 @@ function newRoom(i){
     emoji: DEFAULT_EMOJI[i % DEFAULT_EMOJI.length],
     avatar: null, sprite: null, pixel: false, status: "", showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
     color: PALETTE[i % PALETTE.length].hex,
-    prompt: "", memory: "", files: [], joinGroup: false,
+    prompt: "", memory: "", files: [], joinGroup: false, peekGroup: false,
     provider: "openai", model: "gpt-5.1", customModel: "",
     temp: 0.8, maxTokens: 1600, ctx: 30, diaryStyle: "whim",
     convos: [c], activeConvo: c.id
@@ -670,6 +680,7 @@ function migrate(s){
     if(r.bubbleAi===undefined) r.bubbleAi="";
     if(r.bubbleAlpha===undefined) r.bubbleAlpha=1;
     if(r.joinGroup===undefined) r.joinGroup=false;
+    if(r.peekGroup===undefined) r.peekGroup = !!r.joinGroup;
     if(r.diaryStyle===undefined) r.diaryStyle="whim";
     if(!Array.isArray(r.files)) r.files=[];
     /* v1/v2 → v3：room直下のmessagesを会話に変換 */
@@ -1028,6 +1039,7 @@ function openRoom(id){
   applyChatBg();
   pendingImages = []; pendingFiles = [];
   renderPending();
+  const pkb = document.getElementById("peekBtn"); if(pkb) pkb.style.display = "none";
   renderMsgs();
   closeDrawer();
   show("view-chat");
@@ -1044,6 +1056,7 @@ function openLiving(){
   currentBgCss = "";
   pendingImages = []; pendingFiles = [];
   renderPending();
+  const pkb = document.getElementById("peekBtn"); if(pkb) pkb.style.display = "";
   renderMsgs();
   closeDrawer();
   show("view-chat");
@@ -1099,6 +1112,7 @@ function renderMsgs(){
       if(m.role==="error" || m.sender==="error"){
         html += '<div class="sysmsg">'+esc(m.content)+'</div>'; return;
       }
+      if(m.sender==="notice"){ html += '<div class="notemsg">'+esc(m.content)+'</div>'; return; }
       const sr = m.sender==="user" ? null : roomById(m.sender);
       html += msgRowHtml(m, null, sr);
     });
@@ -1626,7 +1640,7 @@ function groupSystem(r){
 }
 function livingMsgsFor(r){
   return state.living.messages.slice(-40)
-    .filter(m=>m.sender!=="error")
+    .filter(m=>m.sender!=="error" && m.sender!=="notice")
     .map(m=>{
       if(m.sender===r.id) return {role:"assistant", content:m.content||"", images:[]};
       const nm = m.sender==="user" ? (state.userName||"ユーザー") : (roomById(m.sender) ? roomById(m.sender).name : "住人");
@@ -1939,6 +1953,95 @@ async function maybeFootprint(hostId){
       ()=>{ if(currentRoomId!==host.id) openRoom(host.id); });
   }catch(_){ /* 足あとは失敗しても静かに帰る（エラーで日常を邪魔しない） */ }
   ashiatoBusy = false;
+}
+
+/* ════════ そっと覗く（住人だけのおしゃべり） ════════ */
+function peekParticipants(){
+  return state.rooms.filter(r=>r.peekGroup && (r.prompt||"").trim() && state.keys[r.provider] && modelOf(r));
+}
+function shuffleArr(a){
+  a=a.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i];a[i]=a[j];a[j]=t; }
+  return a;
+}
+function peekSystem(r, picked){
+  const others = picked.filter(p=>p.id!==r.id).map(p=>p.name).join("、");
+  return buildSystem(r) +
+    "\n\n【リビング・住人だけの時間】" +
+    "\nいまユーザー（"+(state.userName||"ユーザー")+"）は席を外していて、リビングには住人だけがいます。あなたは「"+r.name+"」として、"+others+" とくつろいで雑談しています。" +
+    "\n・他の参加者の発言は「名前：内容」の形で届きます。あなたの返事には名前の前置きを付けず、自分の発言だけを書いてください。" +
+    "\n・短めに（1〜3文くらい）。会話をひとり占めしないこと。" +
+    "\n・話題は自由。最近のこと、他の住人のこと、なんてことない雑談。楽屋みたいな自然な空気で。" +
+    clockLine();
+}
+async function peekLiving(){
+  if(sending) return;
+  const ps = peekParticipants();
+  if(ps.length<2){ alert("そっと覗くには、参加する住人が2人以上必要なの。各お部屋の設定で「🫣そっと覗くに参加」をONにしてね。"); return; }
+  if(!budgetAllowsSend()) return;
+  const picked = shuffleArr(ps).slice(0, Math.min(3, ps.length));
+  const rounds = 2;
+  let order = [];
+  for(let i=0;i<rounds;i++){
+    let grp = shuffleArr(picked);
+    if(order.length && grp.length>1 && grp[0].id===order[order.length-1].id) grp.push(grp.shift());
+    order = order.concat(grp);
+  }
+  state.living.messages.push({sender:"notice", content:"🫣 そっと覗いてる…（"+picked.map(p=>p.name).join("、")+" だけの時間）", t:Date.now()});
+  sending = true;
+  const sb = document.getElementById("sendBtn"); if(sb) sb.disabled = true;
+  const pk = document.getElementById("peekBtn"); if(pk) pk.disabled = true;
+  saveState(); if(inLiving) renderMsgs();
+  for(const r of order){
+    typingName = r.name;
+    if(inLiving) renderMsgs();
+    try{
+      let msgs = livingMsgsFor(r);
+      if(!msgs.length) msgs = [{role:"user", content:"（静かなリビング。だれからともなく、話しはじめる）", images:[]}];
+      const reply = await chat(r, peekSystem(r, picked), msgs);
+      state.living.messages.push({sender:r.id, content:reply, images:[], atts:[], t:Date.now()});
+    }catch(e){
+      state.living.messages.push({sender:"error", content:"⚠ "+r.name+"："+(e.message||"通信に失敗しちゃった"), t:Date.now()});
+    }
+    saveState(); if(inLiving) renderMsgs();
+  }
+  typingName = "";
+  sending = false;
+  if(sb) sb.disabled = false;
+  if(pk) pk.disabled = false;
+  if(inLiving) renderMsgs();
+}
+
+/* ════════ ステータス自己申告（③） ════════ */
+async function askStatusFromResident(){
+  const r = room(); if(!r) return;
+  if(!(r.prompt||"").trim()){ alert("まず「キャラクター設定」を書いてあげてね。"); return; }
+  if(!state.keys[r.provider]){ alert(PROVIDER_LABEL[r.provider]+"のAPIキーがまだ入っていないみたい。"); return; }
+  if(!modelOf(r)){ alert("モデルが選ばれていないよ。"); return; }
+  if(sending){ alert("いまお返事の作成中みたい。少し待ってね。"); return; }
+  const btn = document.getElementById("askStatusBtn");
+  if(btn){ btn.disabled = true; btn.textContent = "✍ 本人と相談中…"; }
+  try{
+    const sys = (r.prompt||"") +
+      (r.memory ? "\n\n【メモリ（大切な記憶）】\n"+r.memory : "") +
+      (state.userName ? "\n\nユーザーの名前は「"+state.userName+"」です。" : "") +
+      "\n\n【お願い】あなたの一日の「時間帯ステータス」を、あなた自身で決めてください。ホーム画面に「いまなにしてるか」として表示されます。" +
+      "\n・1行に「開始時-終了時 絵文字 短いことば」の形式（24時間表記）。例：「0-6 🌙 ぐぅ…すやすや」" +
+      "\n・3〜5行で、0時から24時までを隙間なくカバーすること。" +
+      "\n・あなた自身の口調・らしさで。説明や前置きは書かず、ステータスの行だけを出力すること。";
+    const reply = await chat(r, sys, [{role:"user", content:"（あなたの一日、教えて？）", images:[]}]);
+    const lines = String(reply||"").split("\n").map(s=>s.trim())
+      .filter(s=>/^\d{1,2}\s*[-〜~]\s*\d{1,2}\s+.+/.test(s));
+    if(!lines.length){
+      alert("うまく形式にならなかったみたい。もう一回押してみて。");
+    }else{
+      document.getElementById("rStatus").value = lines.join("\n");
+      toast("<b>✍ 決めてもらったよ。</b><span class='tx'>気に入ったら保存ボタンで確定してね。</span>");
+    }
+  }catch(e){
+    alert("相談できなかった… "+(e.message||""));
+  }
+  if(btn){ btn.disabled = false; btn.textContent = "✍ この子に決めてもらう"; }
 }
 
 /* ════════ 瓶詰め（感情ログ） ════════ */
@@ -2421,6 +2524,7 @@ function openRoomSettings(){
   document.getElementById("rShowIconMe").checked = r.showIconMe!==false;
   document.getElementById("rBgFit").value = r.bgFit || "cover";
   document.getElementById("rJoinGroup").checked = !!r.joinGroup;
+  document.getElementById("rPeekGroup").checked = !!r.peekGroup;
   document.getElementById("rStream").checked = !!r.stream;
   document.getElementById("rBubbleMe").value = r.bubbleMe || mixHex(r.color, .14);
   document.getElementById("rBubbleAi").value = r.bubbleAi || "#FFFFFF";
@@ -2586,6 +2690,7 @@ function saveRoomSettings(){
   r.showIconMe = document.getElementById("rShowIconMe").checked;
   r.bgFit = document.getElementById("rBgFit").value;
   r.joinGroup = document.getElementById("rJoinGroup").checked;
+  r.peekGroup = document.getElementById("rPeekGroup").checked;
   r.stream = document.getElementById("rStream").checked;
   r.bubbleMe = document.getElementById("rBubbleMe").value;
   r.bubbleAi = document.getElementById("rBubbleAi").value;

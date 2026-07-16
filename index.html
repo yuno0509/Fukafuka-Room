@@ -261,23 +261,6 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
       <button class="iconbtn" id="peekBtn" onclick="peekLiving()" aria-label="そっと覗く" style="display:none">🫣</button>
       <button class="iconbtn" id="chatGear" onclick="chatGear()" aria-label="設定">⚙</button>
     </div>
-    <div id="livingSettings" style="display:none;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--bg)">
-      <div class="field"><label>リビングの背景画像</label>
-        <div class="row" style="gap:8px">
-          <button class="smallbtn" onclick="document.getElementById('lvBgInput').click()">画像を選ぶ</button>
-          <button class="smallbtn" onclick="clearLivingBg()">はずす</button>
-          <span class="hint" id="lvBgStatus" style="margin:0"></span>
-          <input type="file" id="lvBgInput" accept="image/*" style="display:none" onchange="setLivingBg(event)">
-        </div>
-      </div>
-      <div class="field"><label>吹き出しの透け感（<span id="lvAlphaLabel"></span>%）</label>
-        <input type="range" id="lvAlpha" min="0.35" max="1" step="0.05" oninput="document.getElementById('lvAlphaLabel').textContent=Math.round(this.value*100)">
-        <div class="hint">背景を見せたい時は下げてね。各お部屋の透け感設定より薄い方が優先されるよ。</div>
-      </div>
-      <div class="row" style="justify-content:flex-end">
-        <button class="smallbtn" onclick="saveLivingSettings()">保存</button>
-      </div>
-    </div>
     <div class="msgs" id="msgs"></div>
     <div class="scrollnav" id="scrollNav">
       <button id="scrollUpBtn" onclick="chatScroll('up')" aria-label="いちばん上へ">↑</button>
@@ -308,10 +291,6 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
       <div class="field"><label>お庭にあるもの（1行にひとつ）</label>
         <textarea id="gItems" rows="6"></textarea>
         <div class="hint">住人たちに見える備品リストだよ。あとから自由に足したり減らしたりできるの。</div>
-      </div>
-      <div class="field"><label>カードの透け感（<span id="gAlphaLabel"></span>%）</label>
-        <input type="range" id="gAlpha" min="0.35" max="1" step="0.05" oninput="document.getElementById('gAlphaLabel').textContent=Math.round(this.value*100)">
-        <div class="hint">背景のお庭を見せたい時は下げてね。</div>
       </div>
       <div class="field"><label>背景画像（季節の衣替え用）</label>
         <div class="row" style="gap:8px">
@@ -390,13 +369,6 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
             <input type="checkbox" class="toggle" id="rPeekGroup">
           </div>
           <div class="hint">ONだと、リビングの🫣ボタンを押した時に「住人だけのおしゃべり」のメンバー候補になるよ。1回の覗き見で参加者×2回ぶんのAPI呼び出しがあるから、お安いモデルの子がおすすめ。</div>
-        </div>
-        <div class="field">
-          <div class="row" style="justify-content:space-between">
-            <label style="margin:0">🚪 このお部屋には足あとが来ない</label>
-            <input type="checkbox" class="toggle" id="rNoFootprint">
-          </div>
-          <div class="hint">ONだと、他の住人がこのお部屋にふらっと訪問しなくなるよ（この子が他のお部屋やお庭に出かけるのは今までどおり）。ふたりだけの時間を邪魔されたくないお部屋にどうぞ。</div>
         </div>
       </div>
 
@@ -656,7 +628,6 @@ const PRICE = [
 
 /* ════════ 状態 ════════ */
 let persistent = true;
-let storagePersisted = null;
 let state = null;
 let currentRoomId = null;
 let inLiving = false;
@@ -678,7 +649,7 @@ function newRoom(i){
     emoji: DEFAULT_EMOJI[i % DEFAULT_EMOJI.length],
     avatar: null, sprite: null, pixel: false, status: "", showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
     color: PALETTE[i % PALETTE.length].hex,
-    prompt: "", memory: "", files: [], joinGroup: false, peekGroup: false, noFootprint: false,
+    prompt: "", memory: "", files: [], joinGroup: false, peekGroup: false,
     provider: "openai", model: "gpt-5.1", customModel: "",
     temp: 0.8, maxTokens: 1600, ctx: 30, diaryStyle: "whim",
     convos: [c], activeConvo: c.id
@@ -694,8 +665,8 @@ function defaultState(){
     usage: {}, usageDaily: {}, jpyRate: 150,
     budget: {warnUsd:null, stopUsd:null}, budgetWarnedMonth: "", budgetAckDate: "",
     calendarStars: [], diaryAsked: [],
-    living: { messages: [], bg: null, bubbleAlpha: 1 },
-    garden: { events: [], items: DEFAULT_GARDEN_ITEMS.slice(), bg: null, last: 0, cardAlpha: 0.88 },
+    living: { messages: [] },
+    garden: { events: [], items: DEFAULT_GARDEN_ITEMS.slice(), bg: null, last: 0 },
     reminders: [],
     records: [],
     rooms: Array.from({length:7}, (_,i)=>newRoom(i))
@@ -726,14 +697,11 @@ function migrate(s){
   s.ui = Object.assign({fs:14.5, av:32, pos:"top", aiw:100}, s.ui||{});
   s.living = s.living || { messages: [] };
   if(!Array.isArray(s.living.messages)) s.living.messages = [];
-  if(s.living.bg===undefined) s.living.bg = null;
-  if(s.living.bubbleAlpha===undefined) s.living.bubbleAlpha = 1;
   s.garden = s.garden || {};
   if(!Array.isArray(s.garden.events)) s.garden.events = [];
   if(!Array.isArray(s.garden.items) || !s.garden.items.length) s.garden.items = DEFAULT_GARDEN_ITEMS.slice();
   if(s.garden.bg===undefined) s.garden.bg = null;
   if(!s.garden.last) s.garden.last = 0;
-  if(s.garden.cardAlpha===undefined) s.garden.cardAlpha = 0.88;
   if(!Array.isArray(s.reminders)) s.reminders = [];
   s.reminders.forEach(rem=>{
     if(rem.notified===undefined) rem.notified = !!rem.done;
@@ -757,7 +725,6 @@ function migrate(s){
     if(r.bubbleAlpha===undefined) r.bubbleAlpha=1;
     if(r.joinGroup===undefined) r.joinGroup=false;
     if(r.peekGroup===undefined) r.peekGroup = !!r.joinGroup;
-    if(r.noFootprint===undefined) r.noFootprint = false;
     if(r.diaryStyle===undefined) r.diaryStyle="whim";
     if(!Array.isArray(r.files)) r.files=[];
     /* v1/v2 → v3：room直下のmessagesを会話に変換 */
@@ -859,8 +826,6 @@ async function loadState(){
     catch(e2){ persistent = false; }
   }
   if(!persistent) document.getElementById("storageBanner").classList.add("show");
-  /* ブラウザに「このデータは大事だから勝手に消さないで」ってお願いしておく */
-  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().then(g=>{ storagePersisted = g; }); }catch(_){}
 }
 
 let _saveTimer = null;
@@ -983,49 +948,8 @@ function closeDrawer(){
   document.getElementById("toastbox").classList.remove("hid");
 }
 function chatGear(){
-  if(inLiving) toggleLivingSettings();
+  if(inLiving) openDrawer();
   else openRoomSettings();
-}
-function toggleLivingSettings(){
-  const p = document.getElementById("livingSettings");
-  const open = p.style.display === "none";
-  if(open){
-    document.getElementById("lvBgStatus").textContent = state.living.bg ? "設定中" : "なし";
-    const a = state.living.bubbleAlpha===undefined ? 1 : state.living.bubbleAlpha;
-    document.getElementById("lvAlpha").value = a;
-    document.getElementById("lvAlphaLabel").textContent = Math.round(a*100);
-  }
-  p.style.display = open ? "" : "none";
-}
-async function setLivingBg(ev){
-  const f = ev.target.files[0]; ev.target.value = "";
-  if(!f) return;
-  try{
-    state.living.bg = await resizeImage(f, 1600, 0.8);
-    document.getElementById("lvBgStatus").textContent = "設定中";
-    saveState(); applyLivingBg();
-  }catch(e){ alert(e.message); }
-}
-function clearLivingBg(){
-  state.living.bg = null;
-  document.getElementById("lvBgStatus").textContent = "なし";
-  saveState(); applyLivingBg();
-}
-function applyLivingBg(){
-  if(!inLiving) return;
-  currentBgCss = "";
-  if(state.living.bg){
-    const ov = 'linear-gradient(rgba(251,249,244,.74), rgba(251,249,244,.74)), ';
-    currentBgCss = ov + 'url("'+state.living.bg+'") center/cover no-repeat';
-  }
-  applyChatBg();
-}
-function saveLivingSettings(){
-  state.living.bubbleAlpha = parseFloat(document.getElementById("lvAlpha").value);
-  saveState();
-  document.getElementById("livingSettings").style.display = "none";
-  applyLivingBg(); renderMsgs();
-  toast("<b>🛋 リビングの模様替え、覚えたよ。</b>");
 }
 
 /* ════════ 共通 ════════ */
@@ -1176,7 +1100,6 @@ function openRoom(id){
   pendingImages = []; pendingFiles = [];
   renderPending();
   const pkb = document.getElementById("peekBtn"); if(pkb) pkb.style.display = "none";
-  const lvs = document.getElementById("livingSettings"); if(lvs) lvs.style.display = "none";
   renderMsgs();
   closeDrawer();
   show("view-chat");
@@ -1190,8 +1113,7 @@ function openLiving(){
   document.getElementById("chatModel").textContent =
     ps.length ? "参加：" + ps.map(p=>p.name).join("、") : "参加者がいないの（お部屋設定でONにしてね）";
   document.getElementById("msgs").style.background = "";
-  document.getElementById("livingSettings").style.display = "none";
-  applyLivingBg();
+  currentBgCss = "";
   pendingImages = []; pendingFiles = [];
   renderPending();
   const pkb = document.getElementById("peekBtn"); if(pkb) pkb.style.display = "";
@@ -1205,14 +1127,8 @@ function hexToRgba(hex, a){
   return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")";
 }
 function bubbleStyle(r, mine){
-  const la = (inLiving && state && state.living && state.living.bubbleAlpha!==undefined) ? state.living.bubbleAlpha : 1;
-  if(!r){
-    /* リビングのユーザー吹き出し（部屋なし）にも透け感を効かせる */
-    if(la < 1) return ' style="background:'+hexToRgba("#F5E9DA", la)+';border-color:'+hexToRgba("#E5D5BF", Math.min(1, la + .15))+'"';
-    return "";
-  }
-  let a = (r.bubbleAlpha===undefined) ? 1 : r.bubbleAlpha;
-  a = Math.min(a, la);
+  if(!r) return "";
+  const a = (r.bubbleAlpha===undefined) ? 1 : r.bubbleAlpha;
   const custom = mine ? r.bubbleMe : r.bubbleAi;
   if(!custom && a >= 1) return "";
   const base = custom || (mine ? mixHex(r.color, .14) : "#FFFFFF");
@@ -1363,9 +1279,16 @@ function buildSystem(r){
     if(f.enabled) s += "\n\n【知識ファイル：" + f.name + "】\n" + f.text;
   });
   if(state.userName) s += "\n\nユーザーの名前は「" + state.userName + "」です。";
+  s += carryBlock(r);
   s += notesBlock(r);
   s += footprintsBlock(r);
   return s;
+}
+function carryBlock(r){
+  /* 🎒 持ち越し要約：前の会話のあらすじを、この会話のあいだそっと憶えておく */
+  const c = r.convos && r.convos.find(x=>x.id===r.activeConvo);
+  if(!c || !c.carry) return "";
+  return "\n\n【前の会話からの持ち越し】\nこれは新しい会話ですが、直前の会話のあらすじを引き継いでいます。読み上げたり要約を復唱したりせず、自然に「続き」として接してください：\n" + c.carry;
 }
 function footprintsBlock(r){
   /* 直近48時間の置き手紙（最大2通）を本人に知らせる。話題にしてもいいように */
@@ -2062,7 +1985,6 @@ async function maybeFootprint(hostId){
     if(ashiatoBusy || sending) return;
     const host = roomById(hostId);
     if(!host || !(host.prompt||"").trim()) return;      /* 住人のいないお部屋には来ない */
-    if(host.noFootprint) return;                        /* お断りの札がかかってる */
     const c = host.convos.find(x=>x.id===host.activeConvo);
     if(!c) return;
     const now = Date.now();
@@ -2078,7 +2000,6 @@ async function maybeFootprint(hostId){
     state.ashiatoLast.__global = now;
     state.ashiatoLast[host.id] = now;
     ashiatoBusy = true;
-    const baseLen = c.messages.length;  /* 会話が始まったら配達しないための基準 */
     const sys = (visitor.prompt||"") +
       (visitor.memory ? "\n\n【メモリ（大切な記憶）】\n"+visitor.memory : "") +
       (state.userName ? "\n\nユーザーの名前は「"+state.userName+"」です。" : "") +
@@ -2092,11 +2013,6 @@ async function maybeFootprint(hostId){
     const reply = await chat(visitor, sys, [{role:"user", content:"（……お部屋は静か。置き手紙をどうぞ）", images:[]}]);
     const text = String(reply||"").trim().slice(0, 600);
     if(!text){ ashiatoBusy=false; return; }
-    if(c.messages.length !== baseLen || sending){
-      /* 君たちの会話が始まってた。置き手紙は持ち帰って、時間もなかったことに */
-      delete state.ashiatoLast[host.id];
-      ashiatoBusy = false; return;
-    }
     c.messages.push({ role:"footprint", visitorId: visitor.id, content:text, images:[], atts:[], t: Date.now() });
     saveState();
     if(currentRoomId===host.id && !inLiving) renderMsgs();
@@ -2253,8 +2169,7 @@ function renderGardenCards(){
     const nm = v ? v.name : "どこかの住人";
     const d = new Date(ev.t);
     const when = (d.getMonth()+1)+"/"+d.getDate()+"　"+gardenTimeslot(ev.t);
-    const ga = state.garden.cardAlpha===undefined ? 0.88 : state.garden.cardAlpha;
-    html += '<div class="gcard" style="background:rgba(255,255,255,'+ga+')"><div class="ghead">'+(v?avatarHtml(v,true):"")+
+    html += '<div class="gcard"><div class="ghead">'+(v?avatarHtml(v,true):"")+
       '<span class="gname">'+esc(nm)+'</span><span class="gwhen">🌿 '+esc(when)+'</span></div>'+fmt(ev.text)+'</div>';
   });
   box.innerHTML = html;
@@ -2276,11 +2191,7 @@ async function maybeGardenEvent(force){
     }
     const cands = gardenCandidates();
     if(!cands.length){ if(force) alert("お庭に来られる住人がまだいないみたい。キャラクター設定とAPIキーを確認してね。"); return; }
-    /* 直前に来た子は、他に候補がいるならくじから外す（連続防止） */
-    const lastEv = state.garden.events[state.garden.events.length-1];
-    let pool = lastEv ? cands.filter(r=>r.id!==lastEv.roomId) : cands;
-    if(!pool.length) pool = cands;
-    const visitor = pool[Math.floor(Math.random()*pool.length)];
+    const visitor = cands[Math.floor(Math.random()*cands.length)];
     state.garden.last = now;
     gardenBusy = true;
     const bb = document.getElementById("breezeBtn"); if(bb) bb.disabled = true;
@@ -2332,9 +2243,6 @@ function toggleGardenSettings(){
   if(open){
     document.getElementById("gItems").value = state.garden.items.join("\n");
     document.getElementById("gBgStatus").textContent = state.garden.bg ? "設定中" : "なし";
-    const ga = state.garden.cardAlpha===undefined ? 0.88 : state.garden.cardAlpha;
-    document.getElementById("gAlpha").value = ga;
-    document.getElementById("gAlphaLabel").textContent = Math.round(ga*100);
   }
   p.style.display = open ? "" : "none";
 }
@@ -2355,8 +2263,7 @@ function clearGardenBg(){
 function saveGardenSettings(){
   const items = document.getElementById("gItems").value.split("\n").map(s=>s.trim()).filter(Boolean);
   state.garden.items = items.length ? items : DEFAULT_GARDEN_ITEMS.slice();
-  state.garden.cardAlpha = parseFloat(document.getElementById("gAlpha").value);
-  saveState(); renderGardenCards();
+  saveState();
   document.getElementById("gardenSettings").style.display = "none";
   toast("<b>🌷 お庭の備品、覚えたよ。</b><span class='tx'>"+esc(state.garden.items.slice(0,3).join("、"))+" …</span>");
 }
@@ -2430,6 +2337,44 @@ function chunkLines(lines, maxChars){
   if(cur.length) chunks.push(cur.join("\n\n"));
   return chunks;
 }
+/* ════════ 🎒 持ち越し要約 ════════ */
+async function makeCarry(r, prev, next){
+  if(sending){ alert("いまお返事の作成中みたい。落ち着いたらもう一度「新しい会話」からやってみてね。"); return; }
+  const lines = convoLogText(r, prev);
+  if(!lines.length) return;
+  sending = true; const sb=document.getElementById("sendBtn"); if(sb) sb.disabled = true;
+  const prog = toast("<b>🎒 持ち越しの荷造り中…</b><span class='tx' id='carryProg'>前の会話をぎゅっとまとめてるよ。</span>", null, 0);
+  const setProg = t=>{ const e=document.getElementById("carryProg"); if(e) e.textContent=t; };
+  const fmt = "次の観点を、800字以内の日本語でまとめてください：\n・話していた話題と流れ（時系列で簡潔に）\n・決めたこと・約束・宿題\n・ユーザーの様子や気持ち\n・会話の最後がどんな空気で終わったか\n見出しや前置きは書かず、要点だけを書くこと。";
+  try{
+    let body = "";
+    const full = lines.join("\n\n");
+    if(full.length <= 20000){
+      const sys = "以下は「"+r.name+"」とユーザー（"+(state.userName||"ユーザー")+"）の会話ログ全文です。次の会話へ引き継ぐためのあらすじを書いてください。\n"+fmt;
+      body = await chat(r, sys, [{role:"user", content: full, images:[]}]);
+    }else{
+      const chunks = chunkLines(lines, 14000);
+      const sums = [];
+      for(let i=0;i<chunks.length;i++){
+        setProg("長いお話だから分割中…（"+(i+1)+"/"+chunks.length+"）");
+        const sys = "以下は長い会話ログの一部（"+(i+1)+"/"+chunks.length+"）です。話題・決めたこと・感情の流れを、時系列の箇条書きで簡潔に要約してください。";
+        sums.push(await chat(r, sys, [{role:"user", content: chunks[i], images:[]}]));
+      }
+      setProg("荷物をひとつにまとめてるよ…");
+      const sys2 = "以下は同じ会話を順番に分割要約したメモです。これらを統合して、次の会話へ引き継ぐためのあらすじを書いてください。\n"+fmt;
+      body = await chat(r, sys2, [{role:"user", content: sums.map((s,i)=>"◆分割要約 "+(i+1)+"\n"+s).join("\n\n"), images:[]}]);
+    }
+    next.carry = (body||"").trim();
+    saveState();
+    prog.remove();
+    toast("<b>🎒 持ち越し、詰めたよ。</b><span class='tx'>この会話のあいだ、そっと憶えてるからね。</span>");
+  }catch(e){
+    prog.remove();
+    alert("持ち越しの荷造りに失敗しちゃった… "+(e.message||"")+"\n（新しい会話はまっさらのまま始まるよ）");
+  }
+  sending = false; const sb2=document.getElementById("sendBtn"); if(sb2) sb2.disabled = false;
+}
+
 async function generateRecord(){
   const r = room(); const c = convo();
   if(!r || !c) return;
@@ -2710,10 +2655,17 @@ function buildDrawer(){
   box.appendChild(el("h4", "💬 " + r.name + " との会話"));
   const nb = el("button", "＋ 新しい会話をはじめる"); nb.className = "wide-btn gold";
   nb.onclick = ()=>{
+    const prev = r.convos.find(x=>x.id===r.activeConvo);
+    const hasPrev = prev && !prev.archived && prev.messages.some(m=>m.role==="user"||m.role==="assistant");
+    let doCarry = false;
+    if(hasPrev && state.keys[r.provider] && !sending){
+      doCarry = confirm("🎒 いまの会話をぎゅっとまとめて、新しい会話に持っていく？\n\nOK＝持っていく／キャンセル＝まっさらで始める");
+    }
     const c = newConvo();
     r.convos.push(c);
     r.activeConvo = c.id;
     saveState(); openRoom(r.id);
+    if(doCarry) makeCarry(r, prev, c);
   };
   box.appendChild(nb);
   const recb = el("button", "📖 セッション記録を書く（この会話）"); recb.className = "wide-btn";
@@ -2758,8 +2710,13 @@ function convoItem(r, c){
   d.className = "citem" + (c.id===r.activeConvo ? " cur" : "");
   const t = document.createElement("button");
   t.className = "ct";
-  t.innerHTML = esc(c.title) + '<span class="cd">' + dateStr(c.createdAt) + ' · ' + c.messages.length + '件</span>';
+  t.innerHTML = esc(c.title) + (c.carry ? " 🎒" : "") + '<span class="cd">' + dateStr(c.createdAt) + ' · ' + c.messages.length + '件</span>';
   t.onclick = ()=>{ r.activeConvo = c.id; saveState(); openRoom(r.id); };
+  const d0 = c.carry ? miniBtn("🎒", "持ち越しを見る／捨てる", ()=>{
+    if(confirm("【この会話への持ち越し】\n\n"+c.carry+"\n\n――この持ち越しを捨てる？（OK＝捨てる／キャンセル＝そのまま）")){
+      delete c.carry; saveState(); buildDrawer();
+    }
+  }) : null;
   const sv = miniBtn("💾", "テキストで保存", ()=>exportConvoTxt(r, c));
   const ar = miniBtn(c.archived?"📤":"📦", c.archived?"アーカイブから出す":"アーカイブへ", ()=>{
     c.archived = !c.archived;
@@ -2777,7 +2734,7 @@ function convoItem(r, c){
     if(r.activeConvo===c.id) r.activeConvo = r.convos[0].id;
     saveState(); openRoom(r.id); openDrawer();
   });
-  d.append(t, sv, ar, del);
+  if(d0) d.append(t, d0, sv, ar, del); else d.append(t, sv, ar, del);
   return d;
 }
 function miniBtn(icon, label, fn){
@@ -2852,7 +2809,6 @@ function openRoomSettings(){
   document.getElementById("rBgFit").value = r.bgFit || "cover";
   document.getElementById("rJoinGroup").checked = !!r.joinGroup;
   document.getElementById("rPeekGroup").checked = !!r.peekGroup;
-  document.getElementById("rNoFootprint").checked = !!r.noFootprint;
   document.getElementById("rStream").checked = !!r.stream;
   document.getElementById("rBubbleMe").value = r.bubbleMe || mixHex(r.color, .14);
   document.getElementById("rBubbleAi").value = r.bubbleAi || "#FFFFFF";
@@ -3019,7 +2975,6 @@ function saveRoomSettings(){
   r.bgFit = document.getElementById("rBgFit").value;
   r.joinGroup = document.getElementById("rJoinGroup").checked;
   r.peekGroup = document.getElementById("rPeekGroup").checked;
-  r.noFootprint = document.getElementById("rNoFootprint").checked;
   r.stream = document.getElementById("rStream").checked;
   r.bubbleMe = document.getElementById("rBubbleMe").value;
   r.bubbleAi = document.getElementById("rBubbleAi").value;
@@ -3066,22 +3021,9 @@ function openAppSettings(){
   userAvatarPreview();
   renderUsage();
   const used = Math.round(JSON.stringify(state).length/1024);
-  const el = document.getElementById("storageStatus");
-  if(persistent){
-    const guard = storagePersisted===true ? "保護つき（ブラウザが勝手に消さないモード）" : "";
-    el.textContent = "この端末のIndexedDBに保存中" + (guard?"・"+guard:"") + "。お部屋 " + state.rooms.length + " 室、使用量 約" + used.toLocaleString() + "KB。";
-    if(navigator.storage && navigator.storage.estimate){
-      navigator.storage.estimate().then(est=>{
-        if(est && est.quota){
-          const q = Math.round(est.quota/1024/1024);
-          const u2 = Math.round((est.usage||0)/1024/1024);
-          el.textContent += " このブラウザの空き枠の目安：約" + q.toLocaleString() + "MB中 " + u2.toLocaleString() + "MB使用。心配になったら「まとめて書き出し」でバックアップしてね。";
-        }
-      }).catch(()=>{});
-    }
-  }else{
-    el.textContent = "いまは一時メモリのみ（閉じると消えちゃう）。ファイルをダウンロードしてブラウザで開いてね。";
-  }
+  document.getElementById("storageStatus").textContent = persistent
+    ? "この端末のブラウザに保存中。お部屋 " + state.rooms.length + " 室、使用量 約" + used + "KB（目安：5,000KBくらいまで）。"
+    : "いまは一時メモリのみ（閉じると消えちゃう）。ファイルをダウンロードしてブラウザで開いてね。";
   show("view-app");
 }
 function priceOf(model){

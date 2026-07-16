@@ -144,6 +144,11 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 .field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px}
 .row{display:flex;gap:8px;align-items:center}
 .hint{font-size:11.5px;color:var(--ink-soft);margin-top:6px;line-height:1.6}
+.think{margin:0 0 4px;max-width:86%}
+.think summary{cursor:pointer;font-size:11px;color:var(--ink-soft);opacity:.75;list-style:none;user-select:none}
+.think summary::-webkit-details-marker{display:none}
+.think[open] summary{opacity:1}
+.think-body{font-size:11.5px;color:var(--ink-soft);line-height:1.65;border-left:2px dashed var(--line);padding:4px 0 4px 10px;margin-top:4px;white-space:pre-wrap;word-break:break-word}
 .slider-line{display:flex;align-items:center;gap:10px}
 .slider-line input[type=range]{flex:1;padding:0;border:none;background:transparent;accent-color:var(--accent)}
 .slider-val{font-size:12.5px;color:var(--ink-soft);min-width:74px;text-align:right}
@@ -369,6 +374,13 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
             <input type="checkbox" class="toggle" id="rPeekGroup">
           </div>
           <div class="hint">ONだと、リビングの🫣ボタンを押した時に「住人だけのおしゃべり」のメンバー候補になるよ。1回の覗き見で参加者×2回ぶんのAPI呼び出しがあるから、お安いモデルの子がおすすめ。</div>
+        </div>
+        <div class="field">
+          <div class="row" style="justify-content:space-between">
+            <label style="margin:0">💭 思考をちら見する</label>
+            <input type="checkbox" class="toggle" id="rShowThink">
+          </div>
+          <div class="hint">お返事の前の「考えごと」を、吹き出しの上に小さくたたんで見せるよ。Claude・Geminiと、OpenRouterの一部モデルだけ（OpenAIは考えごとを見せてくれない仕様なの）。思考のぶん、お代（トークン）は少し多めになるよ。このお部屋での普段のお喋りだけで、リビングや覗き・お庭では動かないの。</div>
         </div>
       </div>
 
@@ -649,7 +661,7 @@ function newRoom(i){
     emoji: DEFAULT_EMOJI[i % DEFAULT_EMOJI.length],
     avatar: null, sprite: null, pixel: false, status: "", showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
     color: PALETTE[i % PALETTE.length].hex,
-    prompt: "", memory: "", files: [], joinGroup: false, peekGroup: false,
+    prompt: "", memory: "", files: [], joinGroup: false, peekGroup: false, showThink: false,
     provider: "openai", model: "gpt-5.1", customModel: "",
     temp: 0.8, maxTokens: 1600, ctx: 30, diaryStyle: "whim",
     convos: [c], activeConvo: c.id
@@ -725,6 +737,7 @@ function migrate(s){
     if(r.bubbleAlpha===undefined) r.bubbleAlpha=1;
     if(r.joinGroup===undefined) r.joinGroup=false;
     if(r.peekGroup===undefined) r.peekGroup = !!r.joinGroup;
+    if(r.showThink===undefined) r.showThink = false;
     if(r.diaryStyle===undefined) r.diaryStyle="whim";
     if(!Array.isArray(r.files)) r.files=[];
     /* v1/v2 → v3：room直下のmessagesを会話に変換 */
@@ -1140,6 +1153,7 @@ function msgRowHtml(m, r, senderRoom){
   const mine = inLiving ? (m.sender==="user") : (m.role==="user");
   const src = senderRoom || r;
   let body = "";
+  if(!mine && m.think) body += '<details class="think"><summary>💭 考えごと</summary><div class="think-body">'+fmt(m.think)+'</div></details>';
   (m.images||[]).forEach(u=>{ body += '<img class="msgimg" src="'+u+'" alt="添付画像">'; });
   (m.atts||[]).forEach(a=>{ body += '<span class="attchip">📄 '+esc(a.name)+'</span>'; });
   if(m.content) body += '<span class="bubble '+(mine?"me-b":"ai-b")+'"'+bubbleStyle(src, mine)+'>'+fmt(m.content)+'</span>';
@@ -1368,11 +1382,13 @@ function mergeRoles(msgs){
   if(out.length && out[0].role!=="user") out.unshift({role:"user", content:"（会話の続きです）", images:[]});
   return out;
 }
-async function chat(r, system, msgs, onDelta){
+let lastThink = "";
+async function chat(r, system, msgs, onDelta, opts){
+  lastThink = "";
   const norm = mergeRoles(msgs);
-  if(r.provider==="gemini") return chatGemini(r, system, norm, onDelta);
-  if(r.provider==="anthropic") return chatAnthropic(r, system, norm, onDelta);
-  return chatOpenAIStyle(r, system, norm, onDelta);
+  if(r.provider==="gemini") return chatGemini(r, system, norm, onDelta, opts);
+  if(r.provider==="anthropic") return chatAnthropic(r, system, norm, onDelta, opts);
+  return chatOpenAIStyle(r, system, norm, onDelta, opts);
 }
 async function readSSE(res, onData){
   const reader = res.body.getReader();
@@ -1414,7 +1430,8 @@ function exportRoomForShoko(){
   a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
 }
-async function chatOpenAIStyle(r, system, msgs, onDelta){
+async function chatOpenAIStyle(r, system, msgs, onDelta, opts){
+  const wantThink = !!(opts && opts.think);
   const model = modelOf(r);
   const isOR = r.provider==="openrouter";
   const mm = msgs.map(m=>{
@@ -1433,6 +1450,7 @@ async function chatOpenAIStyle(r, system, msgs, onDelta){
     body.max_tokens = r.maxTokens;
     body.temperature = r.temp;
   }
+  if(wantThink && isOR) body.include_reasoning = true; /* くれるモデルだけ、くれるの（おこぼれ方式） */
   const streaming = !!(r.stream && onDelta);
   if(streaming){ body.stream = true; body.stream_options = {include_usage:true}; }
   const url = isOR ? "https://openrouter.ai/api/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
@@ -1449,7 +1467,8 @@ async function chatOpenAIStyle(r, system, msgs, onDelta){
     let text = "", pIn = 0, pOut = 0, pCr = 0, pTh = 0;
     await readSSE(res, d=>{
       const ch = d.choices && d.choices[0];
-      if(ch && ch.delta && typeof ch.delta.content === "string"){ text += ch.delta.content; onDelta(text); }
+      if(ch && ch.delta && typeof ch.delta.reasoning === "string"){ lastThink += ch.delta.reasoning; onDelta(text, lastThink); }
+      if(ch && ch.delta && typeof ch.delta.content === "string"){ text += ch.delta.content; onDelta(text, lastThink); }
       if(d.usage){
         pCr = (d.usage.prompt_tokens_details&&d.usage.prompt_tokens_details.cached_tokens)||0;
         pTh = (d.usage.completion_tokens_details&&d.usage.completion_tokens_details.reasoning_tokens)||0;
@@ -1468,6 +1487,7 @@ async function chatOpenAIStyle(r, system, msgs, onDelta){
     addUsage(model, Math.max(0,(data.usage.prompt_tokens||0)-cr), data.usage.completion_tokens, 0, cr, th);
   }
   const c = data.choices && data.choices[0] && data.choices[0].message;
+  if(c && typeof c.reasoning === "string") lastThink = c.reasoning;
   if(!c || !c.content) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
   return c.content;
 }
@@ -1479,7 +1499,8 @@ function copyMsgTxt(btn){
     setTimeout(()=>{ btn.textContent = old; }, 1200);
   }).catch(()=>{ alert("コピーできなかった…もう一度試してみて？"); });
 }
-async function chatAnthropic(r, system, msgs, onDelta){
+async function chatAnthropic(r, system, msgs, onDelta, opts){
+  const wantThink = !!(opts && opts.think);
   const mm = msgs.map(m=>{
     if(m.role==="user" && m.images.length){
       const arr = [];
@@ -1499,6 +1520,11 @@ async function chatAnthropic(r, system, msgs, onDelta){
     temperature: Math.min(r.temp, 1),
     messages: mm
   };
+  if(wantThink){
+    body.thinking = { type:"enabled", budget_tokens: 2048 };
+    body.temperature = 1; /* 思考モードは温度1固定がAPIのお約束 */
+    body.max_tokens = Math.max(r.maxTokens, 3072); /* 思考ぶんの余白を確保 */
+  }
   const streaming = !!(r.stream && onDelta);
   if(streaming) body.stream = true;
   const res = await fetch("https://api.anthropic.com/v1/messages",{
@@ -1518,7 +1544,8 @@ async function chatAnthropic(r, system, msgs, onDelta){
     }
     let text = "", pIn = 0, pOut = 0, pCi = 0, pCr = 0;
     await readSSE(res, d=>{
-      if(d.type==="content_block_delta" && d.delta && typeof d.delta.text==="string"){ text += d.delta.text; onDelta(text); }
+      if(d.type==="content_block_delta" && d.delta && typeof d.delta.thinking==="string"){ lastThink += d.delta.thinking; onDelta(text, lastThink); }
+      if(d.type==="content_block_delta" && d.delta && typeof d.delta.text==="string"){ text += d.delta.text; onDelta(text, lastThink); }
       if(d.type==="message_start" && d.message && d.message.usage){
         pIn = d.message.usage.input_tokens||0;
         pCi = d.message.usage.cache_creation_input_tokens||0;
@@ -1534,11 +1561,13 @@ async function chatAnthropic(r, system, msgs, onDelta){
   if(!res.ok) throw new Error((data.error && data.error.message) || ("Claudeエラー ("+res.status+")"));
   if(data.usage) addUsage(modelOf(r), data.usage.input_tokens, data.usage.output_tokens,
     data.usage.cache_creation_input_tokens, data.usage.cache_read_input_tokens, 0);
+  lastThink = (data.content||[]).filter(b=>b.type==="thinking").map(b=>b.thinking||"").join("");
   const text = (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
   if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
   return text;
 }
-async function chatGemini(r, system, msgs, onDelta){
+async function chatGemini(r, system, msgs, onDelta, opts){
+  const wantThink = !!(opts && opts.think);
   const model = modelOf(r);
   const contents = msgs.map(m=>{
     const parts = [];
@@ -1555,7 +1584,8 @@ async function chatGemini(r, system, msgs, onDelta){
     contents: contents,
     generationConfig: { temperature: r.temp, maxOutputTokens: r.maxTokens }
   };
-  if(/2\.5-flash/.test(model)) body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
+  if(wantThink) body.generationConfig.thinkingConfig = { thinkingBudget: -1, includeThoughts: true };
+  else if(/2\.5-flash/.test(model)) body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
   const streaming = !!(r.stream && onDelta);
   const method = streaming ? ":streamGenerateContent?alt=sse&key=" : ":generateContent?key=";
   const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+method+encodeURIComponent(state.keys.gemini),{
@@ -1570,8 +1600,8 @@ async function chatGemini(r, system, msgs, onDelta){
     await readSSE(res, d=>{
       const cand = d.candidates && d.candidates[0];
       if(cand && cand.content && cand.content.parts){
-        cand.content.parts.forEach(p=>{ if(p.text) text += p.text; });
-        onDelta(text);
+        cand.content.parts.forEach(p=>{ if(!p.text) return; if(p.thought) lastThink += p.text; else text += p.text; });
+        onDelta(text, lastThink);
       }
       if(d.usageMetadata){
         pCr=d.usageMetadata.cachedContentTokenCount||pCr; pTh=d.usageMetadata.thoughtsTokenCount||pTh;
@@ -1590,7 +1620,10 @@ async function chatGemini(r, system, msgs, onDelta){
     addUsage(model, Math.max(0,(data.usageMetadata.promptTokenCount||0)-cr), (data.usageMetadata.candidatesTokenCount||0)+th, 0, cr, th);
   }
   const cand = data.candidates && data.candidates[0];
-  const text = cand && cand.content && cand.content.parts ? cand.content.parts.map(p=>p.text||"").join("") : "";
+  let text = "";
+  if(cand && cand.content && cand.content.parts){
+    cand.content.parts.forEach(p=>{ if(!p.text) return; if(p.thought) lastThink += p.text; else text += p.text; });
+  }
   if(!text) throw new Error("お返事が空で届いちゃった…もう一度試してみて。");
   return text;
 }
@@ -1656,21 +1689,23 @@ async function sendMessage(){
     const hist = c.messages.filter(m=>m.role==="user"||m.role==="assistant").slice(-r.ctx)
       .map(m=>({role:m.role, content:contentOf(m), images:m.images||[]}));
     let liveMsg = null, renderTimer = null;
-    const onDelta = !r.stream ? null : (full)=>{
+    const onDelta = !r.stream ? null : (full, think)=>{
       if(!liveMsg){
         liveMsg = {role:"assistant", content:"", images:[], atts:[], t:Date.now()};
         c.messages.push(liveMsg);
         typingName = "";
       }
       liveMsg.content = full;
+      if(r.showThink && think) liveMsg.think = think;
       if(!renderTimer){ renderTimer = setTimeout(()=>{ renderTimer=null; renderMsgs(); }, 120); }
     };
-    const reply = await chat(r, system, hist, onDelta);
+    const reply = await chat(r, system, hist, onDelta, {think: !!r.showThink});
     if(renderTimer){ clearTimeout(renderTimer); renderTimer=null; }
     const pr = parseReminder(reply, r, c);
     const pm = parseMemo(pr.clean, r);
-    if(liveMsg){ liveMsg.content = pm.clean; liveMsg.t = Date.now(); }
-    else c.messages.push({role:"assistant", content:pm.clean, images:[], atts:[], t:Date.now()});
+    const thinkTxt = (r.showThink && lastThink) ? lastThink.trim() : "";
+    if(liveMsg){ liveMsg.content = pm.clean; liveMsg.t = Date.now(); if(thinkTxt) liveMsg.think = thinkTxt; }
+    else c.messages.push({role:"assistant", content:pm.clean, images:[], atts:[], t:Date.now(), think: thinkTxt||undefined});
     if(pm.memo){
       const dup = state.notes.some(n=>n.roomId===r.id && n.text.replace(/\s+/g,"")===pm.memo.text.replace(/\s+/g,""));
       if(!dup){
@@ -2809,6 +2844,7 @@ function openRoomSettings(){
   document.getElementById("rBgFit").value = r.bgFit || "cover";
   document.getElementById("rJoinGroup").checked = !!r.joinGroup;
   document.getElementById("rPeekGroup").checked = !!r.peekGroup;
+  document.getElementById("rShowThink").checked = !!r.showThink;
   document.getElementById("rStream").checked = !!r.stream;
   document.getElementById("rBubbleMe").value = r.bubbleMe || mixHex(r.color, .14);
   document.getElementById("rBubbleAi").value = r.bubbleAi || "#FFFFFF";
@@ -2975,6 +3011,7 @@ function saveRoomSettings(){
   r.bgFit = document.getElementById("rBgFit").value;
   r.joinGroup = document.getElementById("rJoinGroup").checked;
   r.peekGroup = document.getElementById("rPeekGroup").checked;
+  r.showThink = document.getElementById("rShowThink").checked;
   r.stream = document.getElementById("rStream").checked;
   r.bubbleMe = document.getElementById("rBubbleMe").value;
   r.bubbleAi = document.getElementById("rBubbleAi").value;

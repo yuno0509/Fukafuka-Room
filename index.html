@@ -208,6 +208,46 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 .gcard .ghead .gname{font-weight:600;font-size:13px}
 .gcard .ghead .gwhen{font-size:11.5px;color:var(--sub);margin-left:auto}
 .gempty{align-self:center;text-align:center;color:var(--sub);font-size:13px;margin-top:32px;line-height:2}
+/* ── スケッチ帳 ── */
+.sketchbook{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+.sketch-intro{background:#FFFDF8;border:1px solid var(--line);border-radius:18px;padding:12px 14px;font-size:12.5px;color:var(--ink-soft);line-height:1.7}
+.sketch-list{display:flex;flex-direction:column;gap:12px}
+.sketch-card{position:relative}
+.sketch-card .sketch-text{white-space:pre-wrap;word-break:break-word}
+.sketch-delete{position:absolute;right:10px;bottom:8px;font-size:10.5px;padding:2px 9px;border-radius:999px;background:rgba(120,110,95,.10);color:var(--ink-soft);opacity:.55}
+.sketch-delete:hover,.sketch-delete:active{opacity:1}
+.sketch-empty{text-align:center;color:var(--ink-soft);font-size:13px;line-height:2;margin-top:22px}
+.sketch-draw{position:sticky;bottom:12px;z-index:5;box-shadow:0 5px 18px rgba(90,70,30,.10)}
+/* ── 足あと帳 ── */
+.stampbook{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+.stamp-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.stamp-week-title{font-family:var(--serif);font-size:15px;text-align:center;flex:1}
+.stamp-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.stamp-day{min-height:118px;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:7px 4px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;overflow:hidden}
+.stamp-day.today{border-color:#C9A85C;box-shadow:0 0 0 2px rgba(201,168,92,.12)}
+.stamp-day .sdow{font-size:11px;color:var(--ink-soft)}
+.stamp-day .sdate{font-size:11px;color:var(--ink-soft)}
+.stamp-mark{width:45px;height:45px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;background:#FBF6E8;border:1px dashed #DBC98E;margin-top:2px;overflow:hidden}
+.stamp-mark.empty{opacity:.38;filter:grayscale(.5)}
+.stamp-mark img{width:100%;height:100%;object-fit:contain}
+.stamp-who{font-size:9.5px;color:var(--ink-soft);width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stamp-done{font-size:9.5px;line-height:1.25;color:var(--ink);width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stamp-flower{text-align:center;padding:10px;border-radius:16px;background:#FFF8ED;border:1px solid #F0DDBF;font-size:14px;animation:fade .3s ease}
+.stamp-today,.stamp-praises,.stamp-items-box{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+.stamp-today h3,.stamp-items-box h3{font-family:var(--serif);font-size:15px;margin-bottom:10px}
+.stamp-checks{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.stamp-check{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:7px 11px;font-size:13px;cursor:pointer}
+.stamp-check.on{border-color:#C9A85C;background:#FFF8E8}
+.stamp-check input{width:auto;accent-color:#C9A85C}
+.stamp-praise{border-left:3px solid #D8BE76;padding:8px 10px;margin-top:8px;background:#FFFCF4;border-radius:0 12px 12px 0;font-size:13px;white-space:pre-wrap}
+.stamp-praise-head{display:flex;align-items:center;gap:6px;margin-bottom:3px;font-size:11px;color:var(--ink-soft)}
+.stamp-praise-head .cpy{margin-left:auto}
+.stamp-item-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}
+.stamp-item-row:last-child{border-bottom:none}
+.stamp-item-name{flex:1;font-size:13.5px}
+.stamp-add{display:flex;gap:8px;margin-top:10px}
+.stamp-add input{flex:1}
+@media (max-width:390px){.stamp-grid{gap:3px}.stamp-day{min-height:110px;padding:6px 2px}.stamp-mark{width:38px;height:38px;font-size:21px}}
 /* ── 記録棚 ── */
 .shelfbg{position:fixed;inset:0;background:rgba(60,48,20,.35);z-index:250;display:none}
 .shelfbg.show{display:block}
@@ -313,6 +353,55 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
     <div class="msgs" id="gardenCards"></div>
   </section>
 
+  <!-- ═══ スケッチ帳 ═══ -->
+  <section id="view-sketchbook" class="view">
+    <div class="chat-head">
+      <button class="iconbtn" onclick="goHome()" aria-label="ホームへ">‹</button>
+      <div class="who">
+        <div class="nm">📓 スケッチ帳</div>
+        <div class="md">みんなが、ことばで描く共用の一冊</div>
+      </div>
+      <span style="width:40px"></span>
+    </div>
+    <div class="sketchbook">
+      <div class="sketch-intro">情景のスケッチ、記号の落書き、ちいさな詩、画像生成プロンプト。住人がその日の気分で、好きな画材を選ぶよ。描かない日もあります。</div>
+      <div class="sketch-list" id="sketchCards"></div>
+      <button class="wide-btn gold sketch-draw" id="sketchDrawBtn" onclick="requestSketch()">🖍 描いてみて</button>
+    </div>
+  </section>
+
+  <!-- ═══ 足あと帳（内部名 stampbook） ═══ -->
+  <section id="view-stampbook" class="view">
+    <div class="chat-head">
+      <button class="iconbtn" onclick="goHome()" aria-label="ホームへ">‹</button>
+      <div class="who">
+        <div class="nm">🐿 足あと帳</div>
+        <div class="md">できたことを、ぽちぽち置いていく帳面</div>
+      </div>
+      <button class="iconbtn" onclick="toggleStampItems()" aria-label="項目を編集">⚙</button>
+    </div>
+    <div class="stampbook">
+      <div class="stamp-nav">
+        <button class="smallbtn" id="stampPrev" onclick="moveStampWeek(1)">‹ 先週</button>
+        <div class="stamp-week-title" id="stampWeekTitle"></div>
+        <button class="smallbtn" id="stampNext" onclick="moveStampWeek(-1)">次週 ›</button>
+      </div>
+      <div class="stamp-grid" id="stampGrid"></div>
+      <div class="stamp-flower" id="stampFlower" style="display:none">🌸💮 7日ぶん、ぜんぶ受け取ったよ。花丸！</div>
+      <div class="stamp-today" id="stampToday"></div>
+      <div class="stamp-praises" id="stampPraises" style="display:none"></div>
+      <div class="stamp-items-box" id="stampItemsBox" style="display:none">
+        <h3>項目を整える</h3>
+        <div id="stampItemList"></div>
+        <div class="stamp-add">
+          <input id="stampNewItem" maxlength="40" placeholder="例：散歩、早寝、ストレッチ">
+          <button class="smallbtn" onclick="addStampItem()">追加</button>
+        </div>
+        <div class="hint">項目はいつでも増やしたり直したりできるよ。数字や体重の記録欄は作らない、やさしい帳面なの。</div>
+      </div>
+    </div>
+  </section>
+
   <!-- ═══ お部屋設定 ═══ -->
   <section id="view-room" class="view">
     <div class="top">
@@ -332,7 +421,7 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
                 <button class="smallbtn" onclick="document.getElementById('rAvatarFile').click()">画像を選ぶ</button>
                 <button class="smallbtn" onclick="clearAvatar()">画像を外す</button>
               </div>
-              <input id="rEmoji" maxlength="4" style="width:90px;text-align:center;font-size:20px" oninput="avatarPreview()" placeholder="絵文字">
+              <input id="rEmoji" maxlength="4" style="width:90px;text-align:center;font-size:20px" oninput="avatarPreview();stampPreview()" placeholder="絵文字">
             </div>
           </div>
           <input type="file" id="rAvatarFile" accept="image/*" style="display:none" onchange="setAvatar(event)">
@@ -354,6 +443,17 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
           </div>
           <input type="file" id="rSpriteFile" accept="image/*" style="display:none" onchange="setSprite(event)">
           <div class="hint">ホーム画面のカードに大きめに表示されるよ。背景が透明なPNGだと特にかわいい。</div>
+        </div>
+        <div class="field"><label>足あと帳のスタンプ画像</label>
+          <div class="avatar-edit">
+            <span class="avatar" id="rStampPreview"></span>
+            <div class="row">
+              <button class="smallbtn" onclick="document.getElementById('rStampFile').click()">画像を選ぶ</button>
+              <button class="smallbtn" onclick="clearStampImage()">画像を外す</button>
+            </div>
+          </div>
+          <input type="file" id="rStampFile" accept="image/*" style="display:none" onchange="setStampImage(event)">
+          <div class="hint">報告した日に、この子のスタンプとして押されるよ。画像がなければアイコンの絵文字を使うから、空欄でも大丈夫。</div>
         </div>
         <div class="field"><label>時間帯ステータス（ホームに表示）</label>
           <textarea id="rStatus" rows="4" placeholder="0-6 🌙 ぐぅ…すやすや&#10;6-9 ☕ 紅茶の準備中&#10;9-23 📖 起きてるよ、おいで&#10;23-24 🕯 そろそろおやすみの支度"></textarea>
@@ -601,7 +701,7 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
         <div class="hint" id="storageStatus"></div>
       </div>
       <button class="wide-btn gold" style="font-weight:600" onclick="saveAppSettings()">保存して戻る</button>
-      <div class="foot">ふかふかルーム v3.4 ─ つきちゃん工房</div>
+      <div class="foot">ふかふかルーム v3.6 ─ つきちゃん工房＋レグ工事</div>
     </div>
   </section>
 </div>
@@ -659,7 +759,7 @@ function newRoom(i){
     id: uid("r"),
     name: "お部屋 " + (i+1),
     emoji: DEFAULT_EMOJI[i % DEFAULT_EMOJI.length],
-    avatar: null, sprite: null, pixel: false, status: "", showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
+    avatar: null, sprite: null, stamp: null, pixel: false, status: "", showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
     color: PALETTE[i % PALETTE.length].hex,
     prompt: "", memory: "", files: [], joinGroup: false, peekGroup: false, showThink: false,
     provider: "openai", model: "gpt-5.1", customModel: "",
@@ -679,6 +779,8 @@ function defaultState(){
     calendarStars: [], diaryAsked: [],
     living: { messages: [] },
     garden: { events: [], items: DEFAULT_GARDEN_ITEMS.slice(), bg: null, last: 0 },
+    sketchbook: { entries: [], last: 0, lastRoomId: "" },
+    stampbook: { items: [], days: {} },
     reminders: [],
     records: [],
     rooms: Array.from({length:7}, (_,i)=>newRoom(i))
@@ -714,6 +816,22 @@ function migrate(s){
   if(!Array.isArray(s.garden.items) || !s.garden.items.length) s.garden.items = DEFAULT_GARDEN_ITEMS.slice();
   if(s.garden.bg===undefined) s.garden.bg = null;
   if(!s.garden.last) s.garden.last = 0;
+  s.sketchbook = s.sketchbook || {};
+  if(!Array.isArray(s.sketchbook.entries)) s.sketchbook.entries = [];
+  if(!s.sketchbook.last) s.sketchbook.last = 0;
+  if(s.sketchbook.lastRoomId===undefined) s.sketchbook.lastRoomId = "";
+  s.stampbook = s.stampbook || {};
+  if(!Array.isArray(s.stampbook.items)) s.stampbook.items = [];
+  if(!s.stampbook.days || typeof s.stampbook.days!=="object" || Array.isArray(s.stampbook.days)) s.stampbook.days = {};
+  Object.keys(s.stampbook.days).forEach(key=>{
+    const d = s.stampbook.days[key] || {};
+    if(!Array.isArray(d.selected)) d.selected = [];
+    if(!d.labels || typeof d.labels!=="object" || Array.isArray(d.labels)) d.labels = {};
+    if(!Array.isArray(d.reports)) d.reports = [];
+    if(d.roomId===undefined) d.roomId = "";
+    if(d.stampAt===undefined) d.stampAt = 0;
+    s.stampbook.days[key] = d;
+  });
   if(!Array.isArray(s.reminders)) s.reminders = [];
   s.reminders.forEach(rem=>{
     if(rem.notified===undefined) rem.notified = !!rem.done;
@@ -725,6 +843,7 @@ function migrate(s){
   if(!Array.isArray(s.emotions)) s.emotions = [];
   (s.rooms||[]).forEach(r=>{
     if(r.avatar===undefined) r.avatar=null;
+    if(r.stamp===undefined) r.stamp=null;
     if(r.showIconAi===undefined) r.showIconAi = (r.showIcons===undefined ? true : !!r.showIcons);
     if(r.showIconMe===undefined) r.showIconMe = (r.showIcons===undefined ? true : !!r.showIcons);
     if(r.bg===undefined) r.bg=null;
@@ -1057,6 +1176,38 @@ function renderHome(){
     '<span class="chev">›</span>';
   gd.onclick = openGarden;
   list.appendChild(gd);
+
+  /* スケッチ帳 */
+  const sk = document.createElement("button");
+  sk.className = "room-card";
+  sk.style.setProperty("--rc", "#9B8064");
+  const skLast = state.sketchbook.entries.length ? state.sketchbook.entries[state.sketchbook.entries.length-1] : null;
+  const skPrev = skLast
+    ? ((roomById(skLast.roomId)||{name:"だれか"}).name + "「" + String(skLast.text||"").replace(/\n/g," ").slice(0,26) + "…」")
+    : "まだまっさらな一冊。最初に描くのはだれかな";
+  sk.innerHTML =
+    '<span class="wash"></span><span class="avatar">📓</span>' +
+    '<span class="room-meta"><span class="room-name">スケッチ帳</span>' +
+    '<span class="room-last" style="display:block">' + esc(skPrev) + '</span></span>' +
+    '<span class="chev">›</span>';
+  sk.onclick = openSketchbook;
+  list.appendChild(sk);
+
+  /* 足あと帳 */
+  const sb = document.createElement("button");
+  sb.className = "room-card";
+  sb.style.setProperty("--rc", "#D1A85A");
+  const todayStamp = state.stampbook.days[dateKey()];
+  const sbPrev = todayStamp && todayStamp.stampAt
+    ? "今日のスタンプ、受け取り済み" + (todayStamp.reports.length>1 ? "（二褒め！）" : "")
+    : (state.stampbook.items.length ? "今日できたことを、ぽちぽちしよう" : "まずは項目を作ってみよう");
+  sb.innerHTML =
+    '<span class="wash"></span><span class="avatar">🐿</span>' +
+    '<span class="room-meta"><span class="room-name">足あと帳</span>' +
+    '<span class="room-last" style="display:block">' + esc(sbPrev) + '</span></span>' +
+    '<span class="chev">›</span>';
+  sb.onclick = openStampbook;
+  list.appendChild(sb);
 
   state.rooms.forEach(r=>{
     const ac = r.convos.find(c=>c.id===r.activeConvo) || r.convos[0];
@@ -2313,6 +2464,311 @@ function exportGardenTxt(){
   download("お庭の記録_"+stamp()+".txt", out);
 }
 
+/* ════════ スケッチ帳（ことばで描く共用の一冊） ════════ */
+const SKETCH_GAP = GARDEN_GAP;
+const SKETCH_CHANCE = GARDEN_CHANCE;
+let sketchBusy = false;
+
+function openSketchbook(){
+  currentRoomId = null; inLiving = false;
+  document.documentElement.style.setProperty("--accent", "#9B8064");
+  renderSketchCards();
+  show("view-sketchbook");
+  setTimeout(()=>{ maybeSketch(false); },900);
+}
+function renderSketchCards(){
+  const box=document.getElementById("sketchCards");
+  const entries=state.sketchbook.entries.slice().sort((a,b)=>b.t-a.t);
+  if(!entries.length){
+    box.innerHTML='<div class="sketch-empty">📓<br>まだ、まっさらな一冊。<br>だれかの線が落ちてくるまで、静かに開いておこう。</div>';
+    return;
+  }
+  box.innerHTML=entries.map(entry=>{
+    const r=roomById(entry.roomId), d=new Date(entry.t);
+    const when=(d.getMonth()+1)+"/"+d.getDate()+"　"+gardenTimeslot(entry.t);
+    return '<div class="gcard sketch-card"><div class="ghead">'+(r?avatarHtml(r,true):"")+
+      '<span class="gname">'+esc(r?r.name:"どこかの住人")+'</span><span class="gwhen">✎ '+esc(when)+'</span></div>'+
+      '<div class="sketch-text">'+fmt(entry.text)+'</div><button class="sketch-delete" onclick="deleteSketch(\''+entry.id+'\')">削除</button></div>';
+  }).join("");
+}
+function sketchCandidates(){
+  const all=state.rooms.filter(r=>(r.prompt||"").trim() && state.keys[r.provider] && modelOf(r));
+  if(all.length<=1 || !state.sketchbook.lastRoomId) return all;
+  const others=all.filter(r=>r.id!==state.sketchbook.lastRoomId);
+  return others.length ? others : all;
+}
+function sketchDeclined(text){
+  const plain=String(text||"").trim().replace(/^[「『\"']+|[」』\"']+$/g,"").trim();
+  return /^(今日は描かない|今日は描く気分じゃない|今日は描く気分ではない)[。.!！]*$/.test(plain);
+}
+async function maybeSketch(force){
+  try{
+    if(sketchBusy || sending) return;
+    const now=Date.now();
+    if(!force){
+      if(now-(state.sketchbook.last||0)<SKETCH_GAP) return;
+      if(Math.random()>SKETCH_CHANCE) return;
+      if(!ashiatoBudgetOk()) return;
+    }else if(!budgetAllowsSend()) return;
+    const cands=sketchCandidates();
+    if(!cands.length){
+      if(force) alert("スケッチ帳を開ける住人がまだいないみたい。キャラクター設定・モデル・APIキーを確認してね。");
+      return;
+    }
+    const artist=cands[Math.floor(Math.random()*cands.length)];
+    state.sketchbook.last=now;
+    saveState();
+    sketchBusy=true;
+    const btn=document.getElementById("sketchDrawBtn");
+    if(btn){btn.disabled=true;btn.textContent="鉛筆を渡してる…";}
+    const sys=(artist.prompt||"")+
+      (artist.memory?"\n\n【メモリ（大切な記憶）】\n"+artist.memory:"")+
+      (state.userName?"\n\nユーザーの名前は「"+state.userName+"」です。":"")+
+      "\n\n【いまの状況】\nあなたはいま、同じ家のみんなで使う共用のスケッチ帳を開いています。"+
+      "\n気が向いたら、次の画材から自由にひとつ選び、スケッチを1枚だけ残してください。画材名や前置きは書きません。"+
+      "\nA. 情景をことばで描く短いスケッチ"+
+      "\nB. 文字と記号のいたずらな落書き"+
+      "\nC. ちいさな詩"+
+      "\nD. 画像生成プロンプト。この場合だけ、日本語の短い一言タイトルを1行目、その下に英語プロンプトだけを書く。日本語の説明文は付けない。"+
+      "\n今日は描く気分でなければ、理由や説明を添えず、正確に「今日は描かない」とだけ返してください。"+
+      "\nほかの住人やユーザーの発言は創作せず、あなた自身が描いた本文だけを返してください。"+
+      clockLine();
+    const reply=await chat(artist,sys,[{role:"user",content:"（共用のスケッチ帳と、よく削った鉛筆をそっと差し出す）",images:[]}]);
+    const text=peekClean(reply,artist).trim().slice(0,1200);
+    if(sketchDeclined(text)){
+      toast("<b>📓 （今日は描く気分じゃないみたい）</b><span class='tx'>また、鉛筆が動く日に。</span>");
+    }else if(text){
+      state.sketchbook.entries.push({id:uid("sk"),roomId:artist.id,text:text,t:Date.now()});
+      if(state.sketchbook.entries.length>200) state.sketchbook.entries=state.sketchbook.entries.slice(-200);
+      state.sketchbook.lastRoomId=artist.id;
+      saveState();
+      const view=document.getElementById("view-sketchbook");
+      if(view&&view.classList.contains("active")) renderSketchCards();
+      toast("<b>📓 "+esc(artist.name)+"が1枚描いたよ。</b><span class='tx'>スケッチ帳に新しい線が増えました。</span>",()=>openSketchbook());
+    }else if(force){
+      toast("<b>📓 （今日は描く気分じゃないみたい）</b><span class='tx'>また、鉛筆が動く日に。</span>");
+    }
+  }catch(e){
+    if(force) alert("スケッチ帳に鉛筆が届かなかった… "+(e.message||""));
+  }
+  sketchBusy=false;
+  const btn2=document.getElementById("sketchDrawBtn");
+  if(btn2){btn2.disabled=false;btn2.textContent="🖍 描いてみて";}
+}
+function requestSketch(){ maybeSketch(true); }
+function deleteSketch(id){
+  if(!confirm("このスケッチを1枚、帳面から外すよ。いい？")) return;
+  state.sketchbook.entries=state.sketchbook.entries.filter(x=>x.id!==id);
+  const last=state.sketchbook.entries[state.sketchbook.entries.length-1];
+  state.sketchbook.lastRoomId=last?last.roomId:"";
+  saveState(); renderSketchCards(); renderHome();
+}
+
+/* ════════ 足あと帳（がんばりスタンプ帳） ════════ */
+let stampWeekOffset = 0;
+let stampItemsOpen = false;
+
+function stampDay(key, create){
+  let d = state.stampbook.days[key];
+  if(!d && create){
+    d = { selected:[], labels:{}, reports:[], roomId:"", stampAt:0 };
+    state.stampbook.days[key] = d;
+  }
+  return d || null;
+}
+function mondayOf(value){
+  const d = value instanceof Date ? new Date(value) : new Date();
+  d.setHours(12,0,0,0);
+  const shift = (d.getDay()+6)%7;
+  d.setDate(d.getDate()-shift);
+  return d;
+}
+function stampWeekDates(offset){
+  const start = mondayOf(new Date());
+  start.setDate(start.getDate()-(offset||0)*7);
+  return Array.from({length:7},(_,i)=>{
+    const d = new Date(start); d.setDate(start.getDate()+i); return d;
+  });
+}
+function stampDateLabel(d){ return (d.getMonth()+1)+"/"+d.getDate(); }
+function stampRoomCandidates(){
+  return state.rooms.filter(r=>(r.prompt||"").trim() && state.keys[r.provider] && modelOf(r));
+}
+function openStampbook(){
+  currentRoomId = null; inLiving = false;
+  document.documentElement.style.setProperty("--accent", "#D1A85A");
+  stampWeekOffset = 0;
+  stampItemsOpen = false;
+  renderStampbook();
+  show("view-stampbook");
+}
+function moveStampWeek(delta){
+  stampWeekOffset = Math.max(0, Math.min(7, stampWeekOffset + delta));
+  renderStampbook();
+}
+function stampMarkHtml(r, marked){
+  if(!marked) return '<span class="stamp-mark empty">・</span>';
+  if(r && r.stamp) return '<span class="stamp-mark"><img src="'+r.stamp+'" alt=""></span>';
+  return '<span class="stamp-mark">'+esc((r&&r.emoji)||"✨")+'</span>';
+}
+function stampSelectedNames(d){
+  if(!d) return [];
+  return d.selected.map(id=>d.labels[id] || ((state.stampbook.items.find(x=>x.id===id)||{}).name) || "").filter(Boolean);
+}
+function renderStampbook(){
+  const dates = stampWeekDates(stampWeekOffset);
+  const first = dates[0], last = dates[6];
+  document.getElementById("stampWeekTitle").textContent = first.getFullYear()+"年 "+stampDateLabel(first)+" 〜 "+stampDateLabel(last);
+  document.getElementById("stampPrev").disabled = stampWeekOffset>=7;
+  document.getElementById("stampNext").disabled = stampWeekOffset<=0;
+  const grid = document.getElementById("stampGrid");
+  const today = dateKey();
+  grid.innerHTML = dates.map((dt,i)=>{
+    const key = dateKey(dt), d = stampDay(key,false), r = d ? roomById(d.roomId) : null;
+    const names = stampSelectedNames(d);
+    return '<div class="stamp-day'+(key===today?' today':'')+'">' +
+      '<span class="sdow">'+"月火水木金土日"[i]+'</span><span class="sdate">'+stampDateLabel(dt)+'</span>'+
+      stampMarkHtml(r, !!(d&&d.stampAt))+
+      '<span class="stamp-who">'+(d&&d.stampAt?esc(r?r.name:"だれか"):"まだ")+'</span>'+
+      '<span class="stamp-done">'+(names.length?esc(names.join("・")):"　")+'</span></div>';
+  }).join("");
+  const complete = dates.every(dt=>{ const d=stampDay(dateKey(dt),false); return !!(d&&d.stampAt); });
+  document.getElementById("stampFlower").style.display = complete ? "" : "none";
+
+  const todayBox = document.getElementById("stampToday");
+  if(stampWeekOffset!==0){
+    todayBox.style.display = "none";
+  }else{
+    todayBox.style.display = "";
+    const d = stampDay(today,true);
+    const items = state.stampbook.items;
+    let html = '<h3>今日やったこと</h3>';
+    if(!items.length){
+      html += '<div class="hint">右上の ⚙ から、ぽちぽちしたい項目を作ってね。</div>';
+    }else{
+      html += '<div class="stamp-checks">'+items.map(it=>{
+        const on = d.selected.includes(it.id);
+        return '<label class="stamp-check'+(on?' on':'')+'"><input type="checkbox" '+(on?'checked':'')+' onchange="toggleStampDone(\''+it.id+'\',this.checked)">'+esc(it.name)+'</label>';
+      }).join("")+'</div>';
+      const count = d.reports.length;
+      const label = count===0 ? "報告する" : count===1 ? "追加ぶんを報告する（あと1回）" : "今日の報告は受け取り済み";
+      html += '<button class="wide-btn gold" id="stampReportBtn" onclick="reportStampDay()" '+(count>=2?'disabled':'')+'>'+label+'</button>';
+      html += '<div class="hint">スタンプは最初の報告で1回。あとから増えた項目は、もう1回だけ褒めてもらえるよ。</div>';
+    }
+    todayBox.innerHTML = html;
+  }
+  renderStampPraises(dates);
+  document.getElementById("stampItemsBox").style.display = stampItemsOpen ? "" : "none";
+  if(stampItemsOpen) renderStampItems();
+}
+function renderStampPraises(dates){
+  const box = document.getElementById("stampPraises");
+  const rows = [];
+  dates.forEach(dt=>{
+    const key=dateKey(dt), d=stampDay(key,false);
+    if(!d) return;
+    d.reports.forEach((rep,i)=>rows.push({key:key,date:stampDateLabel(dt),rep:rep,index:i}));
+  });
+  if(!rows.length){ box.style.display="none"; box.innerHTML=""; return; }
+  box.style.display="";
+  box.innerHTML = '<strong style="font-family:var(--serif)">今週のひとこと</strong>' + rows.map(row=>{
+    const r=roomById(row.rep.roomId);
+    return '<div class="stamp-praise"><div class="stamp-praise-head">'+(r?avatarHtml(r,true):"")+
+      '<span>'+esc(row.date+"　"+(r?r.name:"だれか"))+'</span>'+
+      '<button class="cpy" onclick="bottleStampPraise(\''+row.key+'\','+row.index+')" aria-label="瓶詰め">🫙</button></div>'+fmt(row.rep.text)+'</div>';
+  }).join("");
+}
+function toggleStampDone(id, checked){
+  const d = stampDay(dateKey(),true);
+  const it = state.stampbook.items.find(x=>x.id===id);
+  if(checked){
+    if(!d.selected.includes(id)) d.selected.push(id);
+    if(it) d.labels[id] = it.name;
+  }else{
+    d.selected = d.selected.filter(x=>x!==id);
+  }
+  saveState(); renderStampbook();
+}
+function toggleStampItems(){
+  stampItemsOpen = !stampItemsOpen;
+  document.getElementById("stampItemsBox").style.display = stampItemsOpen ? "" : "none";
+  if(stampItemsOpen) renderStampItems();
+}
+function renderStampItems(){
+  const box = document.getElementById("stampItemList");
+  if(!state.stampbook.items.length){ box.innerHTML='<div class="hint">まだ項目がないよ。下からひとつ作ってみよう。</div>'; return; }
+  box.innerHTML = state.stampbook.items.map(it=>'<div class="stamp-item-row"><span class="stamp-item-name">'+esc(it.name)+'</span>'+
+    '<button class="smallbtn" onclick="editStampItem(\''+it.id+'\')">編集</button><button class="smallbtn" onclick="deleteStampItem(\''+it.id+'\')">削除</button></div>').join("");
+}
+function addStampItem(){
+  const inp=document.getElementById("stampNewItem"), name=(inp.value||"").trim();
+  if(!name) return;
+  if(state.stampbook.items.some(x=>x.name===name)){ toast("<b>🐿 その項目はもうあるよ。</b>"); return; }
+  state.stampbook.items.push({id:uid("si"),name:name.slice(0,40)});
+  inp.value=""; saveState(); renderStampbook();
+}
+function editStampItem(id){
+  const it=state.stampbook.items.find(x=>x.id===id); if(!it) return;
+  const name=prompt("項目の名前を直す？",it.name); if(name===null||!name.trim()) return;
+  it.name=name.trim().slice(0,40);
+  const today=stampDay(dateKey(),false); if(today&&today.selected.includes(id)) today.labels[id]=it.name;
+  saveState(); renderStampbook();
+}
+function deleteStampItem(id){
+  const it=state.stampbook.items.find(x=>x.id===id); if(!it) return;
+  if(!confirm("「"+it.name+"」を項目から外すよ。過去の記録はそのまま残るからね。いい？")) return;
+  state.stampbook.items=state.stampbook.items.filter(x=>x.id!==id);
+  const today=stampDay(dateKey(),false); if(today) today.selected=today.selected.filter(x=>x!==id);
+  saveState(); renderStampbook();
+}
+function pruneStampbook(){
+  const keep=stampWeekDates(7)[0].getTime();
+  Object.keys(state.stampbook.days).forEach(key=>{ const b=dayBounds(key); if(b[0]&&b[0]<keep) delete state.stampbook.days[key]; });
+}
+async function reportStampDay(){
+  if(sending){ alert("いま別のお返事を作っているみたい。少し待ってね。"); return; }
+  if(!budgetAllowsSend()) return;
+  const key=dateKey(), d=stampDay(key,true);
+  if(!d.selected.length){ alert("今日やったことを、ひとつ以上ぽちっとしてね。"); return; }
+  if(d.reports.length>=2){ toast("<b>🐿 今日のぶん、ちゃんと受け取ってるよ。</b><span class='tx'>続きはまた明日のマスへ置こうね。</span>"); return; }
+  const already=new Set(d.reports.flatMap(x=>x.itemIds||[]));
+  const fresh=d.selected.filter(id=>!already.has(id));
+  if(!fresh.length){ toast("<b>🐿 新しく増えた項目はまだないみたい。</b><span class='tx'>あとから何かできたら、ぽちっと足してね。</span>"); return; }
+  let r=d.roomId ? roomById(d.roomId) : null;
+  if(!r || !(r.prompt||"").trim() || !state.keys[r.provider] || !modelOf(r)){
+    const cands=stampRoomCandidates();
+    if(!cands.length){ alert("褒めに来られる住人がまだいないみたい。キャラクター設定・モデル・APIキーを確認してね。"); return; }
+    r=cands[Math.floor(Math.random()*cands.length)]; d.roomId=r.id; saveState();
+  }
+  const names=fresh.map(id=>d.labels[id]||((state.stampbook.items.find(x=>x.id===id)||{}).name)||"").filter(Boolean);
+  if(!names.length) return;
+  const sys=(r.prompt||"")+(r.memory?"\n\n【大切な記憶】\n"+r.memory:"")+
+    "\n\n【足あと帳への報告】\n今日できたこと："+names.join("、")+
+    "\nこの実施項目だけを受け取り、あなた自身の口調で短く褒めてください。"+
+    "\n・1〜3文。返答本文だけを書く。"+
+    "\n・体調、体型、体重、食事、カロリー、数値評価には触れない。"+
+    "\n・成果を義務化したり、明日も続けるよう求めたりしない。";
+  sending=true;
+  const btn=document.getElementById("stampReportBtn"); if(btn){btn.disabled=true;btn.textContent="住人を呼んでる…";}
+  try{
+    const reply=await chat(r,sys,[{role:"user",content:"今日できたことを報告します。ひとこと受け取ってください。",images:[]}]);
+    const text=peekClean(reply,r).trim().slice(0,400);
+    if(!text) throw new Error("ひとことが空っぽだったみたい");
+    d.reports.push({text:text,roomId:r.id,itemIds:fresh.slice(),createdAt:Date.now()});
+    if(!d.stampAt) d.stampAt=Date.now();
+    pruneStampbook(); saveState(); renderStampbook();
+    toast("<b>🐿 "+esc(r.name)+"がスタンプを押してくれたよ。</b><span class='tx'>今日の足あと、受け取りました。</span>");
+  }catch(e){ alert("報告が届かなかった… "+(e.message||"")); }
+  sending=false; renderStampbook();
+}
+function bottleStampPraise(key,index){
+  const d=stampDay(key,false), rep=d&&d.reports[index]; if(!rep) return;
+  const r=roomById(rep.roomId), who=r?r.name:"だれか";
+  const title=prompt("このひとことに、ラベルを付ける？（空欄でもいいよ）",""); if(title===null) return;
+  state.emotions.push({id:uid("emo"),roomId:rep.roomId||"",roomName:who,who:who,title:(title||"").slice(0,40),text:rep.text,createdAt:Date.now()});
+  saveState(); toast("<b>🫙 瓶詰めしたよ。</b><span class='tx'>足あと帳のひとことを、棚に置いておくね。</span>");
+}
+
 /* ════════ 瓶詰め（感情ログ） ════════ */
 function bottleMsg(btn){
   const r = room(); if(!r) return;
@@ -2826,7 +3282,7 @@ function noteAtts(m){
 }
 
 /* ════════ お部屋設定 ════════ */
-let editColor = null, editAvatar = null, editBg = null, editFiles = null, editSprite = null;
+let editColor = null, editAvatar = null, editBg = null, editFiles = null, editSprite = null, editStamp = null;
 function openRoomSettings(){
   const r = room(); if(!r) return;
   document.getElementById("rName").value = r.name;
@@ -2852,12 +3308,13 @@ function openRoomSettings(){
   editColor = r.color;
   editAvatar = r.avatar;
   editSprite = r.sprite;
+  editStamp = r.stamp;
   document.getElementById("rPixel").checked = !!r.pixel;
   document.getElementById("rStatus").value = r.status || "";
   document.getElementById("rDiaryStyle").value = r.diaryStyle || "whim";
   editBg = r.bg;
   editFiles = JSON.parse(JSON.stringify(r.files||[]));
-  renderSwatches(); avatarPreview(); spritePreview(); bgStatus(); renderFileList(); sliderLabels(); modelSelChanged();
+  renderSwatches(); avatarPreview(); spritePreview(); stampPreview(); bgStatus(); renderFileList(); sliderLabels(); modelSelChanged();
   show("view-room");
 }
 function mixHex(hex, ratio){
@@ -2922,6 +3379,19 @@ function spritePreview(){
   el.innerHTML = editSprite
     ? '<img src="'+editSprite+'" alt="" style="'+(pix?'image-rendering:pixelated':'')+'">'
     : '<span class="noimg">なし</span>';
+}
+async function setStampImage(ev){
+  const f = ev.target.files[0]; ev.target.value = "";
+  if(!f) return;
+  try{ editStamp = await resizePng(f, 320); stampPreview(); }
+  catch(e){ alert("スタンプ画像が読めなかった…"); }
+}
+function clearStampImage(){ editStamp = null; stampPreview(); }
+function stampPreview(){
+  const el = document.getElementById("rStampPreview");
+  if(!el) return;
+  el.innerHTML = editStamp ? '<img src="'+editStamp+'" alt="">' : "";
+  if(!editStamp) el.textContent = document.getElementById("rEmoji").value || "✨";
 }
 async function setBg(ev){
   const f = ev.target.files[0]; ev.target.value="";
@@ -3019,6 +3489,7 @@ function saveRoomSettings(){
   r.color = editColor || r.color;
   r.avatar = editAvatar;
   r.sprite = editSprite;
+  r.stamp = editStamp;
   r.pixel = document.getElementById("rPixel").checked;
   r.status = document.getElementById("rStatus").value;
   r.diaryStyle = document.getElementById("rDiaryStyle").value;

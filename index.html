@@ -1180,7 +1180,7 @@ function renderHome(){
   /* スケッチ帳 */
   const sk = document.createElement("button");
   sk.className = "room-card";
-  sk.style.setProperty("--rc", "#9B8064");
+  sk.style.setProperty("--rc", "#00bfff");
   const skLast = state.sketchbook.entries.length ? state.sketchbook.entries[state.sketchbook.entries.length-1] : null;
   const skPrev = skLast
     ? ((roomById(skLast.roomId)||{name:"だれか"}).name + "「" + String(skLast.text||"").replace(/\n/g," ").slice(0,26) + "…」")

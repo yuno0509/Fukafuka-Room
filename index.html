@@ -2211,9 +2211,14 @@ async function maybeFootprint(hostId){
       "\n・置き手紙の本文だけを書いてください（前置き・説明・かぎ括弧は不要）。" +
       "\n・2〜4行くらい。あなた自身の口調のままで。" +
       "\n・宛先は部屋の主の「"+host.name+"」でも、"+(state.userName||"ユーザー")+"さんに向けたひとことでも、両方でもかまいません。" +
+      "\n・あなたは「"+visitor.name+"」本人です。"+(state.userName||"ユーザー")+"や他の住人を名乗らないこと。署名を書くなら「"+visitor.name+"」と書くこと。" +
+      "\n・Secret Notes・内心メモ・隠しブロック・英語の秘密記録などは、置き手紙には絶対に書かないこと。" +
       clockLine();
     const reply = await chat(visitor, sys, [{role:"user", content:"（……お部屋は静か。置き手紙をどうぞ）", images:[]}]);
-    const text = String(reply||"").trim().slice(0, 600);
+    let raw = String(reply||"");
+    raw = raw.replace(/(^|\n)\s*[-—─=＝*]{2,}\s*\n?\s*(AI\s*)?Secret\s*Notes?[\s\S]*$/i, "");   /* 区切り線つきの秘密記録ごと没収 */
+    raw = raw.replace(/(^|\n)\s*(AI\s*)?Secret\s*Notes?\s*[:：][\s\S]*$/i, "");                    /* 区切り線なしでも没収 */
+    const text = peekClean(raw, visitor).trim().slice(0, 600);
     if(!text){ ashiatoBusy=false; return; }
     c.messages.push({ role:"footprint", visitorId: visitor.id, content:text, images:[], atts:[], t: Date.now() });
     saveState();

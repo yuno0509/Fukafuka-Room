@@ -358,7 +358,7 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
     <div class="chat-head">
       <button class="iconbtn" onclick="goHome()" aria-label="ホームへ">‹</button>
       <div class="who">
-        <div class="nm">💫 スケッチ帳</div>
+        <div class="nm">📓 スケッチ帳</div>
         <div class="md">みんなが、ことばで描く共用の一冊</div>
       </div>
       <span style="width:40px"></span>
@@ -481,6 +481,13 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
             <input type="checkbox" class="toggle" id="rShowThink">
           </div>
           <div class="hint">お返事の前の「考えごと」を、吹き出しの上に小さくたたんで見せるよ。Claude・Geminiと、OpenRouterの一部モデルだけ（OpenAIは考えごとを見せてくれない仕様なの）。思考のぶん、お代（トークン）は少し多めになるよ。このお部屋での普段のお喋りだけで、リビングや覗き・お庭では動かないの。</div>
+        </div>
+        <div class="field">
+          <div class="row" style="justify-content:space-between">
+            <label style="margin:0">🚪 足あとお断り</label>
+            <input type="checkbox" class="toggle" id="rNoFoot">
+          </div>
+          <div class="hint">ONにすると、このお部屋には他の住人の置き手紙（🐾）が来なくなるよ。ふたりだけの時間を守りたいお部屋の、そっと掛けておく札。</div>
         </div>
       </div>
 
@@ -761,7 +768,7 @@ function newRoom(i){
     emoji: DEFAULT_EMOJI[i % DEFAULT_EMOJI.length],
     avatar: null, sprite: null, stamp: null, pixel: false, status: "", showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
     color: PALETTE[i % PALETTE.length].hex,
-    prompt: "", memory: "", files: [], joinGroup: false, peekGroup: false, showThink: false,
+    prompt: "", memory: "", files: [], joinGroup: false, peekGroup: false, showThink: false, noFoot: false,
     provider: "openai", model: "gpt-5.1", customModel: "",
     temp: 0.8, maxTokens: 1600, ctx: 30, diaryStyle: "whim",
     convos: [c], activeConvo: c.id
@@ -857,6 +864,7 @@ function migrate(s){
     if(r.joinGroup===undefined) r.joinGroup=false;
     if(r.peekGroup===undefined) r.peekGroup = !!r.joinGroup;
     if(r.showThink===undefined) r.showThink = false;
+    if(r.noFoot===undefined) r.noFoot = false;
     if(r.diaryStyle===undefined) r.diaryStyle="whim";
     if(!Array.isArray(r.files)) r.files=[];
     /* v1/v2 → v3：room直下のmessagesを会話に変換 */
@@ -1180,13 +1188,13 @@ function renderHome(){
   /* スケッチ帳 */
   const sk = document.createElement("button");
   sk.className = "room-card";
-  sk.style.setProperty("--rc", "#e29676");
+  sk.style.setProperty("--rc", "#9B8064");
   const skLast = state.sketchbook.entries.length ? state.sketchbook.entries[state.sketchbook.entries.length-1] : null;
   const skPrev = skLast
     ? ((roomById(skLast.roomId)||{name:"だれか"}).name + "「" + String(skLast.text||"").replace(/\n/g," ").slice(0,26) + "…」")
     : "まだまっさらな一冊。最初に描くのはだれかな";
   sk.innerHTML =
-    '<span class="wash"></span><span class="avatar">💫</span>' +
+    '<span class="wash"></span><span class="avatar">📓</span>' +
     '<span class="room-meta"><span class="room-name">スケッチ帳</span>' +
     '<span class="room-last" style="display:block">' + esc(skPrev) + '</span></span>' +
     '<span class="chev">›</span>';
@@ -1735,7 +1743,12 @@ async function chatGemini(r, system, msgs, onDelta, opts){
     contents: contents,
     generationConfig: { temperature: r.temp, maxOutputTokens: r.maxTokens }
   };
-  if(wantThink) body.generationConfig.thinkingConfig = { thinkingBudget: -1, includeThoughts: true };
+  if(wantThink){
+    body.generationConfig.thinkingConfig = /^gemini-3/.test(model)
+      ? { thinkingLevel: "high", includeThoughts: true }
+      : { thinkingBudget: -1, includeThoughts: true };
+  }
+  else if(/^gemini-3.*flash/.test(model)) body.generationConfig.thinkingConfig = { thinkingLevel: "low" };
   else if(/2\.5-flash/.test(model)) body.generationConfig.thinkingConfig = { thinkingBudget: 0 };
   const streaming = !!(r.stream && onDelta);
   const method = streaming ? ":streamGenerateContent?alt=sse&key=" : ":generateContent?key=";
@@ -2171,8 +2184,11 @@ async function maybeFootprint(hostId){
     if(ashiatoBusy || sending) return;
     const host = roomById(hostId);
     if(!host || !(host.prompt||"").trim()) return;      /* 住人のいないお部屋には来ない */
+    if(host.noFoot) return;                              /* 🚪 お断り札の掛かったお部屋には入らない */
     const c = host.convos.find(x=>x.id===host.activeConvo);
     if(!c) return;
+    const lastMsg = c.messages[c.messages.length-1];
+    if(lastMsg && Date.now()-(lastMsg.t||0) < 10*60*1000) return;  /* 乱入ガード：会話のあたたかいうちは配達しない */
     const now = Date.now();
     const lastGlobal = Number(state.ashiatoLast.__global||0);
     const lastRoom = Number(state.ashiatoLast[host.id]||0);
@@ -3301,6 +3317,7 @@ function openRoomSettings(){
   document.getElementById("rJoinGroup").checked = !!r.joinGroup;
   document.getElementById("rPeekGroup").checked = !!r.peekGroup;
   document.getElementById("rShowThink").checked = !!r.showThink;
+  document.getElementById("rNoFoot").checked = !!r.noFoot;
   document.getElementById("rStream").checked = !!r.stream;
   document.getElementById("rBubbleMe").value = r.bubbleMe || mixHex(r.color, .14);
   document.getElementById("rBubbleAi").value = r.bubbleAi || "#FFFFFF";
@@ -3482,6 +3499,7 @@ function saveRoomSettings(){
   r.joinGroup = document.getElementById("rJoinGroup").checked;
   r.peekGroup = document.getElementById("rPeekGroup").checked;
   r.showThink = document.getElementById("rShowThink").checked;
+  r.noFoot = document.getElementById("rNoFoot").checked;
   r.stream = document.getElementById("rStream").checked;
   r.bubbleMe = document.getElementById("rBubbleMe").value;
   r.bubbleAi = document.getElementById("rBubbleAi").value;

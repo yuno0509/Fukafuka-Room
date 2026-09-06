@@ -135,6 +135,7 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 .msgimg{max-width:200px;max-height:200px;border-radius:14px;border:1px solid var(--line);display:block}
 .attchip{font-size:12px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:4px 10px;color:var(--ink-soft)}
 .sysmsg{align-self:center;font-size:12px;color:var(--danger);background:color-mix(in srgb,var(--danger) 10%,var(--card));border:1px solid color-mix(in srgb,var(--danger) 28%,var(--line));border-radius:12px;padding:6px 12px;max-width:92%}
+.retry-connect{display:block;margin:7px auto 0;padding:5px 12px;border:1px solid color-mix(in srgb,var(--danger) 35%,var(--line));border-radius:999px;background:var(--card);color:var(--ink);font-size:12px}
 .typing{align-self:flex-start;color:var(--ink-soft);font-size:13px;padding:8px 14px;
   background:color-mix(in srgb,var(--card) 78%,transparent);border-radius:14px}
 .typing i{animation:blink 1.2s infinite;font-style:normal}
@@ -413,9 +414,9 @@ html[data-theme="night"] .sendbtn{color:var(--bg)}
       <span style="width:40px"></span>
     </div>
     <div class="sketchbook">
-      <div class="sketch-intro">情景のスケッチ、記号の落書き、ちいさな詩、画像生成プロンプト。住人がその日の気分で、好きな画材を選ぶよ。描かない日もあります。</div>
+      <div class="sketch-intro">ラフでも、落書きでも、つぶやきでも、ひとりごとでも、ひとことでも。住人がその日の気分で、なにかを残すよ。何も残さない日もあります。</div>
       <div class="sketch-list" id="sketchCards"></div>
-      <button class="wide-btn gold sketch-draw" id="sketchDrawBtn" onclick="requestSketch()">🖍 描いてみて</button>
+      <button class="wide-btn gold sketch-draw" id="sketchDrawBtn" onclick="requestSketch()">📓 なにか残す？</button>
     </div>
   </section>
 
@@ -763,7 +764,7 @@ html[data-theme="night"] .sendbtn{color:var(--bg)}
         <div class="hint" id="storageStatus"></div>
       </div>
       <button class="wide-btn gold" style="font-weight:600" onclick="saveAppSettings()">保存して戻る</button>
-      <div class="foot">ふかふかルーム v3.8 ─ つきちゃん工房＋レグ工事</div>
+      <div class="foot">ふかふかルーム v3.9 ─ つきちゃん工房＋レグ工事</div>
     </div>
   </section>
 </div>
@@ -851,8 +852,8 @@ function defaultState(){
     budget: {warnUsd:null, stopUsd:null}, budgetWarnedMonth: "", budgetAckDate: "",
     calendarStars: [], diaryAsked: [],
     living: { messages: [] },
-    garden: { events: [], items: DEFAULT_GARDEN_ITEMS.slice(), bg: null, last: 0 },
-    sketchbook: { entries: [], last: 0, lastRoomId: "" },
+    garden: { events: [], items: DEFAULT_GARDEN_ITEMS.slice(), bg: null, last: 0, queued: false },
+    sketchbook: { entries: [], last: 0, lastRoomId: "", queued: false },
     stampbook: { items: [], days: {} },
     reminders: [],
     records: [],
@@ -890,10 +891,12 @@ function migrate(s){
   if(!Array.isArray(s.garden.items) || !s.garden.items.length) s.garden.items = DEFAULT_GARDEN_ITEMS.slice();
   if(s.garden.bg===undefined) s.garden.bg = null;
   if(!s.garden.last) s.garden.last = 0;
+  s.garden.queued = s.garden.queued===true;
   s.sketchbook = s.sketchbook || {};
   if(!Array.isArray(s.sketchbook.entries)) s.sketchbook.entries = [];
   if(!s.sketchbook.last) s.sketchbook.last = 0;
   if(s.sketchbook.lastRoomId===undefined) s.sketchbook.lastRoomId = "";
+  s.sketchbook.queued = s.sketchbook.queued===true;
   s.stampbook = s.stampbook || {};
   if(!Array.isArray(s.stampbook.items)) s.stampbook.items = [];
   if(!s.stampbook.days || typeof s.stampbook.days!=="object" || Array.isArray(s.stampbook.days)) s.stampbook.days = {};
@@ -1452,7 +1455,10 @@ function renderMsgs(){
     const r = room(); const c = convo();
     if(!r || !c) return;
     c.messages.forEach(m=>{
-      if(m.role==="error"){ html += '<div class="sysmsg">'+esc(m.content)+'</div>'; return; }
+      if(m.role==="error"){
+        const retry = m.retryUserId && m.id ? '<button class="retry-connect" data-error-id="'+esc(m.id)+'" onclick="retryRoomMessage(this.dataset.errorId)">もう一度つなぐ</button>' : '';
+        html += '<div class="sysmsg">'+esc(m.content)+retry+'</div>'; return;
+      }
       if(m.role==="notice"){ html += '<div class="notemsg">'+esc(m.content)+'</div>'; return; }
       if(m.role==="footprint"){
         const v = roomById(m.visitorId);
@@ -1923,35 +1929,18 @@ function budgetAllowsSend(){
   }
   return true;
 }
-async function sendMessage(){
-  if(sending) return;
-  if(inLiving) return sendLiving();
-  const r = room(); const c = convo();
-  if(!r || !c) return;
-  const input = document.getElementById("input");
-  const text = input.value.trim();
-  if(!text && !pendingImages.length && !pendingFiles.length) return;
-  if(!budgetAllowsSend()) return;
-  const key = state.keys[r.provider];
-  if(!key){ alert(PROVIDER_LABEL[r.provider]+"のAPIキーがまだ入っていないみたい。アプリ設定（ホームの⚙）から入れてね。"); return; }
-  if(!modelOf(r)){ alert("モデルが選ばれていないよ。お部屋の設定を見てみて。"); return; }
-  input.value = "";
-  input.style.height = "auto";
-  const imgs = pendingImages.slice(); pendingImages = [];
-  const atts = pendingFiles.slice(); pendingFiles = [];
-  renderPending();
-  c.messages.push({role:"user", content:text, images:imgs, atts:atts, t:Date.now()});
-  if(c.title==="新しい会話" || c.title==="はじまりの会話"){
-    if(text) c.title = text.slice(0,16);
-  }
+async function runRoomReply(r, c, userMsg, retryError){
   sending = true; typingName = r.name;
   document.getElementById("sendBtn").disabled = true;
-  saveState(); renderMsgs();
+  renderMsgs();
+  let liveMsg = null, renderTimer = null;
   try{
+    const text = userMsg.content || "";
     const system = buildSystem(r) + ragSnippets(r, text) + reminderInstruction() + memoInstruction() + clockLine();
-    const hist = c.messages.filter(m=>m.role==="user"||m.role==="assistant").slice(-r.ctx)
+    const userIndex = c.messages.indexOf(userMsg);
+    const sameContext = userIndex>=0 ? c.messages.slice(0,userIndex+1) : c.messages;
+    const hist = sameContext.filter(m=>m.role==="user"||m.role==="assistant").slice(-r.ctx)
       .map(m=>({role:m.role, content:contentOf(m), images:m.images||[]}));
-    let liveMsg = null, renderTimer = null;
     const onDelta = !r.stream ? null : (full, think)=>{
       if(!liveMsg){
         liveMsg = {role:"assistant", content:"", images:[], atts:[], t:Date.now()};
@@ -1969,6 +1958,7 @@ async function sendMessage(){
     const thinkTxt = (r.showThink && lastThink) ? lastThink.trim() : "";
     if(liveMsg){ liveMsg.content = pm.clean; liveMsg.t = Date.now(); if(thinkTxt) liveMsg.think = thinkTxt; }
     else c.messages.push({role:"assistant", content:pm.clean, images:[], atts:[], t:Date.now(), think: thinkTxt||undefined});
+    if(retryError) c.messages = c.messages.filter(m=>m!==retryError);
     if(pm.memo){
       const dup = state.notes.some(n=>n.roomId===r.id && n.text.replace(/\s+/g,"")===pm.memo.text.replace(/\s+/g,""));
       if(!dup){
@@ -1987,11 +1977,51 @@ async function sendMessage(){
       }
     }
   }catch(e){
-    c.messages.push({role:"error", content:"⚠ "+(e.message||"通信に失敗しちゃった"), t:Date.now()});
+    if(renderTimer){ clearTimeout(renderTimer); renderTimer=null; }
+    if(liveMsg) c.messages = c.messages.filter(m=>m!==liveMsg);
+    const content = "⚠ "+(e.message||"通信に失敗しちゃった");
+    if(retryError){ retryError.content=content; retryError.t=Date.now(); }
+    else c.messages.push({id:uid("err"), role:"error", content:content, retryUserId:userMsg.id, t:Date.now()});
   }
-  sending = false;
+  sending = false; typingName = "";
   document.getElementById("sendBtn").disabled = false;
   saveState(); renderMsgs();
+}
+async function retryRoomMessage(errorId){
+  if(sending || inLiving) return;
+  const r=room(), c=convo(); if(!r||!c) return;
+  const errorMsg=c.messages.find(m=>m.role==="error"&&m.id===errorId);
+  const userMsg=errorMsg&&c.messages.find(m=>m.role==="user"&&m.id===errorMsg.retryUserId);
+  if(!errorMsg||!userMsg) return;
+  if(!budgetAllowsSend()) return;
+  if(!state.keys[r.provider]){ alert(PROVIDER_LABEL[r.provider]+"のAPIキーがまだ入っていないみたい。アプリ設定（ホームの⚙）から入れてね。"); return; }
+  if(!modelOf(r)){ alert("モデルが選ばれていないよ。お部屋の設定を見てみて。"); return; }
+  await runRoomReply(r,c,userMsg,errorMsg);
+}
+async function sendMessage(){
+  if(sending) return;
+  if(inLiving) return sendLiving();
+  const r = room(); const c = convo();
+  if(!r || !c) return;
+  const input = document.getElementById("input");
+  const text = input.value.trim();
+  if(!text && !pendingImages.length && !pendingFiles.length) return;
+  if(!budgetAllowsSend()) return;
+  const key = state.keys[r.provider];
+  if(!key){ alert(PROVIDER_LABEL[r.provider]+"のAPIキーがまだ入っていないみたい。アプリ設定（ホームの⚙）から入れてね。"); return; }
+  if(!modelOf(r)){ alert("モデルが選ばれていないよ。お部屋の設定を見てみて。"); return; }
+  input.value = "";
+  input.style.height = "auto";
+  const imgs = pendingImages.slice(); pendingImages = [];
+  const atts = pendingFiles.slice(); pendingFiles = [];
+  renderPending();
+  const userMsg={id:uid("msg"), role:"user", content:text, images:imgs, atts:atts, t:Date.now()};
+  c.messages.push(userMsg);
+  if(c.title==="新しい会話" || c.title==="はじまりの会話"){
+    if(text) c.title = text.slice(0,16);
+  }
+  saveState(); renderMsgs();
+  await runRoomReply(r,c,userMsg,null);
 }
 function groupSystem(r){
   const names = participants().map(p=>p.name).join("、");
@@ -2198,11 +2228,12 @@ setInterval(checkReminders, 15000);
 /* ════════ 自由メモ（覚え書き） ════════ */
 function memoInstruction(){
   return "\n\n【覚え書きの特別ルール】" +
-    "\nユーザーが「覚えておいて」「メモしておいて」「次回に持ち越して」のように、次回のために何かを覚えることを明確にお願いした時だけ、通常のお返事の最後に、次の形式のブロックを1つ付けてください：" +
+    "\nユーザーが「覚えておいて」「メモしておいて」「次回に持ち越して」のようにお願いした時のほか、あなた自身が『これは覚えておきたい』と感じた時にも、自分の意志で通常のお返事の最後に、次の形式のブロックを1つ付けてよいです：" +
     "\n<<FUKAMEMO\n{\"text\":\"覚えておく内容を簡潔に\"}\nFUKAMEMO>>" +
     "\n・このルールは一番新しいユーザー発言に対してだけ適用すること。過去の発言でのお願いに遡って反応してはいけません。" +
     "\n・すでに【覚え書き】一覧に載っている内容を、もう一度書かないこと。" +
-    "\n・依頼がない時は、絶対にこのブロックを出さないこと。";
+    "\n・長さはひとこと〜数行くらいを目安にすること。長い記録は日記の仕事です。" +
+    "\n・毎回の返信で乱発せず、本当に残したい時にだけ、そっと使うこと。";
 }
 function parseMemo(reply, r){
   const m = reply.match(/<<FUKAMEMO([\s\S]*?)FUKAMEMO>>/);
@@ -2489,17 +2520,20 @@ async function maybeGardenEvent(force){
   try{
     if(gardenBusy || sending) return;
     const now = Date.now();
-    if(!force){
+    const reserved = state.garden.queued===true;
+    if(!force && !reserved){
       if(now - (state.garden.last||0) < GARDEN_GAP) return;
       if(Math.random() > GARDEN_CHANCE) return;
       if(!ashiatoBudgetOk()) return;
     }else{
-      if(!budgetAllowsSend()) return;
+      if(force && !budgetAllowsSend()) return;
     }
     const cands = gardenCandidates();
     if(!cands.length){ if(force) alert("お庭に来られる住人がまだいないみたい。キャラクター設定とAPIキーを確認してね。"); return; }
     const visitor = cands[Math.floor(Math.random()*cands.length)];
+    if(reserved) state.garden.queued = false; /* 予約は1回の入室で使い切る */
     state.garden.last = now;
+    saveState();
     gardenBusy = true;
     const bb = document.getElementById("breezeBtn"); if(bb) bb.disabled = true;
     const recent = state.garden.events.slice(-3);
@@ -2601,7 +2635,7 @@ function renderSketchCards(){
   const box=document.getElementById("sketchCards");
   const entries=state.sketchbook.entries.slice().sort((a,b)=>b.t-a.t);
   if(!entries.length){
-    box.innerHTML='<div class="sketch-empty">📓<br>まだ、まっさらな一冊。<br>だれかの線が落ちてくるまで、静かに開いておこう。</div>';
+    box.innerHTML='<div class="sketch-empty">📓<br>まだ、まっさらな一冊。<br>だれかの何かが残るまで、静かに開いておこう。</div>';
     return;
   }
   box.innerHTML=entries.map(entry=>{
@@ -2626,38 +2660,41 @@ async function maybeSketch(force){
   try{
     if(sketchBusy || sending) return;
     const now=Date.now();
-    if(!force){
+    const reserved=state.sketchbook.queued===true;
+    if(!force && !reserved){
       if(now-(state.sketchbook.last||0)<SKETCH_GAP) return;
       if(Math.random()>SKETCH_CHANCE) return;
       if(!ashiatoBudgetOk()) return;
-    }else if(!budgetAllowsSend()) return;
+    }else if(force && !budgetAllowsSend()) return;
     const cands=sketchCandidates();
     if(!cands.length){
       if(force) alert("スケッチ帳を開ける住人がまだいないみたい。キャラクター設定・モデル・APIキーを確認してね。");
       return;
     }
     const artist=cands[Math.floor(Math.random()*cands.length)];
+    if(reserved) state.sketchbook.queued=false; /* 予約は1回の入室で使い切る */
     state.sketchbook.last=now;
     saveState();
     sketchBusy=true;
     const btn=document.getElementById("sketchDrawBtn");
-    if(btn){btn.disabled=true;btn.textContent="鉛筆を渡してる…";}
+    if(btn){btn.disabled=true;btn.textContent="ページをひらいてる…";}
     const sys=(artist.prompt||"")+
       (artist.memory?"\n\n【メモリ（大切な記憶）】\n"+artist.memory:"")+
       (state.userName?"\n\nユーザーの名前は「"+state.userName+"」です。":"")+
       "\n\n【いまの状況】\nあなたはいま、同じ家のみんなで使う共用のスケッチ帳を開いています。"+
-      "\n気が向いたら、次の画材から自由にひとつ選び、スケッチを1枚だけ残してください。画材名や前置きは書きません。"+
-      "\nA. 情景をことばで描く短いスケッチ"+
-      "\nB. 文字と記号のいたずらな落書き"+
-      "\nC. ちいさな詩"+
+      "\n気が向いたら、次の形から自由にひとつ選び、何かをひとつだけ残してください。種類の名前や前置きは書きません。"+
+      "\nA. ラフな情景や、その時ふと浮かんだもの"+
+      "\nB. 文字や記号の落書き"+
+      "\nC. つぶやき、ひとりごと、ひとこと"+
       "\nD. 画像生成プロンプト。この場合だけ、日本語の短い一言タイトルを1行目、その下に英語プロンプトだけを書く。日本語の説明文は付けない。"+
-      "\n今日は描く気分でなければ、理由や説明を添えず、正確に「今日は描かない」とだけ返してください。"+
-      "\nほかの住人やユーザーの発言は創作せず、あなた自身が描いた本文だけを返してください。"+
+      "\nラフでも落書きでも、つぶやきでも、ひとりごとでも、ひとことでも、なんでもかまいません。綺麗に仕上げなくて大丈夫です。"+
+      "\n今日は何も残さなくてもかまいません。その時は、理由や説明を添えず、正確に「今日は描かない」とだけ返してください。"+
+      "\nほかの住人やユーザーの発言は創作せず、あなた自身が残す本文だけを返してください。"+
       clockLine();
-    const reply=await chat(artist,sys,[{role:"user",content:"（共用のスケッチ帳と、よく削った鉛筆をそっと差し出す）",images:[]}]);
+    const reply=await chat(artist,sys,[{role:"user",content:"（共用のスケッチ帳のページを、そっとひらく）",images:[]}]);
     const text=peekClean(reply,artist).trim().slice(0,1200);
     if(sketchDeclined(text)){
-      toast("<b>📓 （今日は描く気分じゃないみたい）</b><span class='tx'>また、鉛筆が動く日に。</span>");
+      toast("<b>📓 （今日は何も残さないみたい）</b><span class='tx'>また、何か置きたくなる日に。</span>");
     }else if(text){
       state.sketchbook.entries.push({id:uid("sk"),roomId:artist.id,text:text,t:Date.now()});
       if(state.sketchbook.entries.length>200) state.sketchbook.entries=state.sketchbook.entries.slice(-200);
@@ -2665,18 +2702,32 @@ async function maybeSketch(force){
       saveState();
       const view=document.getElementById("view-sketchbook");
       if(view&&view.classList.contains("active")) renderSketchCards();
-      toast("<b>📓 "+esc(artist.name)+"が1枚描いたよ。</b><span class='tx'>スケッチ帳に新しい線が増えました。</span>",()=>openSketchbook());
+      toast("<b>📓 "+esc(artist.name)+"が何か残したよ。</b><span class='tx'>スケッチ帳に新しいページが増えました。</span>",()=>openSketchbook());
     }else if(force){
-      toast("<b>📓 （今日は描く気分じゃないみたい）</b><span class='tx'>また、鉛筆が動く日に。</span>");
+      toast("<b>📓 （今日は何も残さないみたい）</b><span class='tx'>また、何か置きたくなる日に。</span>");
     }
   }catch(e){
-    if(force) alert("スケッチ帳に鉛筆が届かなかった… "+(e.message||""));
+    if(force) alert("スケッチ帳のページをひらけなかった… "+(e.message||""));
   }
   sketchBusy=false;
   const btn2=document.getElementById("sketchDrawBtn");
-  if(btn2){btn2.disabled=false;btn2.textContent="🖍 描いてみて";}
+  if(btn2){btn2.disabled=false;btn2.textContent="📓 なにか残す？";}
 }
 function requestSketch(){ maybeSketch(true); }
+function reserveSharedMomentsOnStart(){
+  const now=Date.now();
+  let changed=false;
+  /* 起動時は抽選と予約だけ。生成APIは、それぞれの場所を実際に開いた時まで呼ばない。 */
+  if(!state.garden.queued && now-(state.garden.last||0)>=GARDEN_GAP && Math.random()<=GARDEN_CHANCE && ashiatoBudgetOk() && gardenCandidates().length){
+    state.garden.queued=true;
+    changed=true;
+  }
+  if(!state.sketchbook.queued && now-(state.sketchbook.last||0)>=SKETCH_GAP && Math.random()<=SKETCH_CHANCE && ashiatoBudgetOk() && sketchCandidates().length){
+    state.sketchbook.queued=true;
+    changed=true;
+  }
+  if(changed) saveState();
+}
 function deleteSketch(id){
   if(!confirm("このスケッチを1枚、帳面から外すよ。いい？")) return;
   state.sketchbook.entries=state.sketchbook.entries.filter(x=>x.id!==id);
@@ -3784,7 +3835,7 @@ document.getElementById("input").addEventListener("input", function(){
   this.style.height = Math.min(this.scrollHeight, 170) + "px";
 });
 renderHome();
-setTimeout(()=>{ checkOverdueOnStart(); checkMissedDiariesOnStart(); }, 800);
+setTimeout(()=>{ checkOverdueOnStart(); checkMissedDiariesOnStart(); reserveSharedMomentsOnStart(); }, 800);
 if(location.hash.indexOf("#rem=")===0){
   const remId = location.hash.slice(5);
   const rem = (state.reminders||[]).find(x=>x.id===remId);

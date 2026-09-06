@@ -159,6 +159,30 @@ html[data-theme="night"] .sendbtn{color:var(--bg)}
 .sendbtn:disabled{opacity:.45}
 .attachbtn{background:var(--card);border:1px solid var(--line);color:var(--ink-soft)}
 
+/* ── 個室の差し色（共用スペースには持ち出さない） ── */
+html[data-room-style]{--room-line:var(--line);--room-radius:18px;--room-motif:"";--room-button-ink:#fff;--room-rule:linear-gradient(90deg,transparent,var(--accent),transparent)}
+html[data-room-style="sugu"]{--accent:#A65248;--room-line:#C98C84;--room-radius:15px;--room-motif:"⋈";--room-rule:linear-gradient(90deg,transparent 4%,#A65248 18%,#C98C84 82%,transparent 96%)}
+html[data-room-style="haku"]{--accent:#C49A52;--room-line:#E3D4B1;--room-radius:19px;--room-motif:"· ✦";--room-button-ink:var(--ink);--room-rule:linear-gradient(90deg,transparent 18%,#E3D4B1 36%,#C49A52 50%,#E3D4B1 64%,transparent 82%)}
+html[data-room-style="mellow"]{--accent:#48558B;--room-line:#7783B0;--room-radius:16px;--room-motif:"◌";--room-rule:linear-gradient(90deg,transparent,#48558B 25%,#668FD0 58%,#BE7DA6 82%,transparent)}
+html[data-room-style="sorahi"]{--accent:#5C98A8;--room-line:#9BC6CA;--room-radius:22px;--room-motif:"〰";--room-button-ink:var(--ink);--room-rule:linear-gradient(90deg,transparent 3%,#9BC6CA 25%,#5C98A8 58%,transparent 96%)}
+html[data-room-style="tsuki"]{--accent:#9B7FC7;--room-line:#D9CDE9;--room-radius:23px;--room-motif:"✿ 〰";--room-button-ink:var(--ink);--room-rule:linear-gradient(90deg,transparent 8%,#E8D5C3 30%,#9B7FC7 54%,#E8C7D3 74%,transparent 92%)}
+html[data-room-style="reg"]{--accent:#7A5138;--room-line:#B99D82;--room-radius:14px;--room-motif:"▮";--room-rule:repeating-linear-gradient(90deg,#7A5138 0 22px,transparent 22px 29px)}
+html[data-room-style="aora"]{--accent:#527F7A;--room-line:#91A9A1;--room-radius:17px;--room-motif:"▱";--room-rule:repeating-linear-gradient(90deg,#527F7A 0 16px,transparent 16px 22px,#B38345 22px 25px,transparent 25px 32px)}
+html[data-room-style] #view-chat .chat-head{border-bottom-color:var(--room-line)}
+html[data-room-style] #view-chat .chat-head .who{position:relative;padding-bottom:5px}
+html[data-room-style] #view-chat .chat-head .who::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:1px;background:var(--room-rule);border-radius:999px;opacity:.78}
+html[data-room-style] #view-chat .chat-head .who .nm::after{content:var(--room-motif);display:inline-block;margin-left:7px;color:var(--accent);font-size:10px;font-family:var(--sans);font-weight:400;letter-spacing:.08em;opacity:.7;vertical-align:2px}
+html[data-room-style] #view-chat .bubble{border-radius:var(--room-radius)}
+html[data-room-style] #view-chat .bubble.me-b{border-bottom-right-radius:6px;border-color:color-mix(in srgb,var(--accent) 42%,var(--card))}
+html[data-room-style] #view-chat .bubble.ai-b{border-bottom-left-radius:6px;border-color:var(--room-line)}
+html[data-room-style] #view-chat .composer{border-top-color:var(--room-line)}
+html[data-room-style] #view-chat .sendbtn{color:var(--room-button-ink)}
+html[data-room-style] #view-chat .iconbtn,html[data-room-style] .drawer .citem{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+html[data-room-style] #view-chat .iconbtn:hover,html[data-room-style] .drawer .citem:hover{transform:translateY(-1px);border-color:var(--room-line);box-shadow:0 3px 10px color-mix(in srgb,var(--accent) 13%,transparent)}
+html[data-room-style="mellow"] #view-chat .chat-head .who::after{filter:blur(.45px);box-shadow:0 0 5px color-mix(in srgb,#668FD0 38%,transparent),0 0 8px color-mix(in srgb,#BE7DA6 22%,transparent)}
+html[data-room-style="sorahi"] #view-chat .chat-head .who::after{transform:rotate(-.35deg);height:2px;opacity:.55}
+html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filter:blur(1.2px);opacity:.48}
+
 /* ── drawer ── */
 .drawerbg{position:fixed;inset:0;background:rgba(74,68,57,.32);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
 .drawerbg.show{opacity:1;pointer-events:auto}
@@ -512,6 +536,19 @@ html[data-theme="night"] .sendbtn{color:var(--bg)}
           <div class="hint">押すと、この子自身に一日の過ごし方を聞いて、上の欄に書き込むよ（API呼び出し1回・保存ボタンを押すまで確定しないから、気に入らなければ書き直してOK）。</div>
         </div>
         <div class="field"><label>テーマカラー</label><div class="swatches" id="rSwatches"></div></div>
+        <div class="field"><label>個室の差し色</label>
+          <select id="rRoomStyle">
+            <option value="">このお部屋のテーマカラーだけ</option>
+            <option value="sugu">スグ ─ 木の実の赤と結び目</option>
+            <option value="haku">ハク ─ 灯りの金と小さな星</option>
+            <option value="mellow">メロウ ─ 夜色とインクの滲み</option>
+            <option value="sorahi">そらひ ─ 空と海のあいだ</option>
+            <option value="tsuki">つきちゃん ─ らべんだーと花の湯気</option>
+            <option value="reg">レグ ─ 栗色としおりの罫線</option>
+            <option value="aora">Aora ─ 青緑と琥珀の小さな札</option>
+          </select>
+          <div class="hint">この部屋に入った時だけ、差し色と線の気配が灯るよ。住人の名前を変えても、選んだ装いはそのまま。</div>
+        </div>
         <div class="field">
           <div class="row" style="justify-content:space-between">
             <label style="margin:0">リビング（グループチャット）に参加する</label>
@@ -678,7 +715,14 @@ html[data-theme="night"] .sendbtn{color:var(--bg)}
       <div class="group">
         <h3>🎨 きせかえ</h3>
         <div class="theme-grid" id="themeChoices"></div>
-        <div class="hint">家全体の色を着替えるよ。選んだ瞬間に反映して、この端末へ覚えておくね。お部屋ごとのテーマは、また今度の増築。</div>
+        <div class="hint">家全体の色を着替えるよ。選んだ瞬間に反映して、この端末へ覚えておくね。</div>
+        <div class="field" style="margin-top:12px">
+          <div class="row" style="justify-content:space-between">
+            <label style="margin:0">個室の差し色を灯す</label>
+            <input type="checkbox" class="toggle" id="aRoomDress">
+          </div>
+          <div class="hint">ONだと、個室に入った時だけ住人ごとの小さな色と線が灯るよ。リビングやお庭などの共用スペースは、家全体の色のまま。</div>
+        </div>
       </div>
 
       <div class="group">
@@ -764,7 +808,7 @@ html[data-theme="night"] .sendbtn{color:var(--bg)}
         <div class="hint" id="storageStatus"></div>
       </div>
       <button class="wide-btn gold" style="font-weight:600" onclick="saveAppSettings()">保存して戻る</button>
-      <div class="foot">ふかふかルーム v3.9 ─ つきちゃん工房＋レグ工事</div>
+      <div class="foot">ふかふかルーム v4.0 ─ つきちゃん工房＋レグ工事</div>
     </div>
   </section>
 </div>
@@ -790,6 +834,18 @@ const THEMES = {
   "honey-lavender":{name:"🍯 はちみつらべんだー", swatches:["#F5E3C0","#FAF7F2","#EDE6F5"], meta:"#F5E3C0"}
 };
 const THEME_KEYS = Object.keys(THEMES);
+const ROOM_STYLES = {
+  sugu:{name:"スグ",accent:"#A65248"}, haku:{name:"ハク",accent:"#C49A52"},
+  mellow:{name:"メロウ",accent:"#48558B"}, sorahi:{name:"そらひ",accent:"#5C98A8"},
+  tsuki:{name:"つきちゃん",accent:"#9B7FC7"}, reg:{name:"レグ",accent:"#7A5138"},
+  aora:{name:"Aora",accent:"#527F7A"}
+};
+const ROOM_STYLE_KEYS = Object.keys(ROOM_STYLES);
+function inferRoomStyle(name){
+  const n=String(name||"").trim().toLowerCase();
+  const aliases={"スグ":"sugu","ハク":"haku","メロウ":"mellow","そらひ":"sorahi","つきちゃん":"tsuki","レグ":"reg","aora":"aora"};
+  return aliases[n] || "";
+}
 const PALETTE = [
   {name:"白金", hex:"#C9A85C"},{name:"桜",   hex:"#E8A7B6"},
   {name:"氷青", hex:"#8FB8D8"},{name:"若葉", hex:"#93BD8F"},
@@ -835,7 +891,7 @@ function newRoom(i){
     emoji: DEFAULT_EMOJI[i % DEFAULT_EMOJI.length],
     avatar: null, sprite: null, stamp: null, pixel: false, status: "", showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
     color: PALETTE[i % PALETTE.length].hex,
-    prompt: "", memory: "", files: [], joinGroup: false, peekGroup: false, showThink: false, noFoot: false,
+    prompt: "", memory: "", files: [], joinGroup: false, peekGroup: false, showThink: false, noFoot: false, roomStyle: "",
     provider: "openai", model: "gpt-5.1", customModel: "",
     temp: 0.8, maxTokens: 1600, ctx: 30, diaryStyle: "whim",
     convos: [c], activeConvo: c.id
@@ -845,15 +901,15 @@ function defaultState(){
   return {
     userName: "", appTitle: "ふかふかルーム", userAvatar: null,
     keys: { openai:"", gemini:"", anthropic:"", openrouter:"" },
-    flags: { rag: true, clock: true, ashiato: true, theme: "hojicha" },
+    flags: { rag: true, clock: true, ashiato: true, theme: "hojicha", roomDress: true },
     ashiatoLast: {},
     ui: { fs: 14.5, av: 32, pos: "top", aiw: 100 },
     usage: {}, usageDaily: {}, jpyRate: 150,
     budget: {warnUsd:null, stopUsd:null}, budgetWarnedMonth: "", budgetAckDate: "",
     calendarStars: [], diaryAsked: [],
     living: { messages: [] },
-    garden: { events: [], items: DEFAULT_GARDEN_ITEMS.slice(), bg: null, last: 0, queued: false },
-    sketchbook: { entries: [], last: 0, lastRoomId: "", queued: false },
+    garden: { events: [], items: DEFAULT_GARDEN_ITEMS.slice(), bg: null, last: 0, queued: false, queuedReturned: false },
+    sketchbook: { entries: [], last: 0, lastRoomId: "", queued: false, queuedReturned: false },
     stampbook: { items: [], days: {} },
     reminders: [],
     records: [],
@@ -868,6 +924,7 @@ function migrate(s){
   if(s.flags.rag===undefined) s.flags.rag = true;
   if(s.flags.clock===undefined) s.flags.clock = true;
   if(s.flags.ashiato===undefined) s.flags.ashiato = true;
+  if(s.flags.roomDress===undefined) s.flags.roomDress = true;
   if(!THEME_KEYS.includes(s.flags.theme)) s.flags.theme = "hojicha";
   if(!s.ashiatoLast || typeof s.ashiatoLast!=="object") s.ashiatoLast = {};
   s.usage = s.usage || {};
@@ -892,11 +949,13 @@ function migrate(s){
   if(s.garden.bg===undefined) s.garden.bg = null;
   if(!s.garden.last) s.garden.last = 0;
   s.garden.queued = s.garden.queued===true;
+  s.garden.queuedReturned = s.garden.queued===true && s.garden.queuedReturned===true;
   s.sketchbook = s.sketchbook || {};
   if(!Array.isArray(s.sketchbook.entries)) s.sketchbook.entries = [];
   if(!s.sketchbook.last) s.sketchbook.last = 0;
   if(s.sketchbook.lastRoomId===undefined) s.sketchbook.lastRoomId = "";
   s.sketchbook.queued = s.sketchbook.queued===true;
+  s.sketchbook.queuedReturned = s.sketchbook.queued===true && s.sketchbook.queuedReturned===true;
   s.stampbook = s.stampbook || {};
   if(!Array.isArray(s.stampbook.items)) s.stampbook.items = [];
   if(!s.stampbook.days || typeof s.stampbook.days!=="object" || Array.isArray(s.stampbook.days)) s.stampbook.days = {};
@@ -935,6 +994,8 @@ function migrate(s){
     if(r.peekGroup===undefined) r.peekGroup = !!r.joinGroup;
     if(r.showThink===undefined) r.showThink = false;
     if(r.noFoot===undefined) r.noFoot = false;
+    if(r.roomStyle===undefined) r.roomStyle = inferRoomStyle(r.name);
+    if(!ROOM_STYLE_KEYS.includes(r.roomStyle)) r.roomStyle = "";
     if(r.diaryStyle===undefined) r.diaryStyle="whim";
     if(!Array.isArray(r.files)) r.files=[];
     /* v1/v2 → v3：room直下のmessagesを会話に変換 */
@@ -1138,6 +1199,22 @@ function applyTheme(theme, resetAccent){
   const meta=document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute("content",THEMES[key].meta);
 }
+function clearRoomDress(){
+  const root=document.documentElement;
+  root.removeAttribute("data-room-style");
+  root.style.removeProperty("--accent");
+}
+function applyRoomDress(r){
+  const root=document.documentElement;
+  const key=state.flags.roomDress!==false && ROOM_STYLE_KEYS.includes(r.roomStyle) ? r.roomStyle : "";
+  if(key){
+    root.dataset.roomStyle=key;
+    root.style.setProperty("--accent",ROOM_STYLES[key].accent);
+  }else{
+    root.removeAttribute("data-room-style");
+    root.style.setProperty("--accent",r.color);
+  }
+}
 function themeCssColor(name, fallback){
   const v=getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   return v || fallback;
@@ -1171,7 +1248,7 @@ function applyChatBg(){
 }
 function goHome(){
   const leftRoomId=currentRoomId, wasLiving=inLiving;
-  currentRoomId=null; inLiving=false; document.documentElement.style.removeProperty("--accent"); closeDrawer(); renderHome(); show("view-home");
+  currentRoomId=null; inLiving=false; clearRoomDress(); closeDrawer(); renderHome(); show("view-home");
   if(leftRoomId&&!wasLiving) setTimeout(()=>maybeOfferDiary(leftRoomId),150);
 }
 function openDrawer(){
@@ -1353,7 +1430,7 @@ function modelOf(r){ return r.model==="custom" ? (r.customModel||"") : r.model; 
 function openRoom(id){
   currentRoomId = id; inLiving = false;
   const r = room();
-  document.documentElement.style.setProperty("--accent", r.color);
+  applyRoomDress(r);
   const c = convo();
   document.getElementById("chatName").textContent = (r.avatar ? "" : (r.emoji?r.emoji+" ":"")) + r.name;
   document.getElementById("chatModel").textContent =
@@ -1378,6 +1455,7 @@ function openRoom(id){
 }
 function openLiving(){
   inLiving = true; currentRoomId = null;
+  clearRoomDress();
   document.documentElement.style.setProperty("--accent", "#B07D5A");
   const ps = participants();
   document.getElementById("chatName").textContent = "🛋 リビング";
@@ -2341,7 +2419,8 @@ async function maybeFootprint(hostId){
       "\n・置き手紙の本文だけを書いてください（前置き・説明・かぎ括弧は不要）。" +
       "\n・2〜4行くらい。あなた自身の口調のままで。" +
       "\n・宛先は部屋の主の「"+host.name+"」でも、"+(state.userName||"ユーザー")+"さんに向けたひとことでも、両方でもかまいません。" +
-      "\n・あなたは「"+visitor.name+"」本人です。"+(state.userName||"ユーザー")+"や他の住人を名乗らないこと。署名を書くなら「"+visitor.name+"」と書くこと。" +
+      "\n・あなたは「"+visitor.name+"」本人です。"+(state.userName||"ユーザー")+"や他の住人を名乗らないこと。" +
+      "\n・誰からの手紙かは画面の見出しに表示されるので、本文の中では名乗らず、「〜より」などの署名も書かないこと。" +
       "\n・Secret Notes・内心メモ・隠しブロック・英語の秘密記録などは、置き手紙には絶対に書かないこと。" +
       clockLine();
     const reply = await chat(visitor, sys, [{role:"user", content:"（……お部屋は静か。置き手紙をどうぞ）", images:[]}]);
@@ -2482,6 +2561,7 @@ function gardenTimeslot(t){
 }
 function openGarden(){
   inLiving = false; currentRoomId = null;
+  clearRoomDress();
   document.documentElement.style.setProperty("--accent", "#8AA86E");
   document.getElementById("gardenSettings").style.display = "none";
   renderGardenCards();
@@ -2516,11 +2596,27 @@ function renderGardenCards(){
 function gardenCandidates(){
   return state.rooms.filter(r=>(r.prompt||"").trim() && state.keys[r.provider] && modelOf(r));
 }
+function settleSharedReservation(bucket, reserved, returnUsed, ok){
+  if(!reserved) return;
+  if(ok){
+    bucket.queued=false;
+    bucket.queuedReturned=false;
+  }else if(!returnUsed){
+    bucket.queued=true;
+    bucket.queuedReturned=true;
+  }else{
+    bucket.queued=false;
+    bucket.queuedReturned=false;
+  }
+  saveState();
+}
 async function maybeGardenEvent(force){
+  let reserved=false, returnUsed=false, reservationSettled=false;
   try{
     if(gardenBusy || sending) return;
     const now = Date.now();
-    const reserved = state.garden.queued===true;
+    reserved = state.garden.queued===true;
+    returnUsed = state.garden.queuedReturned===true;
     if(!force && !reserved){
       if(now - (state.garden.last||0) < GARDEN_GAP) return;
       if(Math.random() > GARDEN_CHANCE) return;
@@ -2563,6 +2659,7 @@ async function maybeGardenEvent(force){
     const reply = await chat(visitor, sys, [{role:"user", content:"（……しずかなお庭。痕跡をどうぞ）", images:[]}]);
     const text = peekClean(reply, visitor).slice(0, 600);
     if(text){
+      settleSharedReservation(state.garden,reserved,returnUsed,true); reservationSettled=true;
       state.garden.events.push({ id: uid("gd"), roomId: visitor.id, text: text, t: Date.now() });
       if(state.garden.events.length > 200) state.garden.events = state.garden.events.slice(-200);
       saveState();
@@ -2570,8 +2667,11 @@ async function maybeGardenEvent(force){
       if(gv && gv.classList.contains("active")) renderGardenCards();
       toast("<b>🌷 "+esc(visitor.name)+" がお庭に来てたみたい。</b><span class='tx'>痕跡が残ってるよ。</span>",
         ()=>{ openGarden(); });
+    }else{
+      settleSharedReservation(state.garden,reserved,returnUsed,false); reservationSettled=true;
     }
   }catch(e){
+    if(!reservationSettled){ settleSharedReservation(state.garden,reserved,returnUsed,false); reservationSettled=true; }
     if(force) alert("お庭に風が届かなかった… "+(e.message||""));
   }
   gardenBusy = false;
@@ -2626,6 +2726,7 @@ let sketchBusy = false;
 
 function openSketchbook(){
   currentRoomId = null; inLiving = false;
+  clearRoomDress();
   document.documentElement.style.setProperty("--accent", "#9B8064");
   renderSketchCards();
   show("view-sketchbook");
@@ -2657,10 +2758,12 @@ function sketchDeclined(text){
   return /^(今日は描かない|今日は描く気分じゃない|今日は描く気分ではない)[。.!！]*$/.test(plain);
 }
 async function maybeSketch(force){
+  let reserved=false, returnUsed=false, reservationSettled=false;
   try{
     if(sketchBusy || sending) return;
     const now=Date.now();
-    const reserved=state.sketchbook.queued===true;
+    reserved=state.sketchbook.queued===true;
+    returnUsed=state.sketchbook.queuedReturned===true;
     if(!force && !reserved){
       if(now-(state.sketchbook.last||0)<SKETCH_GAP) return;
       if(Math.random()>SKETCH_CHANCE) return;
@@ -2694,8 +2797,10 @@ async function maybeSketch(force){
     const reply=await chat(artist,sys,[{role:"user",content:"（共用のスケッチ帳のページを、そっとひらく）",images:[]}]);
     const text=peekClean(reply,artist).trim().slice(0,1200);
     if(sketchDeclined(text)){
+      settleSharedReservation(state.sketchbook,reserved,returnUsed,true); reservationSettled=true;
       toast("<b>📓 （今日は何も残さないみたい）</b><span class='tx'>また、何か置きたくなる日に。</span>");
     }else if(text){
+      settleSharedReservation(state.sketchbook,reserved,returnUsed,true); reservationSettled=true;
       state.sketchbook.entries.push({id:uid("sk"),roomId:artist.id,text:text,t:Date.now()});
       if(state.sketchbook.entries.length>200) state.sketchbook.entries=state.sketchbook.entries.slice(-200);
       state.sketchbook.lastRoomId=artist.id;
@@ -2703,10 +2808,12 @@ async function maybeSketch(force){
       const view=document.getElementById("view-sketchbook");
       if(view&&view.classList.contains("active")) renderSketchCards();
       toast("<b>📓 "+esc(artist.name)+"が何か残したよ。</b><span class='tx'>スケッチ帳に新しいページが増えました。</span>",()=>openSketchbook());
-    }else if(force){
-      toast("<b>📓 （今日は何も残さないみたい）</b><span class='tx'>また、何か置きたくなる日に。</span>");
+    }else{
+      settleSharedReservation(state.sketchbook,reserved,returnUsed,false); reservationSettled=true;
+      if(force) toast("<b>📓 （今日は何も残さないみたい）</b><span class='tx'>また、何か置きたくなる日に。</span>");
     }
   }catch(e){
+    if(!reservationSettled){ settleSharedReservation(state.sketchbook,reserved,returnUsed,false); reservationSettled=true; }
     if(force) alert("スケッチ帳のページをひらけなかった… "+(e.message||""));
   }
   sketchBusy=false;
@@ -2720,10 +2827,12 @@ function reserveSharedMomentsOnStart(){
   /* 起動時は抽選と予約だけ。生成APIは、それぞれの場所を実際に開いた時まで呼ばない。 */
   if(!state.garden.queued && now-(state.garden.last||0)>=GARDEN_GAP && Math.random()<=GARDEN_CHANCE && ashiatoBudgetOk() && gardenCandidates().length){
     state.garden.queued=true;
+    state.garden.queuedReturned=false;
     changed=true;
   }
   if(!state.sketchbook.queued && now-(state.sketchbook.last||0)>=SKETCH_GAP && Math.random()<=SKETCH_CHANCE && ashiatoBudgetOk() && sketchCandidates().length){
     state.sketchbook.queued=true;
+    state.sketchbook.queuedReturned=false;
     changed=true;
   }
   if(changed) saveState();
@@ -2768,6 +2877,7 @@ function stampRoomCandidates(){
 }
 function openStampbook(){
   currentRoomId = null; inLiving = false;
+  clearRoomDress();
   document.documentElement.style.setProperty("--accent", "#D1A85A");
   stampWeekOffset = 0;
   stampItemsOpen = false;
@@ -3474,6 +3584,7 @@ function openRoomSettings(){
   document.getElementById("rPeekGroup").checked = !!r.peekGroup;
   document.getElementById("rShowThink").checked = !!r.showThink;
   document.getElementById("rNoFoot").checked = !!r.noFoot;
+  document.getElementById("rRoomStyle").value = ROOM_STYLE_KEYS.includes(r.roomStyle) ? r.roomStyle : "";
   document.getElementById("rStream").checked = !!r.stream;
   const legacyMe=mixHex(r.color,.14), themedMe=mixThemeHex(r.color,.14);
   document.getElementById("rBubbleMe").value = (!r.bubbleMe||r.bubbleMe.toUpperCase()===legacyMe.toUpperCase()) ? themedMe : r.bubbleMe;
@@ -3664,6 +3775,7 @@ function saveRoomSettings(){
   r.peekGroup = document.getElementById("rPeekGroup").checked;
   r.showThink = document.getElementById("rShowThink").checked;
   r.noFoot = document.getElementById("rNoFoot").checked;
+  r.roomStyle = ROOM_STYLE_KEYS.includes(document.getElementById("rRoomStyle").value) ? document.getElementById("rRoomStyle").value : "";
   r.stream = document.getElementById("rStream").checked;
   const bubbleMeValue=document.getElementById("rBubbleMe").value;
   const bubbleAiValue=document.getElementById("rBubbleAi").value;
@@ -3695,6 +3807,7 @@ function deleteRoom(){
 
 /* ════════ アプリ設定 ════════ */
 function openAppSettings(){
+  clearRoomDress();
   applyTheme(state.flags.theme,true);
   document.getElementById("aUserName").value = state.userName;
   document.getElementById("aAppTitle").value = state.appTitle;
@@ -3705,6 +3818,7 @@ function openAppSettings(){
   document.getElementById("aRag").checked = !!state.flags.rag;
   document.getElementById("aClock").checked = !!state.flags.clock;
   document.getElementById("aAshiato").checked = state.flags.ashiato!==false;
+  document.getElementById("aRoomDress").checked = state.flags.roomDress!==false;
   document.getElementById("aFs").value = state.ui.fs;
   document.getElementById("aAv").value = state.ui.av;
   document.getElementById("aPos").value = state.ui.pos;
@@ -3774,6 +3888,7 @@ function saveAppSettings(){
   state.flags.rag = document.getElementById("aRag").checked;
   state.flags.clock = document.getElementById("aClock").checked;
   state.flags.ashiato = document.getElementById("aAshiato").checked;
+  state.flags.roomDress = document.getElementById("aRoomDress").checked;
   state.ui.fs = parseFloat(document.getElementById("aFs").value);
   state.ui.av = parseInt(document.getElementById("aAv").value,10);
   state.ui.pos = document.getElementById("aPos").value;

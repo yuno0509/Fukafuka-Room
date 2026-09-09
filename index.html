@@ -16,6 +16,8 @@
   --line:#EDE7DA; --accent:#C9A85C; --danger:#C76A6A;
   --serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;
   --sans:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
+  --ui-font:var(--sans); --heading-font:var(--serif); --chat-font:var(--sans);
+  --ui-ink:var(--ink); --chat-ink:var(--ink);
 }
 html[data-theme="hojicha"]{
   --bg:#FBF9F4;--card:#FFFFFF;--ink:#4A4439;--ink-soft:#8A8174;--accent:#C9A85C;--line:#EDE7DA;--danger:#C76A6A;
@@ -60,7 +62,7 @@ html[data-theme="honey-lavender"] .drawer{
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.7;letter-spacing:.02em}
+body{background:var(--bg);color:var(--ui-ink);font-family:var(--ui-font);font-size:15px;line-height:1.7;letter-spacing:.02em}
 #chatBg{position:fixed;inset:0;display:none;pointer-events:none;z-index:0}
 #app{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;position:relative;z-index:1}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
@@ -79,7 +81,7 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 /* ── header ── */
 .top{position:sticky;top:0;z-index:10;background:linear-gradient(var(--bg) 70%, transparent);
   padding:14px 16px 10px;display:flex;align-items:center;gap:10px}
-.top .title{flex:1;text-align:center;font-family:var(--serif);font-size:21px;letter-spacing:.08em;font-weight:600}
+.top .title{flex:1;text-align:center;font-family:var(--heading-font);font-size:21px;letter-spacing:.08em;font-weight:600}
 .title .spark{color:var(--accent);font-size:14px;vertical-align:middle;margin:0 6px}
 .iconbtn{width:40px;height:40px;border-radius:14px;background:var(--card);border:1px solid var(--line);
   display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--ink-soft);flex:none}
@@ -101,7 +103,7 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 .avatar img{width:100%;height:100%;object-fit:cover}
 .avatar.sm{width:var(--av-sm,32px);height:var(--av-sm,32px);font-size:calc(var(--av-sm,32px)*0.5)}
 .room-meta{flex:1;min-width:0}
-.room-name{font-family:var(--serif);font-size:16.5px;font-weight:600;letter-spacing:.04em}
+.room-name{font-family:var(--heading-font);font-size:16.5px;font-weight:600;letter-spacing:.04em}
 .room-last{font-size:12.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .chev{color:var(--ink-soft);font-size:18px}
 .addroom{margin:4px auto 0;padding:10px 22px;border-radius:999px;
@@ -111,7 +113,7 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 .chat-head{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);
   padding:10px 10px 8px;display:flex;align-items:center;gap:8px}
 .chat-head .who{flex:1;text-align:center;min-width:0}
-.chat-head .who .nm{font-family:var(--serif);font-weight:600;font-size:16px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-head .who .nm{font-family:var(--heading-font);font-weight:600;font-size:16px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chat-head .who .md{font-size:11px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .msgs{flex:1;padding:16px 14px 8px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
 .mrow{display:flex;gap:8px;align-items:var(--av-align,flex-start);max-width:100%}
@@ -120,7 +122,7 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 .aihead .sender{margin:0}
 .mwrap.ai{max-width:var(--ai-w,100%)}
 .mrow.me{flex-direction:row-reverse}
-.bubble{padding:10px 14px;border-radius:18px;white-space:pre-wrap;word-break:break-word;font-size:var(--msg-fs,14.5px)}
+.bubble{padding:10px 14px;border-radius:18px;white-space:pre-wrap;word-break:break-word;font-size:var(--msg-fs,14.5px);font-family:var(--chat-font);color:var(--chat-ink)}
 .mbtns{display:inline-flex;gap:5px;margin-top:3px}
 .mrow.me .mbtns{align-self:flex-end}
 .mbtns .cpy{margin-top:0}
@@ -155,23 +157,30 @@ input[type=color]{padding:2px;height:38px;width:54px;border-radius:10px}
 .roundbtn{width:44px;height:44px;border-radius:50%;flex:none;font-size:18px;
   display:flex;align-items:center;justify-content:center}
 .sendbtn{background:var(--accent);color:#fff}
+html[data-room-style="tsuki"] #view-chat .sendbtn{background:#c7a5cc}
+html[data-room-style="sugu"] #view-chat .sendbtn{background:#f09199}
+html[data-room-style="sorahi"] #view-chat .sendbtn{background:#82cddd}
+html[data-room-style="haku"] #view-chat .sendbtn{background:#f6ad49}
+html[data-room-style="reg"] #view-chat .sendbtn{background:#7b8d42}
+html[data-room-style="mellow"] #view-chat .sendbtn{background:#778899}
+html[data-room-style="aora"] #view-chat .sendbtn{background:#165e83}
 html[data-theme="night"] .sendbtn{color:var(--bg)}
 .sendbtn:disabled{opacity:.45}
 .attachbtn{background:var(--card);border:1px solid var(--line);color:var(--ink-soft)}
 
 /* ── 個室の差し色（共用スペースには持ち出さない） ── */
 html[data-room-style]{--room-line:var(--line);--room-radius:18px;--room-motif:"";--room-button-ink:#fff;--room-rule:linear-gradient(90deg,transparent,var(--accent),transparent)}
-html[data-room-style="sugu"]{--accent:#A65248;--room-line:#C98C84;--room-radius:15px;--room-motif:"⋈";--room-rule:linear-gradient(90deg,transparent 4%,#A65248 18%,#C98C84 82%,transparent 96%)}
-html[data-room-style="haku"]{--accent:#C49A52;--room-line:#E3D4B1;--room-radius:19px;--room-motif:"· ✦";--room-button-ink:var(--ink);--room-rule:linear-gradient(90deg,transparent 18%,#E3D4B1 36%,#C49A52 50%,#E3D4B1 64%,transparent 82%)}
-html[data-room-style="mellow"]{--accent:#48558B;--room-line:#7783B0;--room-radius:16px;--room-motif:"◌";--room-rule:linear-gradient(90deg,transparent,#48558B 25%,#668FD0 58%,#BE7DA6 82%,transparent)}
-html[data-room-style="sorahi"]{--accent:#5C98A8;--room-line:#9BC6CA;--room-radius:22px;--room-motif:"〰";--room-button-ink:var(--ink);--room-rule:linear-gradient(90deg,transparent 3%,#9BC6CA 25%,#5C98A8 58%,transparent 96%)}
-html[data-room-style="tsuki"]{--accent:#9B7FC7;--room-line:#D9CDE9;--room-radius:23px;--room-motif:"✿ 〰";--room-button-ink:var(--ink);--room-rule:linear-gradient(90deg,transparent 8%,#E8D5C3 30%,#9B7FC7 54%,#E8C7D3 74%,transparent 92%)}
-html[data-room-style="reg"]{--accent:#7A5138;--room-line:#B99D82;--room-radius:14px;--room-motif:"▮";--room-rule:repeating-linear-gradient(90deg,#7A5138 0 22px,transparent 22px 29px)}
-html[data-room-style="aora"]{--accent:#527F7A;--room-line:#91A9A1;--room-radius:17px;--room-motif:"▱";--room-rule:repeating-linear-gradient(90deg,#527F7A 0 16px,transparent 16px 22px,#B38345 22px 25px,transparent 25px 32px)}
+html[data-room-style="sugu"]{--accent:#A65248;--room-line:#C98C84;--room-radius:15px;--room-motif:"";--room-rule:linear-gradient(90deg,transparent 4%,#A65248 18%,#C98C84 82%,transparent 96%)}
+html[data-room-style="haku"]{--accent:#C49A52;--room-line:#E3D4B1;--room-radius:19px;--room-motif:"";--room-button-ink:var(--ink);--room-rule:linear-gradient(90deg,transparent 18%,#E3D4B1 36%,#C49A52 50%,#E3D4B1 64%,transparent 82%)}
+html[data-room-style="mellow"]{--accent:#48558B;--room-line:#7783B0;--room-radius:16px;--room-motif:"";--room-rule:linear-gradient(90deg,transparent,#48558B 25%,#668FD0 58%,#BE7DA6 82%,transparent)}
+html[data-room-style="sorahi"]{--accent:#5C98A8;--room-line:#9BC6CA;--room-radius:22px;--room-motif:"";--room-button-ink:var(--ink);--room-rule:linear-gradient(90deg,transparent 3%,#9BC6CA 25%,#5C98A8 58%,transparent 96%)}
+html[data-room-style="tsuki"]{--accent:#9B7FC7;--room-line:#D9CDE9;--room-radius:23px;--room-motif:"";--room-button-ink:var(--ink);--room-rule:linear-gradient(90deg,transparent 8%,#E8D5C3 30%,#9B7FC7 54%,#E8C7D3 74%,transparent 92%)}
+html[data-room-style="reg"]{--accent:#7A5138;--room-line:#9A7A68;--room-radius:14px;--room-motif:"";--room-rule:linear-gradient(90deg,rgba(107,63,49,.18) 0%,rgba(107,63,49,.58) 18%,#6B3F31 38%,#65522C 48%,#62602A 54%,#5F6527 64%,rgba(95,101,39,.58) 82%,rgba(95,101,39,.18) 100%)}
+html[data-room-style="aora"]{--accent:#418B89;--room-line:#79AAA7;--room-radius:17px;--room-motif:"";--room-rule:linear-gradient(90deg,rgba(65,139,137,0) 0%,rgba(65,139,137,.3) 8%,#418B89 24%,#418B89 41%,#70928D 43%,#B79A83 45%,#72938D 47%,#418B89 50%,#418B89 66%,#74938D 68%,#B79A83 70%,#72938D 72%,#418B89 75%,#418B89 86%,rgba(65,139,137,.28) 94%,rgba(65,139,137,0) 100%)}
 html[data-room-style] #view-chat .chat-head{border-bottom-color:var(--room-line)}
 html[data-room-style] #view-chat .chat-head .who{position:relative;padding-bottom:5px}
 html[data-room-style] #view-chat .chat-head .who::after{content:"";position:absolute;left:12%;right:12%;bottom:0;height:1px;background:var(--room-rule);border-radius:999px;opacity:.78}
-html[data-room-style] #view-chat .chat-head .who .nm::after{content:var(--room-motif);display:inline-block;margin-left:7px;color:var(--accent);font-size:10px;font-family:var(--sans);font-weight:400;letter-spacing:.08em;opacity:.7;vertical-align:2px}
+html[data-room-style] #view-chat .chat-head .who .nm::after{content:var(--room-motif);display:inline-block;margin-left:0;color:var(--accent);font-size:10px;font-family:var(--sans);font-weight:400;letter-spacing:.08em;opacity:.7;vertical-align:2px}
 html[data-room-style] #view-chat .bubble{border-radius:var(--room-radius)}
 html[data-room-style] #view-chat .bubble.me-b{border-bottom-right-radius:6px;border-color:color-mix(in srgb,var(--accent) 42%,var(--card))}
 html[data-room-style] #view-chat .bubble.ai-b{border-bottom-left-radius:6px;border-color:var(--room-line)}
@@ -190,7 +199,7 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
   transform:translateX(-105%);transition:transform .22s ease;box-shadow:4px 0 24px rgba(74,68,57,.10);
   overflow-y:auto;padding:18px 14px calc(20px + env(safe-area-inset-bottom))}
 .drawer.show{transform:none}
-.drawer h4{font-family:var(--serif);font-size:14.5px;letter-spacing:.06em;margin:14px 4px 10px;font-weight:600}
+.drawer h4{font-family:var(--heading-font);font-size:14.5px;letter-spacing:.06em;margin:14px 4px 10px;font-weight:600}
 .drawer h4:first-child{margin-top:2px}
 .citem{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:9px 10px;margin-bottom:8px;width:100%}
 .citem.cur{border-color:var(--accent);background:color-mix(in srgb, var(--accent) 7%, var(--card))}
@@ -204,8 +213,9 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
 
 /* ── settings ── */
 .panel{padding:6px 16px 60px;display:flex;flex-direction:column;gap:18px}
+#view-app{color:var(--ink)}
 .group{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px}
-.group h3{font-family:var(--serif);font-size:15px;letter-spacing:.06em;margin-bottom:10px;font-weight:600}
+.group h3{font-family:var(--heading-font);font-size:15px;letter-spacing:.06em;margin-bottom:10px;font-weight:600}
 .theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .theme-choice{display:flex;align-items:center;gap:9px;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:10px 11px;min-width:0}
 .theme-choice.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 16%,transparent)}
@@ -275,9 +285,11 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
 .toast .tx{display:block;margin-top:2px}
 @keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 .notemsg{align-self:center;font-size:12px;color:var(--ink);background:color-mix(in srgb,var(--accent) 10%,var(--card));border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));border-radius:12px;padding:6px 12px;max-width:92%}
-.fpmsg{align-self:center;font-size:13px;color:var(--ink);background:color-mix(in srgb,#93BD8F 12%,var(--card));border:1px solid color-mix(in srgb,#93BD8F 30%,var(--line));border-radius:14px;padding:10px 14px;max-width:92%;white-space:pre-wrap;box-shadow:0 1px 3px color-mix(in srgb,var(--ink) 8%,transparent)}
+.fpmsg{align-self:center;position:relative;overflow:hidden;font-family:var(--chat-font);font-size:13px;color:var(--ink);background:color-mix(in srgb,#93BD8F 12%,var(--card));border:1px solid color-mix(in srgb,#93BD8F 30%,var(--line));border-radius:14px;padding:10px 14px;max-width:92%;white-space:pre-wrap;box-shadow:0 1px 3px color-mix(in srgb,var(--ink) 8%,transparent)}
+.fpmsg.has-seal{padding-right:60px;min-height:62px}
+.fpseal{position:absolute;right:9px;bottom:7px;width:46px;height:46px;object-fit:contain;pointer-events:none;filter:saturate(.88)}
 .fpmsg .fphead{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12px;opacity:.85;margin-bottom:5px;white-space:normal}
-.gcard{background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:0 1px 4px color-mix(in srgb,var(--ink) 8%,transparent);white-space:pre-wrap;font-size:13.5px}
+.gcard{background:color-mix(in srgb,var(--card) 88%,transparent);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:0 1px 4px color-mix(in srgb,var(--ink) 8%,transparent);white-space:pre-wrap;font-size:13.5px;font-family:var(--chat-font)}
 .gcard .ghead{display:flex;align-items:center;gap:8px;margin-bottom:6px;white-space:normal}
 .gcard .ghead .gname{font-weight:600;font-size:13px}
 .gcard .ghead .gwhen{font-size:11.5px;color:var(--ink-soft);margin-left:auto}
@@ -287,7 +299,7 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
 .sketch-intro{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 14px;font-size:12.5px;color:var(--ink-soft);line-height:1.7}
 .sketch-list{display:flex;flex-direction:column;gap:12px}
 .sketch-card{position:relative}
-.sketch-card .sketch-text{white-space:pre-wrap;word-break:break-word}
+.sketch-card .sketch-text{white-space:pre-wrap;word-break:break-word;font-family:var(--chat-font)}
 .sketch-delete{position:absolute;right:10px;bottom:8px;font-size:10.5px;padding:2px 9px;border-radius:999px;background:color-mix(in srgb,var(--ink) 10%,transparent);color:var(--ink-soft);opacity:.65}
 .sketch-delete:hover,.sketch-delete:active{opacity:1}
 .sketch-empty{text-align:center;color:var(--ink-soft);font-size:13px;line-height:2;margin-top:22px}
@@ -295,7 +307,7 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
 /* ── 足あと帳 ── */
 .stampbook{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
 .stamp-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.stamp-week-title{font-family:var(--serif);font-size:15px;text-align:center;flex:1}
+.stamp-week-title{font-family:var(--heading-font);font-size:15px;text-align:center;flex:1}
 .stamp-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
 .stamp-day{min-height:118px;background:var(--card);border:1px solid var(--line);border-radius:15px;padding:7px 4px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;overflow:hidden}
 .stamp-day.today{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 18%,transparent)}
@@ -308,12 +320,12 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
 .stamp-done{font-size:9.5px;line-height:1.25;color:var(--ink);width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .stamp-flower{text-align:center;padding:10px;border-radius:16px;background:color-mix(in srgb,var(--accent) 12%,var(--card));border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));font-size:14px;animation:fade .3s ease}
 .stamp-today,.stamp-praises,.stamp-items-box{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
-.stamp-today h3,.stamp-items-box h3{font-family:var(--serif);font-size:15px;margin-bottom:10px}
+.stamp-today h3,.stamp-items-box h3{font-family:var(--heading-font);font-size:15px;margin-bottom:10px}
 .stamp-checks{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 .stamp-check{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:7px 11px;font-size:13px;cursor:pointer}
 .stamp-check.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--card))}
 .stamp-check input{width:auto;accent-color:var(--accent)}
-.stamp-praise{border-left:3px solid var(--accent);padding:8px 10px;margin-top:8px;background:color-mix(in srgb,var(--accent) 8%,var(--card));border-radius:0 12px 12px 0;font-size:13px;white-space:pre-wrap}
+.stamp-praise{border-left:3px solid var(--accent);padding:8px 10px;margin-top:8px;background:color-mix(in srgb,var(--accent) 8%,var(--card));border-radius:0 12px 12px 0;font-size:13px;white-space:pre-wrap;font-family:var(--chat-font)}
 .stamp-praise-head{display:flex;align-items:center;gap:6px;margin-bottom:3px;font-size:11px;color:var(--ink-soft)}
 .stamp-praise-head .cpy{margin-left:auto}
 .stamp-item-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}
@@ -331,7 +343,7 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
 .ritem{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:var(--bg)}
 .ritem .rt{font-weight:600;font-size:13.5px;color:var(--ink)}
 .ritem .rd{font-size:11.5px;color:var(--ink-soft);margin:2px 0 6px}
-.ritem pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;line-height:1.6;background:var(--card);border-radius:8px;padding:8px;margin:6px 0;max-height:260px;overflow:auto}
+.ritem pre{white-space:pre-wrap;font-family:var(--chat-font);font-size:12.5px;line-height:1.6;background:var(--card);border-radius:8px;padding:8px;margin:6px 0;max-height:260px;overflow:auto}
 .ritem .rbtns{display:flex;gap:6px;flex-wrap:wrap}
 .remrow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:7px 10px;margin-bottom:6px;font-size:12.5px;background:var(--bg)}
 .remrow .ri{flex:1;min-width:0}
@@ -344,6 +356,14 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
 .spedit{display:flex;align-items:center;gap:10px}
 .spedit img{width:64px;height:64px;object-fit:contain;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
 .spedit .noimg{width:64px;height:64px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--bg);border:1px dashed var(--line);color:var(--ink-soft);font-size:11px}
+.shared-icon-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.shared-icon-edit{display:flex;align-items:center;gap:8px;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:9px}
+.shared-icon-edit .shared-icon-meta{flex:1;min-width:0}
+.shared-icon-edit .shared-icon-name{font-size:12.5px;font-weight:600;margin-bottom:5px}
+.shared-icon-edit .row{gap:5px}
+.shared-icon-edit .smallbtn{padding:5px 9px;font-size:11px}
+.shared-home-avatar img{object-fit:contain;padding:2px}
+@media (max-width:390px){.shared-icon-grid{grid-template-columns:1fr}}
 /* ── 記録棚タブ ── */
 .shelftabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .shelftabs button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--ink-soft);cursor:pointer}
@@ -379,6 +399,25 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
       </div>
       <button class="iconbtn" id="peekBtn" onclick="peekLiving()" aria-label="そっと覗く" style="display:none">🫣</button>
       <button class="iconbtn" id="chatGear" onclick="chatGear()" aria-label="設定">⚙</button>
+    </div>
+    <div id="livingSettings" style="display:none;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--bg)">
+      <div class="field"><label>リビングの背景画像</label>
+        <div class="row" style="gap:8px">
+          <button class="smallbtn" onclick="document.getElementById('lBgInput').click()">画像を選ぶ</button>
+          <button class="smallbtn" onclick="clearLivingBg()">はずす</button>
+          <span class="hint" id="lBgStatus" style="margin:0"></span>
+          <input type="file" id="lBgInput" accept="image/*" style="display:none" onchange="setLivingBg(event)">
+        </div>
+        <div class="row" style="margin-top:8px">
+          <span style="font-size:12.5px;color:var(--ink-soft);flex:none">表示方法</span>
+          <select id="lBgFit">
+            <option value="cover">画面いっぱい（はみ出す分は切れる）</option>
+            <option value="contain">ぜんぶ見せる（余白が出ることも）</option>
+            <option value="repeat">そのまま並べる（パターン向け）</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end"><button class="smallbtn" onclick="saveLivingSettings()">保存</button></div>
     </div>
     <div class="msgs" id="msgs"></div>
     <div class="scrollnav" id="scrollNav">
@@ -417,6 +456,14 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
           <button class="smallbtn" onclick="clearGardenBg()">はずす</button>
           <span class="hint" id="gBgStatus" style="margin:0"></span>
           <input type="file" id="gBgInput" accept="image/*" style="display:none" onchange="setGardenBg(event)">
+        </div>
+        <div class="row" style="margin-top:8px">
+          <span style="font-size:12.5px;color:var(--ink-soft);flex:none">表示方法</span>
+          <select id="gBgFit">
+            <option value="cover">画面いっぱい（はみ出す分は切れる）</option>
+            <option value="contain">ぜんぶ見せる（余白が出ることも）</option>
+            <option value="repeat">そのまま並べる（パターン向け）</option>
+          </select>
         </div>
       </div>
       <div class="row" style="justify-content:flex-end;gap:8px">
@@ -528,6 +575,18 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
           </div>
           <input type="file" id="rStampFile" accept="image/*" style="display:none" onchange="setStampImage(event)">
           <div class="hint">報告した日に、この子のスタンプとして押されるよ。画像がなければアイコンの絵文字を使うから、空欄でも大丈夫。</div>
+        </div>
+        <div class="field"><label>置き手紙の封蝋画像</label>
+          <div class="avatar-edit">
+            <span class="avatar" id="rSealPreview"></span>
+            <div class="row">
+              <button class="smallbtn" onclick="document.getElementById('rSealFile').click()">画像を選ぶ</button>
+              <button class="smallbtn" onclick="clearSealImage()">画像を外す</button>
+            </div>
+          </div>
+          <input type="file" id="rSealFile" accept="image/*" style="display:none" onchange="setSealImage(event)">
+          <div class="slider-line" style="margin-top:8px"><input type="range" id="rSealAlpha" min="0.4" max="0.85" step="0.05" oninput="sealPreview();sliderLabels()"><span class="slider-val" id="sealAlphaVal"></span></div>
+          <div class="hint">この子が残した置き手紙の右下に、小さな透かしとして表示するよ。透明背景のPNGがおすすめ。</div>
         </div>
         <div class="field"><label>時間帯ステータス（ホームに表示）</label>
           <textarea id="rStatus" rows="4" placeholder="0-6 🌙 ぐぅ…すやすや&#10;6-9 ☕ 紅茶の準備中&#10;9-23 📖 起きてるよ、おいで&#10;23-24 🕯 そろそろおやすみの支度"></textarea>
@@ -726,7 +785,46 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
       </div>
 
       <div class="group">
+        <h3>共用スペースのホーム画像</h3>
+        <div class="shared-icon-grid">
+          <div class="shared-icon-edit"><span class="avatar shared-home-avatar" id="sharedIconLiving"></span><div class="shared-icon-meta"><div class="shared-icon-name">🛋 リビング</div><div class="row"><button class="smallbtn" onclick="document.getElementById('sharedIconFileLiving').click()">選ぶ</button><button class="smallbtn" onclick="clearSharedIcon('living')">戻す</button></div></div><input type="file" id="sharedIconFileLiving" accept="image/*" style="display:none" onchange="setSharedIcon(event,'living')"></div>
+          <div class="shared-icon-edit"><span class="avatar shared-home-avatar" id="sharedIconGarden"></span><div class="shared-icon-meta"><div class="shared-icon-name">🌷 お庭</div><div class="row"><button class="smallbtn" onclick="document.getElementById('sharedIconFileGarden').click()">選ぶ</button><button class="smallbtn" onclick="clearSharedIcon('garden')">戻す</button></div></div><input type="file" id="sharedIconFileGarden" accept="image/*" style="display:none" onchange="setSharedIcon(event,'garden')"></div>
+          <div class="shared-icon-edit"><span class="avatar shared-home-avatar" id="sharedIconSketchbook"></span><div class="shared-icon-meta"><div class="shared-icon-name">📓 スケッチ帳</div><div class="row"><button class="smallbtn" onclick="document.getElementById('sharedIconFileSketchbook').click()">選ぶ</button><button class="smallbtn" onclick="clearSharedIcon('sketchbook')">戻す</button></div></div><input type="file" id="sharedIconFileSketchbook" accept="image/*" style="display:none" onchange="setSharedIcon(event,'sketchbook')"></div>
+          <div class="shared-icon-edit"><span class="avatar shared-home-avatar" id="sharedIconStampbook"></span><div class="shared-icon-meta"><div class="shared-icon-name">🐿 足あと帳</div><div class="row"><button class="smallbtn" onclick="document.getElementById('sharedIconFileStampbook').click()">選ぶ</button><button class="smallbtn" onclick="clearSharedIcon('stampbook')">戻す</button></div></div><input type="file" id="sharedIconFileStampbook" accept="image/*" style="display:none" onchange="setSharedIcon(event,'stampbook')"></div>
+        </div>
+        <div class="hint">一枚ずつ設定できるよ。画像を戻した場所は、これまでの絵文字がまた表示されます。透明背景の正方形PNGがおすすめ。</div>
+      </div>
+
+      <div class="group">
         <h3>チャットの見た目（ぜんぶのお部屋共通）</h3>
+        <div class="field"><label>UIのフォント</label>
+          <select id="aUiFont">
+            <option value="current">現行フォント</option>
+            <option value="zen-maru">Zen Maru Gothic</option>
+          </select>
+        </div>
+        <div class="field"><label>会話（吹き出し・住人の言葉）のフォント</label>
+          <select id="aChatFont">
+            <option value="current">現行フォント</option>
+            <option value="zen-maru">Zen Maru Gothic</option>
+          </select>
+          <div class="hint">Zen Maru Gothicを選んだ時だけGoogle Fontsから読み込むよ。読み込めない時は現行フォントに戻ります。</div>
+        </div>
+        <div class="field"><label>UIの文字色</label>
+          <div class="row">
+            <select id="aUiColorMode" onchange="updateColorFields()"><option value="theme">テーマの色に従う</option><option value="custom">任意色</option></select>
+            <input type="color" id="aUiColor" aria-label="UIの任意文字色">
+            <button class="smallbtn" onclick="resetTextColor('ui')">テーマに戻す</button>
+          </div>
+        </div>
+        <div class="field"><label>会話（吹き出し内）の文字色</label>
+          <div class="row">
+            <select id="aChatColorMode" onchange="updateColorFields()"><option value="theme">テーマの色に従う</option><option value="custom">任意色</option></select>
+            <input type="color" id="aChatColor" aria-label="会話の任意文字色">
+            <button class="smallbtn" onclick="resetTextColor('chat')">テーマに戻す</button>
+          </div>
+          <div class="hint">初期値はどちらもテーマ準拠。任意色が背景に沈んでも、この設定画面だけはテーマの文字色で表示するから、いつでも戻せるよ。</div>
+        </div>
         <div class="field"><label>文字サイズ</label>
           <div class="slider-line"><input type="range" id="aFs" min="12" max="30" step="0.5" oninput="uiLabels()"><span class="slider-val" id="aFsVal"></span></div>
         </div>
@@ -808,7 +906,7 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
         <div class="hint" id="storageStatus"></div>
       </div>
       <button class="wide-btn gold" style="font-weight:600" onclick="saveAppSettings()">保存して戻る</button>
-      <div class="foot">ふかふかルーム v4.0 ─ つきちゃん工房＋レグ工事</div>
+      <div class="foot">ふかふかルーム v4.2 ─ つきちゃん工房＋レグ工事</div>
     </div>
   </section>
 </div>
@@ -838,7 +936,7 @@ const ROOM_STYLES = {
   sugu:{name:"スグ",accent:"#A65248"}, haku:{name:"ハク",accent:"#C49A52"},
   mellow:{name:"メロウ",accent:"#48558B"}, sorahi:{name:"そらひ",accent:"#5C98A8"},
   tsuki:{name:"つきちゃん",accent:"#9B7FC7"}, reg:{name:"レグ",accent:"#7A5138"},
-  aora:{name:"Aora",accent:"#527F7A"}
+  aora:{name:"Aora",accent:"#418B89"}
 };
 const ROOM_STYLE_KEYS = Object.keys(ROOM_STYLES);
 function inferRoomStyle(name){
@@ -889,7 +987,7 @@ function newRoom(i){
     id: uid("r"),
     name: "お部屋 " + (i+1),
     emoji: DEFAULT_EMOJI[i % DEFAULT_EMOJI.length],
-    avatar: null, sprite: null, stamp: null, pixel: false, status: "", showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
+    avatar: null, sprite: null, stamp: null, seal: null, sealAlpha: 0.68, pixel: false, status: "", showIconAi: true, showIconMe: true, bg: null, bgFit: "cover", bubbleMe: "", bubbleAi: "", bubbleAlpha: 1,
     color: PALETTE[i % PALETTE.length].hex,
     prompt: "", memory: "", files: [], joinGroup: false, peekGroup: false, showThink: false, noFoot: false, roomStyle: "",
     provider: "openai", model: "gpt-5.1", customModel: "",
@@ -900,15 +998,16 @@ function newRoom(i){
 function defaultState(){
   return {
     userName: "", appTitle: "ふかふかルーム", userAvatar: null,
+    sharedIcons: { living:null, garden:null, sketchbook:null, stampbook:null },
     keys: { openai:"", gemini:"", anthropic:"", openrouter:"" },
     flags: { rag: true, clock: true, ashiato: true, theme: "hojicha", roomDress: true },
     ashiatoLast: {},
-    ui: { fs: 14.5, av: 32, pos: "top", aiw: 100 },
+    ui: { fs: 14.5, av: 32, pos: "top", aiw: 100, fontUi: "current", fontChat: "current", uiColorMode:"theme", uiColor:"#4A4439", chatColorMode:"theme", chatColor:"#4A4439" },
     usage: {}, usageDaily: {}, jpyRate: 150,
     budget: {warnUsd:null, stopUsd:null}, budgetWarnedMonth: "", budgetAckDate: "",
     calendarStars: [], diaryAsked: [],
-    living: { messages: [] },
-    garden: { events: [], items: DEFAULT_GARDEN_ITEMS.slice(), bg: null, last: 0, queued: false, queuedReturned: false },
+    living: { messages: [], bg: null, bgFit: "cover" },
+    garden: { events: [], items: DEFAULT_GARDEN_ITEMS.slice(), bg: null, bgFit: "cover", last: 0, queued: false, queuedReturned: false },
     sketchbook: { entries: [], last: 0, lastRoomId: "", queued: false, queuedReturned: false },
     stampbook: { items: [], days: {} },
     reminders: [],
@@ -918,6 +1017,8 @@ function defaultState(){
 }
 function migrate(s){
   s.userAvatar = s.userAvatar || null;
+  if(!s.sharedIcons || typeof s.sharedIcons!=="object" || Array.isArray(s.sharedIcons)) s.sharedIcons={};
+  ["living","garden","sketchbook","stampbook"].forEach(k=>{ if(typeof s.sharedIcons[k]!=="string" || !s.sharedIcons[k]) s.sharedIcons[k]=null; });
   s.keys = s.keys || {};
   ["openai","gemini","anthropic","openrouter"].forEach(k=>{ if(!s.keys[k]) s.keys[k]=""; });
   s.flags = s.flags || { rag:true, clock:true };
@@ -940,13 +1041,22 @@ function migrate(s){
   if(s.budgetAckDate===undefined) s.budgetAckDate = "";
   if(!Array.isArray(s.calendarStars)) s.calendarStars = [];
   if(!Array.isArray(s.diaryAsked)) s.diaryAsked = [];
-  s.ui = Object.assign({fs:14.5, av:32, pos:"top", aiw:100}, s.ui||{});
+  s.ui = Object.assign({fs:14.5, av:32, pos:"top", aiw:100, fontUi:"current", fontChat:"current", uiColorMode:"theme", uiColor:"#4A4439", chatColorMode:"theme", chatColor:"#4A4439"}, s.ui||{});
+  if(!["current","zen-maru"].includes(s.ui.fontUi)) s.ui.fontUi="current";
+  if(!["current","zen-maru"].includes(s.ui.fontChat)) s.ui.fontChat="current";
+  if(!["theme","custom"].includes(s.ui.uiColorMode)) s.ui.uiColorMode="theme";
+  if(!["theme","custom"].includes(s.ui.chatColorMode)) s.ui.chatColorMode="theme";
+  if(!/^#[0-9a-fA-F]{6}$/.test(s.ui.uiColor||"")) s.ui.uiColor="#4A4439";
+  if(!/^#[0-9a-fA-F]{6}$/.test(s.ui.chatColor||"")) s.ui.chatColor="#4A4439";
   s.living = s.living || { messages: [] };
   if(!Array.isArray(s.living.messages)) s.living.messages = [];
+  if(s.living.bg===undefined) s.living.bg = null;
+  if(!["cover","contain","repeat"].includes(s.living.bgFit)) s.living.bgFit = "cover";
   s.garden = s.garden || {};
   if(!Array.isArray(s.garden.events)) s.garden.events = [];
   if(!Array.isArray(s.garden.items) || !s.garden.items.length) s.garden.items = DEFAULT_GARDEN_ITEMS.slice();
   if(s.garden.bg===undefined) s.garden.bg = null;
+  if(!["cover","contain","repeat"].includes(s.garden.bgFit)) s.garden.bgFit = "cover";
   if(!s.garden.last) s.garden.last = 0;
   s.garden.queued = s.garden.queued===true;
   s.garden.queuedReturned = s.garden.queued===true && s.garden.queuedReturned===true;
@@ -980,6 +1090,9 @@ function migrate(s){
   (s.rooms||[]).forEach(r=>{
     if(r.avatar===undefined) r.avatar=null;
     if(r.stamp===undefined) r.stamp=null;
+    if(r.seal===undefined) r.seal=null;
+    if(!Number.isFinite(Number(r.sealAlpha))) r.sealAlpha=.68;
+    r.sealAlpha=Math.min(.85,Math.max(.4,Number(r.sealAlpha)));
     if(r.showIconAi===undefined) r.showIconAi = (r.showIcons===undefined ? true : !!r.showIcons);
     if(r.showIconMe===undefined) r.showIconMe = (r.showIcons===undefined ? true : !!r.showIcons);
     if(r.bg===undefined) r.bg=null;
@@ -1263,7 +1376,7 @@ function closeDrawer(){
   document.getElementById("toastbox").classList.remove("hid");
 }
 function chatGear(){
-  if(inLiving) openDrawer();
+  if(inLiving) toggleLivingSettings();
   else openRoomSettings();
 }
 
@@ -1303,6 +1416,10 @@ function clockLine(){
   const z = n=>String(n).padStart(2,"0");
   return "\n\n【現在日時】" + d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()+"（"+w+"） "+z(d.getHours())+":"+z(d.getMinutes());
 }
+function quietClockLine(){
+  const now=clockLine();
+  return now ? now+"\n現在日時は雰囲気の参考にとどめ、本文で日付や時刻の数字をそのまま読み上げないこと。" : "";
+}
 
 /* ════════ ホーム ════════ */
 function statusOf(r){
@@ -1317,6 +1434,11 @@ function statusOf(r){
     if(hit) return m[3].trim();
   }
   return "";
+}
+const SHARED_HOME_EMOJI={living:"🛋",garden:"🌷",sketchbook:"📓",stampbook:"🐿"};
+function sharedHomeAvatar(key){
+  const src=state.sharedIcons && state.sharedIcons[key];
+  return '<span class="avatar shared-home-avatar">'+(src?'<img src="'+esc(src)+'" alt="">':SHARED_HOME_EMOJI[key])+'</span>';
 }
 function renderHome(){
   document.getElementById("appTitle").textContent = state.appTitle || "ふかふかルーム";
@@ -1337,7 +1459,7 @@ function renderHome(){
   const lvPreview = lvLast ? (lvLast.content||"（画像）").slice(0,40)
     : (ps.length ? ps.map(p=>p.name).join("、") + " が参加中" : "参加する住人をお部屋設定で選んでね");
   lv.innerHTML =
-    '<span class="wash"></span><span class="avatar">🛋</span>' +
+    '<span class="wash"></span>'+sharedHomeAvatar("living") +
     '<span class="room-meta"><span class="room-name">リビング</span>' +
     '<span class="room-last" style="display:block">' + esc(lvPreview) + '</span></span>' +
     '<span class="chev">›</span>';
@@ -1353,7 +1475,7 @@ function renderHome(){
     ? ((roomById(gLast.roomId)||{name:"だれか"}).name + "「" + String(gLast.text||"").replace(/\n/g," ").slice(0,26) + "…」")
     : "まだしずかなお庭。だれか来るかな";
   gd.innerHTML =
-    '<span class="wash"></span><span class="avatar">🌷</span>' +
+    '<span class="wash"></span>'+sharedHomeAvatar("garden") +
     '<span class="room-meta"><span class="room-name">お庭</span>' +
     '<span class="room-last" style="display:block">' + esc(gPrev) + '</span></span>' +
     '<span class="chev">›</span>';
@@ -1369,7 +1491,7 @@ function renderHome(){
     ? ((roomById(skLast.roomId)||{name:"だれか"}).name + "「" + String(skLast.text||"").replace(/\n/g," ").slice(0,26) + "…」")
     : "まだまっさらな一冊。最初に描くのはだれかな";
   sk.innerHTML =
-    '<span class="wash"></span><span class="avatar">📓</span>' +
+    '<span class="wash"></span>'+sharedHomeAvatar("sketchbook") +
     '<span class="room-meta"><span class="room-name">スケッチ帳</span>' +
     '<span class="room-last" style="display:block">' + esc(skPrev) + '</span></span>' +
     '<span class="chev">›</span>';
@@ -1385,7 +1507,7 @@ function renderHome(){
     ? "今日のスタンプ、受け取り済み" + (todayStamp.reports.length>1 ? "（二褒め！）" : "")
     : (state.stampbook.items.length ? "今日できたことを、ぽちぽちしよう" : "まずは項目を作ってみよう");
   sb.innerHTML =
-    '<span class="wash"></span><span class="avatar">🐿</span>' +
+    '<span class="wash"></span>'+sharedHomeAvatar("stampbook") +
     '<span class="room-meta"><span class="room-name">足あと帳</span>' +
     '<span class="room-last" style="display:block">' + esc(sbPrev) + '</span></span>' +
     '<span class="chev">›</span>';
@@ -1433,17 +1555,9 @@ function openRoom(id){
   applyRoomDress(r);
   const c = convo();
   document.getElementById("chatName").textContent = (r.avatar ? "" : (r.emoji?r.emoji+" ":"")) + r.name;
-  document.getElementById("chatModel").textContent =
-    PROVIDER_LABEL[r.provider] + " · " + (modelOf(r)||"モデル未設定") + (c ? " · " + c.title : "");
-  currentBgCss = "";
-  if(r.bg){
-    const veil=hexToRgba(themeCssColor("--bg","#FBF9F4"),.74);
-    const ov = 'linear-gradient('+veil+', '+veil+'), ';
-    const fit = r.bgFit || "cover";
-    if(fit==="contain") currentBgCss = ov + 'url("'+r.bg+'") center/contain no-repeat var(--bg)';
-    else if(fit==="repeat") currentBgCss = ov + 'url("'+r.bg+'") top left/auto repeat';
-    else currentBgCss = ov + 'url("'+r.bg+'") center/cover no-repeat';
-  }
+  document.getElementById("chatModel").textContent = modelOf(r)||"モデル未設定";
+  document.getElementById("livingSettings").style.display = "none";
+  currentBgCss = imageBackgroundCss(r.bg,r.bgFit,.74);
   applyChatBg();
   pendingImages = []; pendingFiles = [];
   renderPending();
@@ -1461,8 +1575,8 @@ function openLiving(){
   document.getElementById("chatName").textContent = "🛋 リビング";
   document.getElementById("chatModel").textContent =
     ps.length ? "参加：" + ps.map(p=>p.name).join("、") : "参加者がいないの（お部屋設定でONにしてね）";
-  document.getElementById("msgs").style.background = "";
-  currentBgCss = "";
+  document.getElementById("livingSettings").style.display = "none";
+  currentBgCss = imageBackgroundCss(state.living.bg,state.living.bgFit,.74);
   pendingImages = []; pendingFiles = [];
   renderPending();
   const pkb = document.getElementById("peekBtn"); if(pkb) pkb.style.display = "";
@@ -1470,14 +1584,55 @@ function openLiving(){
   closeDrawer();
   show("view-chat");
 }
+function toggleLivingSettings(){
+  const p=document.getElementById("livingSettings");
+  const open=p.style.display==="none";
+  if(open){
+    document.getElementById("lBgStatus").textContent=state.living.bg ? "設定中" : "なし";
+    document.getElementById("lBgFit").value=state.living.bgFit||"cover";
+  }
+  p.style.display=open ? "" : "none";
+}
+async function setLivingBg(ev){
+  const f=ev.target.files[0]; ev.target.value="";
+  if(!f) return;
+  try{
+    state.living.bg=await resizeImage(f,1600,.8);
+    document.getElementById("lBgStatus").textContent="設定中";
+    saveState();
+    currentBgCss=imageBackgroundCss(state.living.bg,state.living.bgFit,.74);
+    applyChatBg();
+  }catch(e){ alert(e.message); }
+}
+function clearLivingBg(){
+  state.living.bg=null;
+  document.getElementById("lBgStatus").textContent="なし";
+  currentBgCss=""; saveState(); applyChatBg();
+}
+function saveLivingSettings(){
+  const fit=document.getElementById("lBgFit").value;
+  state.living.bgFit=["cover","contain","repeat"].includes(fit) ? fit : "cover";
+  saveState(); currentBgCss=imageBackgroundCss(state.living.bg,state.living.bgFit,.74); applyChatBg();
+  document.getElementById("livingSettings").style.display="none";
+}
 function hexToRgba(hex, a){
   if(!/^#[0-9a-fA-F]{6}$/.test(hex)) return hex;
   const n = parseInt(hex.slice(1),16);
   return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")";
 }
+function imageBackgroundCss(src, fit, veilAlpha){
+  if(!src) return "";
+  const veil=hexToRgba(themeCssColor("--bg","#FBF9F4"),veilAlpha);
+  const ov='linear-gradient('+veil+', '+veil+'), ';
+  if(fit==="contain") return ov+'url("'+src+'") center/contain no-repeat var(--bg)';
+  if(fit==="repeat") return ov+'url("'+src+'") top left/auto repeat var(--bg)';
+  return ov+'url("'+src+'") center/cover no-repeat var(--bg)';
+}
 function bubbleStyle(r, mine){
   if(!r) return "";
-  const a = (r.bubbleAlpha===undefined) ? 1 : r.bubbleAlpha;
+  const rawAlpha = (r.bubbleAlpha===undefined) ? 1 : r.bubbleAlpha;
+  const dressed = !inLiving && document.documentElement.dataset.roomStyle===r.roomStyle;
+  const a = Math.min(1, rawAlpha + (dressed ? .12 : 0));
   const raw = mine ? r.bubbleMe : r.bubbleAi;
   const legacyDefault = mine ? mixHex(r.color,.14) : "#FFFFFF";
   const themeDefault = mine ? mixThemeHex(r.color,.14) : themeCssColor("--card","#FFFFFF");
@@ -1542,7 +1697,8 @@ function renderMsgs(){
         const v = roomById(m.visitorId);
         const nm = v ? ((v.emoji?v.emoji+" ":"")+v.name) : "どこかの住人";
         const av = v ? avatarHtml(v, true) : "";
-        html += '<div class="fpmsg"><div class="fphead">'+av+'🐾 '+esc(nm)+' の置き手紙</div>'+fmt(m.content)+'</div>';
+        const seal = v && v.seal ? '<img class="fpseal" src="'+esc(v.seal)+'" alt="" style="opacity:'+Math.min(.85,Math.max(.4,Number(v.sealAlpha)||.68))+'">' : '';
+        html += '<div class="fpmsg'+(seal?' has-seal':'')+'"><div class="fphead">'+av+'🐾 '+esc(nm)+' の置き手紙</div>'+fmt(m.content)+seal+'</div>';
         return;
       }
       html += msgRowHtml(m, r, null);
@@ -2348,7 +2504,7 @@ async function generateDiary(targetRoomId, targetDate){
     const sys = "あなたは「"+r.name+"」です。以下はあなたとユーザー（"+(state.userName||"ユーザー")+"）の"+when+"のログです。これを振り返って、あなた自身の視点で短い日記を書いてください。" +
       "\n・200〜400字くらい。出来事の羅列にせず、感情と余韻を大切に。" +
       "\n・あなた自身の口調・文体のままで。" +
-      "\n・日記の本文だけを書くこと（前置きや見出しは不要）。" + clockLine();
+      "\n・日記の本文だけを書くこと（前置きや見出しは不要）。" + quietClockLine();
     const body = await chat(r, sys, [{role:"user", content: full, images:[]}]);
     const createdAt=targetDate ? dayBounds(targetDate)[0]+12*60*60*1000 : Date.now();
     state.diaries.push({ id: uid("dia"), roomId: r.id, roomName: r.name, convoTitle: targetDate?(targetDate+" の会話"):c.title, body: body.trim(), createdAt: createdAt });
@@ -2422,7 +2578,7 @@ async function maybeFootprint(hostId){
       "\n・あなたは「"+visitor.name+"」本人です。"+(state.userName||"ユーザー")+"や他の住人を名乗らないこと。" +
       "\n・誰からの手紙かは画面の見出しに表示されるので、本文の中では名乗らず、「〜より」などの署名も書かないこと。" +
       "\n・Secret Notes・内心メモ・隠しブロック・英語の秘密記録などは、置き手紙には絶対に書かないこと。" +
-      clockLine();
+      quietClockLine();
     const reply = await chat(visitor, sys, [{role:"user", content:"（……お部屋は静か。置き手紙をどうぞ）", images:[]}]);
     let raw = String(reply||"");
     raw = raw.replace(/(^|\n)\s*[-—─=＝*]{2,}\s*\n?\s*(AI\s*)?Secret\s*Notes?[\s\S]*$/i, "");   /* 区切り線つきの秘密記録ごと没収 */
@@ -2459,7 +2615,7 @@ function peekSystem(r, picked){
     "\n・（）の独り言や仕草は控えめに（多くても1〜2個）。会話の中心は声に出す言葉。また、他の住人の（）の中身は聞こえていない・見えていないものとして扱うこと。" +
     "\n・短めに（1〜3文くらい）。会話をひとり占めしないこと。" +
     "\n・話題は自由。最近のこと、他の住人のこと、なんてことない雑談。楽屋みたいな自然な空気で。" +
-    clockLine();
+    quietClockLine();
 }
 function peekClean(reply, self){
   const known = [state.userName||"ユーザー"].concat(state.rooms.map(r=>r.name)).filter(s=>s && s.trim());
@@ -2570,12 +2726,7 @@ function openGarden(){
 }
 function renderGardenCards(){
   const box = document.getElementById("gardenCards");
-  if(state.garden.bg){
-    const veil=hexToRgba(themeCssColor("--bg","#FBF9F4"),.68);
-    box.style.background = 'linear-gradient('+veil+', '+veil+'), url("'+state.garden.bg+'") center/cover no-repeat';
-  }else{
-    box.style.background = "";
-  }
+  box.style.background = imageBackgroundCss(state.garden.bg,state.garden.bgFit,.68);
   const evs = state.garden.events.slice().sort((a,b)=>b.t-a.t);
   if(!evs.length){
     box.innerHTML = '<div class="gempty">🌷<br>まだしずかなお庭。<br>ここは、住人たちの痕跡がすこしずつ積もる場所。<br>🍃を押すと、そっと風を吹かせられるよ。</div>';
@@ -2655,7 +2806,7 @@ async function maybeGardenEvent(force){
       "\n・2〜4行くらい。あなた自身の口調で、痕跡の本文だけを書くこと（前置き・説明は不要）。" +
       "\n・直前の痕跡に気づいて、そっと応えたり続きをしたりするのも自由（無理に触れなくてもいい）。" +
       "\n・「名前：」の形式や、他の住人・ユーザーのセリフの創作は禁止。" +
-      clockLine();
+      quietClockLine();
     const reply = await chat(visitor, sys, [{role:"user", content:"（……しずかなお庭。痕跡をどうぞ）", images:[]}]);
     const text = peekClean(reply, visitor).slice(0, 600);
     if(text){
@@ -2684,6 +2835,7 @@ function toggleGardenSettings(){
   if(open){
     document.getElementById("gItems").value = state.garden.items.join("\n");
     document.getElementById("gBgStatus").textContent = state.garden.bg ? "設定中" : "なし";
+    document.getElementById("gBgFit").value = state.garden.bgFit || "cover";
   }
   p.style.display = open ? "" : "none";
 }
@@ -2704,7 +2856,10 @@ function clearGardenBg(){
 function saveGardenSettings(){
   const items = document.getElementById("gItems").value.split("\n").map(s=>s.trim()).filter(Boolean);
   state.garden.items = items.length ? items : DEFAULT_GARDEN_ITEMS.slice();
+  const fit=document.getElementById("gBgFit").value;
+  state.garden.bgFit=["cover","contain","repeat"].includes(fit) ? fit : "cover";
   saveState();
+  renderGardenCards();
   document.getElementById("gardenSettings").style.display = "none";
   toast("<b>🌷 お庭の備品、覚えたよ。</b><span class='tx'>"+esc(state.garden.items.slice(0,3).join("、"))+" …</span>");
 }
@@ -2793,7 +2948,7 @@ async function maybeSketch(force){
       "\nラフでも落書きでも、つぶやきでも、ひとりごとでも、ひとことでも、なんでもかまいません。綺麗に仕上げなくて大丈夫です。"+
       "\n今日は何も残さなくてもかまいません。その時は、理由や説明を添えず、正確に「今日は描かない」とだけ返してください。"+
       "\nほかの住人やユーザーの発言は創作せず、あなた自身が残す本文だけを返してください。"+
-      clockLine();
+      quietClockLine();
     const reply=await chat(artist,sys,[{role:"user",content:"（共用のスケッチ帳のページを、そっとひらく）",images:[]}]);
     const text=peekClean(reply,artist).trim().slice(0,1200);
     if(sketchDeclined(text)){
@@ -2953,7 +3108,7 @@ function renderStampPraises(dates){
   });
   if(!rows.length){ box.style.display="none"; box.innerHTML=""; return; }
   box.style.display="";
-  box.innerHTML = '<strong style="font-family:var(--serif)">今週のひとこと</strong>' + rows.map(row=>{
+  box.innerHTML = '<strong style="font-family:var(--heading-font)">今週のひとこと</strong>' + rows.map(row=>{
     const r=roomById(row.rep.roomId);
     return '<div class="stamp-praise"><div class="stamp-praise-head">'+(r?avatarHtml(r,true):"")+
       '<span>'+esc(row.date+"　"+(r?r.name:"だれか"))+'</span>'+
@@ -3564,7 +3719,7 @@ function noteAtts(m){
 }
 
 /* ════════ お部屋設定 ════════ */
-let editColor = null, editAvatar = null, editBg = null, editFiles = null, editSprite = null, editStamp = null;
+let editColor = null, editAvatar = null, editBg = null, editFiles = null, editSprite = null, editStamp = null, editSeal = null;
 function openRoomSettings(){
   const r = room(); if(!r) return;
   document.getElementById("rName").value = r.name;
@@ -3594,12 +3749,14 @@ function openRoomSettings(){
   editAvatar = r.avatar;
   editSprite = r.sprite;
   editStamp = r.stamp;
+  editSeal = r.seal;
+  document.getElementById("rSealAlpha").value = r.sealAlpha===undefined ? .68 : r.sealAlpha;
   document.getElementById("rPixel").checked = !!r.pixel;
   document.getElementById("rStatus").value = r.status || "";
   document.getElementById("rDiaryStyle").value = r.diaryStyle || "whim";
   editBg = r.bg;
   editFiles = JSON.parse(JSON.stringify(r.files||[]));
-  renderSwatches(); avatarPreview(); spritePreview(); stampPreview(); bgStatus(); renderFileList(); sliderLabels(); modelSelChanged();
+  renderSwatches(); avatarPreview(); spritePreview(); stampPreview(); sealPreview(); bgStatus(); renderFileList(); sliderLabels(); modelSelChanged();
   show("view-room");
 }
 function mixHex(hex, ratio){
@@ -3685,6 +3842,19 @@ function stampPreview(){
   el.innerHTML = editStamp ? '<img src="'+editStamp+'" alt="">' : "";
   if(!editStamp) el.textContent = document.getElementById("rEmoji").value || "✨";
 }
+async function setSealImage(ev){
+  const f=ev.target.files[0]; ev.target.value="";
+  if(!f) return;
+  try{ editSeal=await resizePng(f,320); sealPreview(); }
+  catch(e){ alert("封蝋画像が読めなかった…"); }
+}
+function clearSealImage(){ editSeal=null; sealPreview(); }
+function sealPreview(){
+  const el=document.getElementById("rSealPreview"); if(!el) return;
+  const alpha=Math.min(.85,Math.max(.4,Number(document.getElementById("rSealAlpha").value)||.68));
+  el.innerHTML=editSeal ? '<img src="'+editSeal+'" alt="" style="opacity:'+alpha+'">' : '';
+  if(!editSeal) el.textContent="なし";
+}
 async function setBg(ev){
   const f = ev.target.files[0]; ev.target.value="";
   if(!f) return;
@@ -3755,6 +3925,7 @@ function sliderLabels(){
   document.getElementById("maxVal").textContent = document.getElementById("rMax").value + " tokens";
   document.getElementById("ctxVal").textContent = "直近 " + document.getElementById("rCtx").value + " 件";
   document.getElementById("alphaVal").textContent = Math.round(parseFloat(document.getElementById("rBubbleAlpha").value)*100) + "%";
+  document.getElementById("sealAlphaVal").textContent = Math.round(parseFloat(document.getElementById("rSealAlpha").value)*100) + "%";
 }
 function saveRoomSettings(){
   const r = room(); if(!r) return;
@@ -3788,6 +3959,8 @@ function saveRoomSettings(){
   r.avatar = editAvatar;
   r.sprite = editSprite;
   r.stamp = editStamp;
+  r.seal = editSeal;
+  r.sealAlpha = Math.min(.85,Math.max(.4,parseFloat(document.getElementById("rSealAlpha").value)||.68));
   r.pixel = document.getElementById("rPixel").checked;
   r.status = document.getElementById("rStatus").value;
   r.diaryStyle = document.getElementById("rDiaryStyle").value;
@@ -3819,6 +3992,12 @@ function openAppSettings(){
   document.getElementById("aClock").checked = !!state.flags.clock;
   document.getElementById("aAshiato").checked = state.flags.ashiato!==false;
   document.getElementById("aRoomDress").checked = state.flags.roomDress!==false;
+  document.getElementById("aUiFont").value = state.ui.fontUi || "current";
+  document.getElementById("aChatFont").value = state.ui.fontChat || "current";
+  document.getElementById("aUiColorMode").value = state.ui.uiColorMode || "theme";
+  document.getElementById("aUiColor").value = state.ui.uiColor || "#4A4439";
+  document.getElementById("aChatColorMode").value = state.ui.chatColorMode || "theme";
+  document.getElementById("aChatColor").value = state.ui.chatColor || "#4A4439";
   document.getElementById("aFs").value = state.ui.fs;
   document.getElementById("aAv").value = state.ui.av;
   document.getElementById("aPos").value = state.ui.pos;
@@ -3828,6 +4007,8 @@ function openAppSettings(){
   document.getElementById("aBudgetStop").value = state.budget.stopUsd===null ? "" : state.budget.stopUsd;
   uiLabels();
   userAvatarPreview();
+  sharedIconPreviews();
+  updateColorFields();
   renderThemeChoices();
   renderUsage();
   const used = Math.round(JSON.stringify(state).length/1024);
@@ -3867,6 +4048,25 @@ function userAvatarPreview(){
   if(state.userAvatar) el.innerHTML = '<img src="'+state.userAvatar+'" alt="">';
   else el.textContent = "🫧";
 }
+function sharedIconPreviews(){
+  const ids={living:"sharedIconLiving",garden:"sharedIconGarden",sketchbook:"sharedIconSketchbook",stampbook:"sharedIconStampbook"};
+  Object.keys(ids).forEach(key=>{
+    const el=document.getElementById(ids[key]); if(!el) return;
+    const src=state.sharedIcons && state.sharedIcons[key];
+    el.innerHTML=src ? '<img src="'+src+'" alt="">' : '';
+    if(!src) el.textContent=SHARED_HOME_EMOJI[key];
+  });
+}
+async function setSharedIcon(ev,key){
+  const f=ev.target.files[0]; ev.target.value="";
+  if(!f || !Object.prototype.hasOwnProperty.call(SHARED_HOME_EMOJI,key)) return;
+  try{ state.sharedIcons[key]=await resizePng(f,320); sharedIconPreviews(); }
+  catch(e){ alert("ミニ画像が読めなかった…"); }
+}
+function clearSharedIcon(key){
+  if(!Object.prototype.hasOwnProperty.call(SHARED_HOME_EMOJI,key)) return;
+  state.sharedIcons[key]=null; sharedIconPreviews();
+}
 async function setUserAvatar(ev){
   const f = ev.target.files[0]; ev.target.value="";
   if(!f) return;
@@ -3889,6 +4089,12 @@ function saveAppSettings(){
   state.flags.clock = document.getElementById("aClock").checked;
   state.flags.ashiato = document.getElementById("aAshiato").checked;
   state.flags.roomDress = document.getElementById("aRoomDress").checked;
+  state.ui.fontUi = document.getElementById("aUiFont").value;
+  state.ui.fontChat = document.getElementById("aChatFont").value;
+  state.ui.uiColorMode = document.getElementById("aUiColorMode").value==="custom" ? "custom" : "theme";
+  state.ui.uiColor = document.getElementById("aUiColor").value;
+  state.ui.chatColorMode = document.getElementById("aChatColorMode").value==="custom" ? "custom" : "theme";
+  state.ui.chatColor = document.getElementById("aChatColor").value;
   state.ui.fs = parseFloat(document.getElementById("aFs").value);
   state.ui.av = parseInt(document.getElementById("aAv").value,10);
   state.ui.pos = document.getElementById("aPos").value;
@@ -3907,6 +4113,41 @@ function applyUi(){
   root.setProperty("--av-sm", state.ui.av + "px");
   root.setProperty("--av-align", state.ui.pos==="bottom" ? "flex-end" : "flex-start");
   root.setProperty("--ai-w", state.ui.aiw + "%");
+  applyFonts();
+  applyTextColors();
+}
+function applyFonts(){
+  const uiZen=state.ui.fontUi==="zen-maru", chatZen=state.ui.fontChat==="zen-maru";
+  let link=document.getElementById("zenMaruFont");
+  if((uiZen||chatZen) && !link){
+    link=document.createElement("link"); link.id="zenMaruFont"; link.rel="stylesheet";
+    link.href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap";
+    document.head.appendChild(link);
+  }else if(!uiZen && !chatZen && link){ link.remove(); }
+  const root=document.documentElement.style;
+  root.setProperty("--ui-font",uiZen?'"Zen Maru Gothic",var(--sans)':"var(--sans)");
+  root.setProperty("--heading-font",uiZen?'"Zen Maru Gothic",var(--sans)':"var(--serif)");
+  root.setProperty("--chat-font",chatZen?'"Zen Maru Gothic",var(--sans)':"var(--sans)");
+}
+function updateColorFields(){
+  [["aUiColorMode","aUiColor"],["aChatColorMode","aChatColor"]].forEach(pair=>{
+    const mode=document.getElementById(pair[0]), picker=document.getElementById(pair[1]);
+    if(!mode||!picker) return;
+    picker.disabled=mode.value!=="custom";
+    picker.style.opacity=picker.disabled ? ".42" : "1";
+  });
+}
+function resetTextColor(kind){
+  const id=kind==="chat" ? "aChatColorMode" : "aUiColorMode";
+  document.getElementById(id).value="theme"; updateColorFields();
+}
+function applyTextColors(){
+  const root=document.documentElement.style;
+  const valid=c=>/^#[0-9a-fA-F]{6}$/.test(c||"");
+  const ui=state.ui.uiColorMode==="custom"&&valid(state.ui.uiColor) ? state.ui.uiColor : "var(--ink)";
+  const chat=state.ui.chatColorMode==="custom"&&valid(state.ui.chatColor) ? state.ui.chatColor : "var(--ink)";
+  root.setProperty("--ui-ink",ui);
+  root.setProperty("--chat-ink",chat);
 }
 function uiLabels(){
   document.getElementById("aFsVal").textContent = document.getElementById("aFs").value + "px";

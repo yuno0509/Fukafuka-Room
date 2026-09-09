@@ -906,7 +906,7 @@ html[data-room-style="tsuki"] #view-chat .chat-head .who::after{height:3px;filte
         <div class="hint" id="storageStatus"></div>
       </div>
       <button class="wide-btn gold" style="font-weight:600" onclick="saveAppSettings()">保存して戻る</button>
-      <div class="foot">ふかふかルーム v4.3 ─ つきちゃん工房＋レグ工事</div>
+      <div class="foot">ふかふかルーム v4.3.1 ─ つきちゃん工房＋レグ工事</div>
     </div>
   </section>
 </div>
@@ -4180,51 +4180,6 @@ function importJson(ev){
   reader.readAsText(file);
   ev.target.value = "";
 }
-
-/* swipe-back start ── お試し施工：撤去する時はこのブロックを丸ごと外す */
-(()=>{
-  const EDGE_PX=30;
-  const MIN_X_PX=72;
-  const HORIZONTAL_RATIO=1.45;
-  let start=null;
-
-  function activeBackView(){
-    const view=document.querySelector(".view.active");
-    return view && view.id!=="view-home" ? view : null;
-  }
-  function reset(){ start=null; }
-
-  document.addEventListener("touchstart",ev=>{
-    reset();
-    if(ev.touches.length!==1 || !activeBackView()) return;
-    if(document.querySelector(".drawer.show,.shelf.show")) return;
-    const target=ev.target;
-    if(target && target.closest && target.closest("input,textarea,select,[contenteditable='true']")) return;
-    const touch=ev.touches[0];
-    if(touch.clientX>EDGE_PX) return;
-    start={id:touch.identifier,x:touch.clientX,y:touch.clientY,viewId:activeBackView().id};
-  },{passive:true});
-
-  document.addEventListener("touchmove",ev=>{
-    if(start && ev.touches.length!==1) reset();
-  },{passive:true});
-
-  document.addEventListener("touchend",ev=>{
-    if(!start) return;
-    const origin=start; reset();
-    const touch=Array.from(ev.changedTouches||[]).find(t=>t.identifier===origin.id);
-    const view=activeBackView();
-    if(!touch || !view || view.id!==origin.viewId) return;
-    const dx=touch.clientX-origin.x;
-    const dy=touch.clientY-origin.y;
-    if(dx<MIN_X_PX || dx<=Math.abs(dy)*HORIZONTAL_RATIO) return;
-    const back=view.querySelector('button[aria-label="ホームへ"],button[aria-label="戻る"]');
-    if(back && !back.disabled) back.click();
-  },{passive:true});
-
-  document.addEventListener("touchcancel",reset,{passive:true});
-})();
-/* swipe-back end */
 
 /* ════════ 起動 ════════ */
 (async ()=>{
